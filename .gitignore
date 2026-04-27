@@ -6,6 +6,10 @@ backend/storage/framework/cache/*
 backend/storage/framework/sessions/*
 backend/storage/framework/views/*
 backend/bootstrap/cache/*
+.env.local
+.env.docker
+backend/.env.local
+backend/.env.docker
 
 # React
 frontend/node_modules/

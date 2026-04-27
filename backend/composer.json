@@ -7,8 +7,12 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "google/apiclient": "^2.19",
         "laravel/framework": "^13.0",
-        "laravel/tinker": "^3.0"
+        "laravel/socialite": "^5.26",
+        "laravel/tinker": "^3.0",
+        "php-open-source-saver/jwt-auth": "^2.9",
+        "shetabit/visitor": "^4.5"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
