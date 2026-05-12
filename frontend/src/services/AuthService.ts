@@ -14,7 +14,7 @@ import type {
 class AuthService {
   private static instance: AuthService
 
-  private constructor() {}
+  private constructor() { }
 
   static getInstance(): AuthService {
     if (!AuthService.instance) {
@@ -44,7 +44,17 @@ class AuthService {
   }
 
   setGoogleCookie(token: string) {
+    localStorage.setItem('token', token);
     return http.post<SetCookieResponse>('/api/auth/google/set-cookie', { token })
+  }
+
+  getToken() {
+    return localStorage.getItem('token')
+  }
+
+  logout() {
+    localStorage.removeItem('token')
+    // and potentially call logout API
   }
 
   forgotPassword(email: string) {

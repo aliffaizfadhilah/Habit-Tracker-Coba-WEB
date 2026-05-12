@@ -1,13 +1,15 @@
 // ─── Dashboard Page ────────────────────────────────────────────────────────────
 // UI sesuai design token Landing Page. Jembatan ke 14 fitur habit.
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { GlobalStyles, Button, Card, Badge } from '../factories/ComponentFactory'
 import { tokens } from '../factories/tokens'
 import {
   PageHeader, StatCard, HabitCard, EmptyState, ModalOverlay,
 } from '../factories/SectionFactory'
+import ReminderView from '../components/ReminderView'
+import { reminderService } from '../services/ReminderService'
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 const mockHabits = [
@@ -34,6 +36,12 @@ const NavItem: React.FC<{ icon: string; label: string; active?: boolean; onClick
 
 export default function Dashboard() {
   const navigate = useNavigate()
+
+  useEffect(() => {
+    // Jalankan scheduler reminder terpusat (Singleton)
+    reminderService.startPolling();
+  }, []);
+
   const [activeNav, setActiveNav] = useState('today')
   const [habits, setHabits] = useState(mockHabits)
   const [showAddModal, setShowAddModal] = useState(false)
@@ -42,8 +50,8 @@ export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
   const completedCount = habits.filter(h => h.isCompleted).length
-  const totalStreak    = habits.reduce((a, h) => a + h.streak, 0)
-  const avgProgress    = habits.length ? Math.round(habits.reduce((a, h) => a + h.progress, 0) / habits.length) : 0
+  const totalStreak = habits.reduce((a, h) => a + h.streak, 0)
+  const avgProgress = habits.length ? Math.round(habits.reduce((a, h) => a + h.progress, 0) / habits.length) : 0
 
   const handleToggle = (id: number) => {
     setHabits(prev => prev.map(h =>
@@ -67,14 +75,14 @@ export default function Dashboard() {
   }
 
   const navItems = [
-    { id: 'today',    icon: '📅', label: 'Hari Ini' },
-    { id: 'habits',   icon: '✅', label: 'Semua Habit' },
-    { id: 'streak',   icon: '🔥', label: 'Streak' },
+    { id: 'today', icon: '📅', label: 'Hari Ini' },
+    { id: 'habits', icon: '✅', label: 'Semua Habit' },
+    { id: 'streak', icon: '🔥', label: 'Streak' },
     { id: 'progress', icon: '📊', label: 'Progress' },
-    { id: 'report',   icon: '📋', label: 'Laporan' },
+    { id: 'report', icon: '📋', label: 'Laporan' },
     { id: 'reminder', icon: '🔔', label: 'Reminder' },
-    { id: 'share',    icon: '📤', label: 'Share Progress' },
-    { id: 'wall',     icon: '🖼', label: 'Wall Pribadi' },
+    { id: 'share', icon: '📤', label: 'Share Progress' },
+    { id: 'wall', icon: '🖼', label: 'Wall Pribadi' },
   ]
 
   return (
@@ -129,55 +137,63 @@ export default function Dashboard() {
             title={activeNav === 'today' ? `Halo! 👋` : navItems.find(n => n.id === activeNav)?.label || ''}
             subtitle={activeNav === 'today' ? `Rabu, 29 April 2026 — Semangat hari ini!` : undefined}
             action={
-              <Button variant="primary" size="sm" onClick={() => setShowAddModal(true)}>
-                + Tambah Habit
-              </Button>
+              activeNav === 'today' && (
+                <Button variant="primary" size="sm" onClick={() => setShowAddModal(true)}>
+                  + Tambah Habit
+                </Button>
+              )
             }
           />
         </div>
 
-        {/* Stat Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 32 }}>
-          <StatCard label="Total Habit"    value={habits.length}    icon="✅" color="blue"   trend={`${completedCount} selesai hari ini`} />
-          <StatCard label="Total Streak"   value={`${totalStreak}d`} icon="🔥" color="orange" trend="Pertahankan terus!" />
-          <StatCard label="Avg Progress"   value={`${avgProgress}%`} icon="📈" color="green"  trend="Rata-rata semua habit" />
-          <StatCard label="Completed"      value={completedCount}   icon="🏆" color="green"  trend={`dari ${habits.length} habit`} />
-        </div>
-
-        {/* Habit List */}
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-            <h2 style={{ fontFamily: tokens.fontHeading, fontSize: 18, fontWeight: 700, color: tokens.text }}>
-              Habit Hari Ini
-            </h2>
-            <Badge color="blue">{habits.length} habit</Badge>
-          </div>
-
-          {habits.length === 0 ? (
-            <EmptyState
-              icon="🌱"
-              title="Belum ada habit"
-              description="Mulai tambahkan habit pertamamu dan bangun rutinitas positif!"
-              action={
-                <Button variant="primary" size="sm" onClick={() => setShowAddModal(true)}>
-                  + Tambah Habit Pertama
-                </Button>
-              }
-            />
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {habits.map(habit => (
-                <HabitCard
-                  key={habit.id}
-                  {...habit}
-                  onCheck={() => handleToggle(habit.id)}
-                  onEdit={() => {}}
-                  onDelete={() => setShowDeleteModal(habit.id)}
-                />
-              ))}
+        {activeNav === 'reminder' ? (
+          <ReminderView />
+        ) : (
+          <>
+            {/* Stat Cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 32 }}>
+              <StatCard label="Total Habit" value={habits.length} icon="✅" color="blue" trend={`${completedCount} selesai hari ini`} />
+              <StatCard label="Total Streak" value={`${totalStreak}d`} icon="🔥" color="orange" trend="Pertahankan terus!" />
+              <StatCard label="Avg Progress" value={`${avgProgress}%`} icon="📈" color="green" trend="Rata-rata semua habit" />
+              <StatCard label="Completed" value={completedCount} icon="🏆" color="green" trend={`dari ${habits.length} habit`} />
             </div>
-          )}
-        </div>
+
+            {/* Habit List */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <h2 style={{ fontFamily: tokens.fontHeading, fontSize: 18, fontWeight: 700, color: tokens.text }}>
+                  Habit Hari Ini
+                </h2>
+                <Badge color="blue">{habits.length} habit</Badge>
+              </div>
+
+              {habits.length === 0 ? (
+                <EmptyState
+                  icon="🌱"
+                  title="Belum ada habit"
+                  description="Mulai tambahkan habit pertamamu dan bangun rutinitas positif!"
+                  action={
+                    <Button variant="primary" size="sm" onClick={() => setShowAddModal(true)}>
+                      + Tambah Habit Pertama
+                    </Button>
+                  }
+                />
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {habits.map(habit => (
+                    <HabitCard
+                      key={habit.id}
+                      {...habit}
+                      onCheck={() => handleToggle(habit.id)}
+                      onEdit={() => { }}
+                      onDelete={() => setShowDeleteModal(habit.id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </main>
 
       {/* ── Add Habit Modal ── */}

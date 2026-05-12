@@ -22,10 +22,10 @@ class AuthController extends Controller
             60 * 24,
             '/',
             null,
-            true,
-            true,
+            config('app.env') === 'production', // secure only in production
+            true, // httpOnly
             false,
-            'None'
+            'Lax' // samesite Lax for local dev
         );
     }
 
@@ -180,16 +180,33 @@ class AuthController extends Controller
     public function googleRedirect()
     {
         return response()->json([
-            'url' => Socialite::driver('google')->stateless()->redirect()->getTargetUrl()
+            'url' => Socialite::driver('google')
+                ->stateless()
+                ->redirectUrl(env('GOOGLE_REDIRECT_URI'))
+                ->redirect()
+                ->getTargetUrl()
         ]);
     }
 
     public function googleCallback(Request $request)
     {
+        \Illuminate\Support\Facades\Log::info('Google Callback Full URL: ' . $request->fullUrl());
         try {
-            $googleUser = Socialite::driver('google')->stateless()->user();
+            $code = $request->input('code');
+            if (!$code) {
+                return response()->json(['success' => false, 'message' => 'Kode otorisasi Google tidak ditemukan.'], 400);
+            }
+
+            $googleUser = Socialite::driver('google')
+                ->stateless()
+                ->redirectUrl(env('GOOGLE_REDIRECT_URI'))
+                ->user();
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Google login gagal.'], 400);
+            return response()->json([
+                'success' => false, 
+                'message' => 'Google login gagal.',
+                'error' => $e->getMessage()
+            ], 400);
         }
 
         $user = User::where('google_id', $googleUser->getId())
@@ -251,5 +268,94 @@ public function setGoogleCookie(Request $request)
             'user'    => auth('api')->user()
         ]);
     }
+
+
+    // ↓ TAMBAHKAN DI SINI ↓
+
+    public function forgotPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json(['success' => true, 'message' => 'Jika email terdaftar, kode OTP akan dikirim.']);
+        }
+
+        $this->sendOtp($user);
+
+        return response()->json(['success' => true, 'message' => 'Kode OTP telah dikirim ke email kamu.']);
+    }
+
+    public function verifyForgotOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'otp'   => 'required|string|size:6',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'User tidak ditemukan.'], 404);
+        }
+
+        if ($user->otp_code !== $request->otp) {
+            return response()->json(['success' => false, 'message' => 'Kode OTP salah.'], 422);
+        }
+
+        if (now()->isAfter($user->otp_expires_at)) {
+            return response()->json(['success' => false, 'message' => 'Kode OTP sudah kadaluarsa.'], 422);
+        }
+
+        return response()->json(['success' => true, 'message' => 'OTP valid. Silakan reset password.']);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email'                 => 'required|email',
+            'otp'                   => 'required|string|size:6',
+            'password'              => 'required|string|min:8|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'User tidak ditemukan.'], 404);
+        }
+
+        if ($user->otp_code !== $request->otp) {
+            return response()->json(['success' => false, 'message' => 'Kode OTP salah.'], 422);
+        }
+
+        if (now()->isAfter($user->otp_expires_at)) {
+            return response()->json(['success' => false, 'message' => 'Kode OTP sudah kadaluarsa.'], 422);
+        }
+
+        $user->update([
+            'password'       => Hash::make($request->password),
+            'otp_code'       => null,
+            'otp_expires_at' => null,
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Password berhasil direset! Silakan login.']);
+    }
+
+} // ← closing brace class AuthController, jangan dihapus
     
-}
+

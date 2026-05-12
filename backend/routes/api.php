@@ -13,8 +13,12 @@ Route::prefix('auth')->group(function () {
     Route::get('/google/callback', [AuthController::class, 'googleCallback']);
 });
 
+use App\Http\Controllers\Api\NoteController;
+
 Route::middleware('jwt.auth')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
+    Route::apiResource('notes', NoteController::class);
+    Route::get('poll-reminders', [NoteController::class, 'poll']);
 });
 
 Route::post('/auth/forgot-password',        [AuthController::class, 'forgotPassword']);

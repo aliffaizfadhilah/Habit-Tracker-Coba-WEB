@@ -1,11 +1,17 @@
+# Habit Tracker - Docker Compose Configuration
+# Stack Version:
+# - Web Server: Nginx Alpine (Reverse Proxy)
+# - Backend: Laravel 13 (PHP 8.4)
+# - Frontend: React/TypeScript (Node.js 24)
+# - Database: MySQL 8.0
+
 services:
   nginx:
-    image: nginx:alpine
+    build:
+      context: .
+      dockerfile: frontend.Dockerfile
     ports:
-      - "8080:80"
-    volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
-      - ./frontend/dist:/var/www/frontend
+      - "5173:80" # Frontend access
     depends_on:
       - php
 
@@ -15,6 +21,15 @@ services:
       dockerfile: backend.Dockerfile
     volumes:
       - ./backend:/var/www/html
+    environment:
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-177449966877-6fpd740l4k952jpusb1hskjqc996g4bb.apps.googleusercontent.com}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-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}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI:-http://localhost:8000/api/auth/google/callback}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173}
+      - DB_HOST=mysql
+      - DB_PORT=3306
+    ports:
+      - "8000:8000" # Backend API access
     depends_on:
       - mysql
 
