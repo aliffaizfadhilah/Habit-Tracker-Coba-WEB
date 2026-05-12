@@ -1,87 +1,104 @@
-// ─── useForgotPassword — Custom Hook ──────────────────────────────────────────
-
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { authService } from '../services/AuthService'
 import { ForgotPasswordFormBuilder } from '../builders/ForgotPasswordFormBuilder'
 import type { ForgotPasswordStep } from '../types/auth.types'
+import type { PasswordFormConfig } from '../builders/ForgotPasswordFormBuilder'
+import { http } from '../services/HttpService'
 
-export function useForgotPassword() {
-  const navigate = useNavigate()
-  const [step, setStep] = useState<ForgotPasswordStep>('email')
-  const [email, setEmail] = useState('')
-  const [digits, setDigits] = useState<string[]>(Array(6).fill(''))
+export const useForgotPassword = () => {
+  const [step, setStep]           = useState<ForgotPasswordStep>('email')
+  const [email, setEmail]         = useState('')
+  const [digits, setDigits]       = useState<string[]>(Array(6).fill(''))
   const [passwords, setPasswords] = useState({ password: '', password_confirmation: '' })
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [error, setError]         = useState<string | null>(null)
+  const [success, setSuccess]     = useState<string | null>(null)
+  const [loading, setLoading]     = useState(false)
   const [countdown, setCountdown] = useState(0)
-  const [showPass, setShowPass] = useState(false)
+  const [showPass, setShowPass]   = useState(false)
 
   useEffect(() => {
     if (countdown <= 0) return
-    const t = setTimeout(() => setCountdown(c => c - 1), 1000)
-    return () => clearTimeout(t)
+    const timer = setTimeout(() => setCountdown(c => c - 1), 1000)
+    return () => clearTimeout(timer)
   }, [countdown])
 
-  const handleSendOtp = async (emailVal: string) => {
-    setError(''); setLoading(true)
+  const handleSendEmail = async (inputEmail: string) => {
+    setError(null)
+    setSuccess(null)
+    setLoading(true)
     try {
-      const data = await authService.forgotPassword(emailVal)
-      if (!data.success) { setError(data.message || 'Email tidak ditemukan.'); return }
-      setEmail(emailVal)
-      setStep('otp')
+      await http.post('/api/forgot-password', { email: inputEmail })
+      setEmail(inputEmail)
+      setSuccess('Kode OTP telah dikirim ke email kamu')
       setCountdown(60)
-      setSuccess('Kode OTP telah dikirim ke emailmu.')
-    } catch { setError('Terjadi kesalahan. Coba lagi.') }
-    finally { setLoading(false) }
+      setStep('otp')
+    } catch {
+      setError('Gagal mengirim OTP. Periksa email kamu.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleVerifyOtp = async (otp: string) => {
-    setError(''); setLoading(true)
+    setError(null)
+    setSuccess(null)
+    setLoading(true)
     try {
-      const data = await authService.verifyForgotOtp(email, otp)
-      if (!data.success) { setError(data.message || 'Kode OTP salah.'); return }
-      setStep('reset'); setSuccess(''); setError('')
-    } catch { setError('Terjadi kesalahan. Coba lagi.') }
-    finally { setLoading(false) }
+      await http.post('/api/verify-otp', { email, otp })
+      setSuccess('OTP berhasil diverifikasi')
+      setStep('reset')
+    } catch {
+      setError('Kode OTP salah atau sudah kadaluarsa.')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleResend = async () => {
-    setError(''); setLoading(true)
+  const handleResendOtp = async () => {
+    setError(null)
+    setSuccess(null)
+    setLoading(true)
     try {
-      const data = await authService.forgotPassword(email)
-      if (data.success) {
-        setSuccess('OTP baru telah dikirim.')
-        setCountdown(60)
-        setDigits(Array(6).fill(''))
-      } else { setError(data.message || 'Gagal mengirim ulang.') }
-    } catch { setError('Gagal mengirim ulang.') }
-    finally { setLoading(false) }
+      await http.post('/api/forgot-password', { email })
+      setSuccess('Kode OTP baru telah dikirim')
+      setCountdown(60)
+      setDigits(Array(6).fill(''))
+    } catch {
+      setError('Gagal mengirim ulang OTP.')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleResetPassword = async (password: string, confirmation: string) => {
-    if (password !== confirmation) { setError('Password tidak cocok.'); return }
-    setError(''); setLoading(true)
+  const handleResetPassword = async (password: string, password_confirmation: string) => {
+    setError(null)
+    setSuccess(null)
+    setLoading(true)
     try {
-      const data = await authService.resetPassword(email, digits.join(''), password, confirmation)
-      if (!data.success) { setError(data.message || 'Gagal reset password.'); return }
-      setSuccess('Password berhasil diubah!')
-      setTimeout(() => navigate('/login'), 1800)
-    } catch { setError('Terjadi kesalahan. Coba lagi.') }
-    finally { setLoading(false) }
+      await http.post('/api/reset-password', { email, password, password_confirmation })
+      setSuccess('Password berhasil diubah! Silakan login.')
+    } catch {
+      setError('Gagal mengubah password. Coba lagi.')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  // ── Builder digunakan untuk membentuk konfigurasi form ──
-  const formConfig = new ForgotPasswordFormBuilder()
-    .addEmailStep(handleSendOtp)
-    .addOtpStep(email, handleVerifyOtp, handleResend)
+  const formConfig: PasswordFormConfig = new ForgotPasswordFormBuilder()
+    .setMode('forgot')
+    .addEmailStep(handleSendEmail)
+    .addOtpStep(email, handleVerifyOtp, handleResendOtp)
     .addResetStep(handleResetPassword)
     .setCurrentStep(step)
     .build()
 
   return {
-    step, setStep, email, digits, setDigits, passwords, setPasswords,
-    error, success, loading, countdown, showPass, setShowPass, formConfig,
+    step, setStep,
+    email, setEmail,
+    digits, setDigits,
+    passwords, setPasswords,
+    error, success, loading,
+    countdown,
+    showPass, setShowPass,
+    formConfig,
   }
 }

@@ -1,5 +1,3 @@
-// ─── PasswordStrengthBar — Reusable Component ────────────────────────────────
-// Extracted karena dipakai di Register.tsx dan ForgotPassword.tsx
 
 import React from 'react'
 import { tokens } from '../../factories/tokens'

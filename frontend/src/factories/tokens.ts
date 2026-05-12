@@ -1,4 +1,4 @@
-// ─── Design Tokens (sesuai LandingPage) ───────────────────────────────────────
+
 export const tokens = {
   primary:      '#2b59ff',
   primaryDark:  '#1a3fd4',
@@ -16,9 +16,11 @@ export const tokens = {
   warning:      '#f97316',
   fontHeading:  "'Syne', sans-serif",
   fontBody:     "'DM Sans', sans-serif",
+  fontMono: "'JetBrains Mono', monospace",
   radius:       '12px',
   radiusSm:     '8px',
   radiusLg:     '16px',
   shadow:       '0 2px 12px rgba(0,0,0,0.06)',
   shadowMd:     '0 4px 24px rgba(43,89,255,0.12)',
+  shadowLg: '0 10px 25px rgba(0,0,0,0.15)',
 }

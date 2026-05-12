@@ -1,8 +1,7 @@
-// ─── ForgotPassword Page ───────────────────────────────────────────────────────
-// Menggunakan Builder Pattern untuk konfigurasi multi-step form
 
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
+
 import AuthLayout from '../../components/auth/AuthLayout'
 import { Alert, Button, Input } from '../../factories/ComponentFactory'
 import { tokens } from '../../factories/tokens'
@@ -10,7 +9,7 @@ import { OtpInputGroup } from '../../components/auth/OtpInputGroup'
 import { PasswordStrengthBar } from '../../components/auth/PasswordStrengthBar'
 import { useForgotPassword } from '../../hooks/useForgotPassword'
 import type { ForgotPasswordStep } from '../../types/auth.types'
-import type { EmailStepConfig, OtpStepConfig, ResetStepConfig } from '../../builders/ForgotPasswordFormBuilder'
+import type { EmailStepConfig, OtpStepConfig, ResetStepConfig, AnyStepConfig } from '../../builders/ForgotPasswordFormBuilder'
 
 const STEPS: ForgotPasswordStep[] = ['email', 'otp', 'reset']
 
@@ -20,12 +19,10 @@ export default function ForgotPassword() {
     error, success, loading, countdown, showPass, setShowPass, formConfig,
   } = useForgotPassword()
 
-// Local email state for the email step form
 const [localEmail, setLocalEmail] = useState('')
-
-const emailStep = formConfig.steps.find(s => s.id === 'email') as EmailStepConfig | undefined
-const otpStep   = formConfig.steps.find(s => s.id === 'otp')   as OtpStepConfig   | undefined
-const resetStep = formConfig.steps.find(s => s.id === 'reset') as ResetStepConfig  | undefined
+const emailStep = formConfig.steps.find((s: AnyStepConfig) => s.id === 'email') as EmailStepConfig | undefined
+const otpStep   = formConfig.steps.find((s: AnyStepConfig) => s.id === 'otp')   as OtpStepConfig   | undefined
+const resetStep = formConfig.steps.find((s: AnyStepConfig) => s.id === 'reset') as ResetStepConfig  | undefined
 
 const currentStepIndex = STEPS.indexOf(step)
 
@@ -126,7 +123,7 @@ const currentStepIndex = STEPS.indexOf(step)
                 label="Password Baru"
                 type={showPass ? 'text' : 'password'}
                 value={passwords.password}
-                onChange={e => setPasswords(p => ({ ...p, password: e.target.value }))}
+                onChange={e => setPasswords((p: typeof passwords) => ({ ...p, password: e.target.value }))}
                 required
                 placeholder="Min. 8 karakter"
                 autoFocus
@@ -148,7 +145,7 @@ const currentStepIndex = STEPS.indexOf(step)
               label="Konfirmasi Password Baru"
               type={showPass ? 'text' : 'password'}
               value={passwords.password_confirmation}
-              onChange={e => setPasswords(p => ({ ...p, password_confirmation: e.target.value }))}
+             onChange={e => setPasswords((p: typeof passwords) => ({ ...p, password_confirmation: e.target.value }))}
               required
               placeholder="Ulangi password baru"
             />

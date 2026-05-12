@@ -1,6 +1,3 @@
-// ─── HttpService — Singleton Pattern ──────────────────────────────────────────
-// Satu instance HTTP client digunakan di seluruh aplikasi.
-// Semua konfigurasi headers & credentials terpusat di sini.
 
 class HttpService {
   private static instance: HttpService
@@ -28,6 +25,23 @@ class HttpService {
   async get<T = unknown>(url: string): Promise<T> {
     const res = await fetch(url, {
       method: 'GET',
+      headers: this.baseHeaders,
+      credentials: 'include',
+    })
+    return res.json() as Promise<T>
+  }
+  async put<T = unknown>(url: string, body: unknown): Promise<T> {
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: this.baseHeaders,
+      credentials: 'include',
+      body: JSON.stringify(body),
+    })
+    return res.json() as Promise<T>
+  }
+  async delete<T = unknown>(url: string): Promise<T> {
+    const res = await fetch(url, {
+      method: 'DELETE',
       headers: this.baseHeaders,
       credentials: 'include',
     })

@@ -1,13 +1,8 @@
-// ─── ComponentFactory — Factory Pattern ───────────────────────────────────────
-// Satu pintu pembuatan komponen UI. Anggota tim cukup memanggil factory
-// tanpa perlu tahu detail styling. Perubahan desain cukup di satu tempat.
 
 import React from 'react'
 import { tokens } from './tokens'
 export { tokens } // re-export supaya file lain tidak perlu ubah import
 
-
-// ─── Button ───────────────────────────────────────────────────────────────────
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost' | 'google' | 'danger'
   size?: 'sm' | 'md' | 'lg'
@@ -60,7 +55,6 @@ export const Button: React.FC<ButtonProps> = ({
   )
 }
 
-// ─── Input ────────────────────────────────────────────────────────────────────
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string
   error?: string
@@ -108,7 +102,6 @@ export const Input: React.FC<InputProps> = ({ label, error, rightElement, style,
   </div>
 )
 
-// ─── Alert ────────────────────────────────────────────────────────────────────
 export interface AlertProps {
   type: 'error' | 'success' | 'info'
   message: string
@@ -134,7 +127,6 @@ export const Alert: React.FC<AlertProps> = ({ type, message }) => {
   )
 }
 
-// ─── Card ─────────────────────────────────────────────────────────────────────
 export interface CardProps {
   children: React.ReactNode
   style?: React.CSSProperties
@@ -151,7 +143,6 @@ export const Card: React.FC<CardProps> = ({ children, style, padding = '28px 32p
   </div>
 )
 
-// ─── Badge ────────────────────────────────────────────────────────────────────
 export interface BadgeProps {
   children: React.ReactNode
   color?: 'blue' | 'green' | 'orange' | 'red' | 'gray'
@@ -175,8 +166,6 @@ export const Badge: React.FC<BadgeProps> = ({ children, color = 'blue' }) => {
     }}>{children}</span>
   )
 }
-
-// ─── Divider ──────────────────────────────────────────────────────────────────
 export const Divider: React.FC<{ label?: string }> = ({ label }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '4px 0' }}>
     <div style={{ flex: 1, height: 1, background: tokens.border }} />
@@ -185,7 +174,6 @@ export const Divider: React.FC<{ label?: string }> = ({ label }) => (
   </div>
 )
 
-// ─── Google SVG ───────────────────────────────────────────────────────────────
 export const GoogleIcon: React.FC = () => (
   <svg width="18" height="18" viewBox="0 0 24 24">
     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -195,7 +183,6 @@ export const GoogleIcon: React.FC = () => (
   </svg>
 )
 
-// ─── Global Styles ────────────────────────────────────────────────────────────
 export const GlobalStyles: React.FC = () => (
   <style>{`
     @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@600;700;800&display=swap');

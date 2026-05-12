@@ -1,4 +1,3 @@
-// ─── AuthLayout — Light Theme (sesuai design token Landing Page) ──────────────
 
 import { type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'

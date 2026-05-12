@@ -239,7 +239,7 @@ export default function LandingPage() {
         <button
           className="mobile-menu-btn"
           style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer', flexDirection: 'column', gap: 5, padding: 4 }}
-          onClick={() => setMobileMenuOpen(v => !v)}
+          onClick={() => setMobileMenuOpen((v: boolean) => !v)}
         >
           {[0,1,2].map(i => <div key={i} style={{ width: 24, height: 2, background: '#1a1a2e', borderRadius: 2 }} />)}
         </button>
@@ -423,15 +423,14 @@ export default function LandingPage() {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: 24 }} className="services-grid">
-            {[
-             
+            {([
               {
                 icon: '🏢', color: '#fff7ed', title: 'Personal Plan',
-                desc: 'ICocok untuk individu yang ingin membangun kebiasaan pribadi. Gratis selamanya dengan akses ke semua fitur dasar.',
+                desc: 'Cocok untuk individu yang ingin membangun kebiasaan pribadi. Gratis selamanya dengan akses ke semua fitur dasar.',
                 bullets: ['Unlimited habit tracking', 'Daily reminders', 'Progress analytics', 'Share & export'],
+                badge: undefined as string | undefined,
               },
-              
-            ].map((s, i) => (
+            ] as { icon: string; color: string; title: string; desc: string; bullets: string[]; badge?: string }[]).map((s, i) => (
               <div
                 key={i}
                 id={`svc-${i}`}

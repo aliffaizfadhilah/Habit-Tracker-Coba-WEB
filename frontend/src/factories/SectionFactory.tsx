@@ -1,12 +1,8 @@
-// ─── SectionFactory — Factory Pattern ─────────────────────────────────────────
-// Factory untuk section-level components: PageHeader, StatCard, HabitCard, dll.
-// Digunakan di Dashboard dan halaman fitur habit.
 
 import React from 'react'
 import { Badge } from './ComponentFactory'
 import { tokens } from './tokens'
 
-// ─── PageHeader ───────────────────────────────────────────────────────────────
 export interface PageHeaderProps {
   title: string
   subtitle?: string
@@ -33,7 +29,6 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ title, subtitle, action 
   </div>
 )
 
-// ─── StatCard ─────────────────────────────────────────────────────────────────
 export interface StatCardProps {
   label: string
   value: string | number
@@ -65,7 +60,6 @@ export const StatCard: React.FC<StatCardProps> = ({ label, value, icon, color = 
   )
 }
 
-// ─── HabitCard ────────────────────────────────────────────────────────────────
 export interface HabitCardProps {
   name: string
   category: string
@@ -151,8 +145,6 @@ const ActionButton: React.FC<{ icon: string; onClick: () => void; title: string;
     display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s',
   }}>{icon}</button>
 )
-
-// ─── EmptyState ───────────────────────────────────────────────────────────────
 export interface EmptyStateProps {
   icon: string
   title: string
@@ -171,8 +163,6 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ icon, title, description
     {action}
   </div>
 )
-
-// ─── ModalOverlay ─────────────────────────────────────────────────────────────
 export const ModalOverlay: React.FC<{ children: React.ReactNode; onClose: () => void }> = ({ children, onClose }) => (
   <div onClick={onClose} style={{
     position: 'fixed', inset: 0, background: 'rgba(26,26,46,0.5)',

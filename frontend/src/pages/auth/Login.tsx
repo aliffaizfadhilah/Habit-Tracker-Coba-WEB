@@ -1,5 +1,3 @@
-// ─── Login Page ────────────────────────────────────────────────────────────────
-// UI only — semua logika ada di useLogin hook, komponen via ComponentFactory
 
 import { Link } from 'react-router-dom'
 import AuthLayout from '../../components/auth/AuthLayout'

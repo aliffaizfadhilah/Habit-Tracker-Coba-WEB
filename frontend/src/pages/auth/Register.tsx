@@ -1,4 +1,3 @@
-// ─── Register Page ─────────────────────────────────────────────────────────────
 
 import { Link } from 'react-router-dom'
 import AuthLayout from '../../components/auth/AuthLayout'

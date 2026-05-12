@@ -1,4 +1,3 @@
-// ─── OtpVerify Page ────────────────────────────────────────────────────────────
 
 import { useLocation, useNavigate } from 'react-router-dom'
 import AuthLayout from '../../components/auth/AuthLayout'

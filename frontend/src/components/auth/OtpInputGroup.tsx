@@ -1,5 +1,3 @@
-// ─── OtpInputGroup — Reusable Component ──────────────────────────────────────
-// Extracted karena duplikat di OtpVerify.tsx dan ForgotPassword.tsx
 
 import React, { useRef } from 'react'
 import { tokens } from '../../factories/tokens'

@@ -1,5 +1,3 @@
-// ─── AuthService — Singleton Pattern ──────────────────────────────────────────
-// Semua endpoint /api/auth/* terpusat. Menggunakan HttpService singleton.
 
 import { http } from './HttpService'
 import type {
