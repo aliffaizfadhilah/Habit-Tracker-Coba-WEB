@@ -1,35 +1,47 @@
+
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import Dashboard      from './Presentasion/pages/Dashboard'
-import Login          from './Presentasion/pages/auth/Login'
-import Register       from './Presentasion/pages/auth/Register'
-import ForgotPassword from './Presentasion/pages/auth/ForgotPassword'
-import OtpVerify      from './Presentasion/pages/auth/OtpVerify'
-import LandingPage    from './Presentasion/pages/LandingPage'
-import HabitPage      from './Presentasion/pages/HabitPage'
-import ProfilePage    from './Presentasion/pages/ProfilePage'
-import PostinganPage  from './Presentasion/pages/PostinganPage'
-import Reminder       from './Presentasion/pages/Reminder'
-import ProtectedRoute from './Presentasion/components/ProtectedRoute'
+import ProtectedRoute  from './components/ProtectedRoute'
+import Dashboard       from './pages/Dashboard'
+import HabitPage       from './pages/HabitPage'
+import ProfilePage     from './pages/ProfilePage'
+import ReminderPage    from './pages/Reminder'
+import LandingPage     from './pages/LandingPage'
+import Login           from './pages/auth/Login'
+import Register        from './pages/auth/Register'
+import OtpVerify       from './pages/auth/OtpVerify'
+import AuthCallback    from './pages/auth/AuthCallback'
+import ForgotPassword  from './pages/auth/ForgotPassword'
+import PostinganPage from './pages/PostinganPage'
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public */}
+        {/* Public routes */}
         <Route path="/"                element={<LandingPage />} />
         <Route path="/login"           element={<Login />} />
         <Route path="/register"        element={<Register />} />
+        <Route path="/otp"             element={<OtpVerify />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/otp-verify"      element={<OtpVerify />} />
+        <Route path="/auth/callback"   element={<AuthCallback />} />
 
-        {/* Protected */}
-        <Route path="/dashboard"  element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/habits"     element={<ProtectedRoute><HabitPage /></ProtectedRoute>} />
-        <Route path="/profile"    element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-        <Route path="/postingan"  element={<ProtectedRoute><PostinganPage /></ProtectedRoute>} />
-        <Route path="/reminder"   element={<ProtectedRoute><Reminder /></ProtectedRoute>} />
+        {/* Protected routes */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute><Dashboard /></ProtectedRoute>
+        } />
+        <Route path="/kelola-habit" element={
+          <ProtectedRoute><HabitPage /></ProtectedRoute>
+        } />
+        <Route path="/reminder" element={
+          <ProtectedRoute><ReminderPage /></ProtectedRoute>
+        } />
+        <Route path="/profile" element={
+          <ProtectedRoute><ProfilePage /></ProtectedRoute>
+        } />
 
-        {/* Fallback */}
+        { <Route path="/postingan" element={<ProtectedRoute><PostinganPage /></ProtectedRoute>} 
+        /> }
+
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>

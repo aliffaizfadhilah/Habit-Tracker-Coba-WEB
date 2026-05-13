@@ -8,13 +8,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Activity extends Model
 {
-    protected $table      = 'habit_activities';
     protected $primaryKey = 'id_activity';
 
-    protected $fillable = [
-        'id_habit',
-        'name',
-    ];
+    protected $fillable = ['id_habit', 'name'];
 
     public function habit(): BelongsTo
     {

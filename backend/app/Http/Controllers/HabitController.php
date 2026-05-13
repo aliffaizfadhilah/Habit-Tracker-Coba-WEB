@@ -69,28 +69,6 @@ class HabitController extends Controller
         ], 201);
     }
 
-    public function show(Request $request, int $id): JsonResponse
-    {
-        $username = $request->user()->username;
-
-        $habit = Habit::where('id_habit', $id)
-            ->where('username', $username)
-            ->where('status', 1)
-            ->first();
-
-        if (!$habit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Habit tidak ditemukan.',
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'data'    => $this->formatHabit($habit),
-        ]);
-    }
-
     public function update(Request $request, int $id): JsonResponse
     {
         $username = $request->user()->username;
@@ -183,10 +161,6 @@ class HabitController extends Controller
             'progress_percent'     => $habit->progress_percent,
             'total_period_days'    => $habit->total_period_days,
             'total_completed_days' => $habit->total_completed_days,
-            'checked_today'        => $habit->activityLogs()
-                ->whereDate('date', today())
-                ->where('status', 1)
-                ->exists(),
         ];
     }
 }

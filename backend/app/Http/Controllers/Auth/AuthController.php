@@ -15,19 +15,20 @@ use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
-    private function jwtCookie(string $token)
-    {
-        return cookie(
-            'jwt_token', $token,
-            60 * 24,
-            '/',
-            null,
-            false,
-            true,
-            false,
-            'Lax'
-        );
-    }
+private function jwtCookie(string $token)
+{
+    $isProduction = app()->environment('production');
+    return cookie(
+        'jwt_token', $token,
+        60 * 24,
+        '/',
+        null,
+        $isProduction,
+        true,
+        false,
+        $isProduction ? 'None' : 'Lax'
+    );
+}
 
     public function register(Request $request)
     {
@@ -91,7 +92,6 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Login berhasil!',
-            'token'   => $token,
             'user'    => $user,
         ])->withCookie($this->jwtCookie($token));
     }
@@ -149,7 +149,6 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Email berhasil diverifikasi!',
-            'token'   => $token,
             'user'    => $user,
         ])->withCookie($this->jwtCookie($token));
     }
@@ -182,16 +181,33 @@ class AuthController extends Controller
     public function googleRedirect()
     {
         return response()->json([
-            'url' => Socialite::driver('google')->stateless()->redirect()->getTargetUrl()
+            'url' => Socialite::driver('google')
+                ->stateless()
+                ->redirectUrl(env('GOOGLE_REDIRECT_URI'))
+                ->redirect()
+                ->getTargetUrl()
         ]);
     }
 
     public function googleCallback(Request $request)
     {
+        \Illuminate\Support\Facades\Log::info('Google Callback Full URL: ' . $request->fullUrl());
         try {
-            $googleUser = Socialite::driver('google')->stateless()->user();
+            $code = $request->input('code');
+            if (!$code) {
+                return response()->json(['success' => false, 'message' => 'Kode otorisasi Google tidak ditemukan.'], 400);
+            }
+
+            $googleUser = Socialite::driver('google')
+                ->stateless()
+                ->redirectUrl(env('GOOGLE_REDIRECT_URI'))
+                ->user();
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Google login gagal.'], 400);
+            return response()->json([
+                'success' => false, 
+                'message' => 'Google login gagal.',
+                'error' => $e->getMessage()
+            ], 400);
         }
 
         $user = User::where('google_id', $googleUser->getId())
@@ -217,9 +233,9 @@ class AuthController extends Controller
 
          $token = JWTAuth::fromUser($user);
 
-    // ✅ Kirim token sebagai query param
+    
     return redirect(env('FRONTEND_URL', 'http://localhost:5173') . '/auth/callback?token=' . $token);
-    // Hapus ->withCookie(...) karena kita pakai query param
+    
 }
 public function setGoogleCookie(Request $request)
 {
@@ -253,6 +269,91 @@ public function setGoogleCookie(Request $request)
             'user'    => auth('api')->user()
         ]);
     }
+
+    public function forgotPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json(['success' => true, 'message' => 'Jika email terdaftar, kode OTP akan dikirim.']);
+        }
+
+        $this->sendOtp($user);
+
+        return response()->json(['success' => true, 'message' => 'Kode OTP telah dikirim ke email kamu.']);
+    }
+
+    public function verifyForgotOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'otp'   => 'required|string|size:6',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'User tidak ditemukan.'], 404);
+        }
+
+        if ($user->otp_code !== $request->otp) {
+            return response()->json(['success' => false, 'message' => 'Kode OTP salah.'], 422);
+        }
+
+        if (now()->isAfter($user->otp_expires_at)) {
+            return response()->json(['success' => false, 'message' => 'Kode OTP sudah kadaluarsa.'], 422);
+        }
+
+        return response()->json(['success' => true, 'message' => 'OTP valid. Silakan reset password.']);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email'                 => 'required|email',
+            'otp'                   => 'required|string|size:6',
+            'password'              => 'required|string|min:8|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'User tidak ditemukan.'], 404);
+        }
+
+        if ($user->otp_code !== $request->otp) {
+            return response()->json(['success' => false, 'message' => 'Kode OTP salah.'], 422);
+        }
+
+        if (now()->isAfter($user->otp_expires_at)) {
+            return response()->json(['success' => false, 'message' => 'Kode OTP sudah kadaluarsa.'], 422);
+        }
+
+        $user->update([
+            'password'       => Hash::make($request->password),
+            'otp_code'       => null,
+            'otp_expires_at' => null,
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Password berhasil direset! Silakan login.']);
+    }
+
+} 
     
-}
 

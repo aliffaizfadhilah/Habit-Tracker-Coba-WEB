@@ -7,14 +7,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ActivityLog extends Model
 {
-    protected $fillable = [
-        'id_activity',
-        'date',
-        'status',
-    ];
+    protected $primaryKey = 'id_activitylog';
+
+    protected $fillable = ['id_activity', 'date', 'status'];
 
     protected $casts = [
-        'date' => 'date',
+        'date'   => 'date',
+        'status' => 'boolean',
     ];
 
     public function activity(): BelongsTo
