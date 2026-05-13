@@ -22,10 +22,10 @@ class AuthController extends Controller
             60 * 24,
             '/',
             null,
-            true,
+            false,
             true,
             false,
-            'None'
+            'Lax'
         );
     }
 
@@ -91,6 +91,7 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Login berhasil!',
+            'token'   => $token,
             'user'    => $user,
         ])->withCookie($this->jwtCookie($token));
     }
@@ -148,6 +149,7 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Email berhasil diverifikasi!',
+            'token'   => $token,
             'user'    => $user,
         ])->withCookie($this->jwtCookie($token));
     }
@@ -253,3 +255,4 @@ public function setGoogleCookie(Request $request)
     }
     
 }
+

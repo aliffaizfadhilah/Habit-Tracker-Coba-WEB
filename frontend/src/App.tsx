@@ -1,28 +1,36 @@
-// ─── App.tsx ───────────────────────────────────────────────────────────────────
-
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import Dashboard     from './pages/Dashboard'
-import Login         from './pages/auth/Login'
-import Register      from './pages/auth/Register'
-import OtpVerify     from './pages/auth/OtpVerify'
-import AuthCallback  from './pages/auth/AuthCallback'
-import ForgotPassword from './pages/auth/ForgotPassword'
-
-// LandingPage tetap di posisi semula (tidak diubah strukturnya)
-import LandingPage   from './pages/LandingPage'
+import Dashboard      from './Presentasion/pages/Dashboard'
+import Login          from './Presentasion/pages/auth/Login'
+import Register       from './Presentasion/pages/auth/Register'
+import ForgotPassword from './Presentasion/pages/auth/ForgotPassword'
+import OtpVerify      from './Presentasion/pages/auth/OtpVerify'
+import LandingPage    from './Presentasion/pages/LandingPage'
+import HabitPage      from './Presentasion/pages/HabitPage'
+import ProfilePage    from './Presentasion/pages/ProfilePage'
+import PostinganPage  from './Presentasion/pages/PostinganPage'
+import Reminder       from './Presentasion/pages/Reminder'
+import ProtectedRoute from './Presentasion/components/ProtectedRoute'
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public */}
         <Route path="/"                element={<LandingPage />} />
         <Route path="/login"           element={<Login />} />
         <Route path="/register"        element={<Register />} />
-        <Route path="/otp"             element={<OtpVerify />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/auth/callback"   element={<AuthCallback />} />
-        <Route path="/dashboard"       element={<Dashboard />} />
-        <Route path="*"                element={<Navigate to="/" />} />
+        <Route path="/otp-verify"      element={<OtpVerify />} />
+
+        {/* Protected */}
+        <Route path="/dashboard"  element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/habits"     element={<ProtectedRoute><HabitPage /></ProtectedRoute>} />
+        <Route path="/profile"    element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="/postingan"  element={<ProtectedRoute><PostinganPage /></ProtectedRoute>} />
+        <Route path="/reminder"   element={<ProtectedRoute><Reminder /></ProtectedRoute>} />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
   )

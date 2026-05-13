@@ -11,6 +11,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->encryptCookies(except: ['jwt_token']);
         $middleware->append(\App\Http\Middleware\TrackVisitor::class);
         $middleware->alias([
             'jwt.auth' => \App\Http\Middleware\JWTMiddleware::class,
