@@ -3,7 +3,6 @@ import { Button, Input, Alert, Card, tokens } from '../../BusinessLogic/factorie
 import { PageHeader, ModalOverlay } from '../../BusinessLogic/factories/SectionFactory'
 import { useProfile } from '../../BusinessLogic/hooks/useProfile'
 import { useAuth } from '../../BusinessLogic/hooks/useAuth'
-import { ForgotPasswordFormBuilder } from '../../BusinessLogic/builders/ForgotPasswordFormBuilder'
 import { Sidebar, LogoutModal, useSidebar } from './shared/sideBar'
 
 interface ChangePasswordModalProps {

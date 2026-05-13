@@ -1,3 +1,5 @@
+const PUBLIC_PATHS = ['/', '/login', '/register', '/forgot-password', '/otp-verify']
+
 class HttpService {
   private static instance: HttpService
   private constructor() {}
@@ -20,6 +22,23 @@ class HttpService {
     return headers
   }
 
+  private handleUnauthorized(): void {
+    localStorage.removeItem('jwt_token')
+    if (!PUBLIC_PATHS.includes(window.location.pathname)) {
+      window.location.href = '/login'
+    }
+  }
+
+  private async parseResponse<T>(res: Response): Promise<T> {
+    if (res.status === 401) {
+      this.handleUnauthorized()
+    }
+    const data = await res.json() as any
+    if (data?.token) localStorage.setItem('jwt_token', data.token)
+    if (data?.accessToken) localStorage.setItem('jwt_token', data.accessToken)
+    return data as T
+  }
+
   async post<T = unknown>(url: string, body: unknown): Promise<T> {
     const res = await fetch(url, {
       method: 'POST',
@@ -27,10 +46,7 @@ class HttpService {
       credentials: 'include',
       body: JSON.stringify(body),
     })
-    const data = await res.json() as any
-    if (data?.token) localStorage.setItem('jwt_token', data.token)
-    if (data?.accessToken) localStorage.setItem('jwt_token', data.accessToken)
-    return data as T
+    return this.parseResponse<T>(res)
   }
 
   async get<T = unknown>(url: string): Promise<T> {
@@ -39,7 +55,7 @@ class HttpService {
       headers: this.getHeaders(),
       credentials: 'include',
     })
-    return res.json() as Promise<T>
+    return this.parseResponse<T>(res)
   }
 
   async put<T = unknown>(url: string, body: unknown): Promise<T> {
@@ -49,7 +65,7 @@ class HttpService {
       credentials: 'include',
       body: JSON.stringify(body),
     })
-    return res.json() as Promise<T>
+    return this.parseResponse<T>(res)
   }
 
   async delete<T = unknown>(url: string): Promise<T> {
@@ -58,7 +74,7 @@ class HttpService {
       headers: this.getHeaders(),
       credentials: 'include',
     })
-    return res.json() as Promise<T>
+    return this.parseResponse<T>(res)
   }
 }
 

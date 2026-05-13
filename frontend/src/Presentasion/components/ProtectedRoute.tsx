@@ -1,4 +1,3 @@
-
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../../BusinessLogic/hooks/useAuth'
 import { tokens } from '../../BusinessLogic/factories/tokens'
@@ -25,10 +24,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
     )
   }
 
-  // Belum login → redirect ke /login
-  if (!isLoggedIn) {
-    return <Navigate to="/login" replace />
-  }
+  if (!isLoggedIn) return <Navigate to="/login" replace />
 
   return <>{children}</>
 }

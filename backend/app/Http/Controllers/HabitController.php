@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Habit;
+use App\Services\StreakBuilderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -139,10 +140,21 @@ class HabitController extends Controller
             'total_period_days' => $periodDays,
         ]);
 
+        $updated = $habit->fresh();
+
+        app(StreakBuilderService::class)
+            ->loadActivityLogs($updated)
+            ->calculatePeriodDays($updated)
+            ->calculateCurrentStreak()
+            ->calculateLongestStreak()
+            ->calculateProgress()
+            ->saveToHabit($updated)
+            ->build();
+
         return response()->json([
             'success' => true,
             'message' => 'Habit berhasil diperbarui!',
-            'data'    => $this->formatHabit($habit->fresh()),
+            'data'    => $this->formatHabit($updated->fresh()),
         ]);
     }
 

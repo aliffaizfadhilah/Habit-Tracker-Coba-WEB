@@ -79,7 +79,7 @@ export function useProfile() {
   }): Promise<{ success: boolean; message: string }> => {
     try {
       return await http.post<{ success: boolean; message: string }>(
-        '/api/profile/change-password/reset', payload
+        '/api/profile/change-password', payload
       )
     } catch {
       return { success: false, message: 'Gagal mengganti password.' }

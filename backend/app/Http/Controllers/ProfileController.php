@@ -69,7 +69,7 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function requestChangePassword(Request $request): JsonResponse
+    public function requestChangePasswordOtp(Request $request): JsonResponse
     {
         $user = $request->user();
 

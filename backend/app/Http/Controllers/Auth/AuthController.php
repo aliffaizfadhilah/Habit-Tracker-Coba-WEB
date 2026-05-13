@@ -236,6 +236,93 @@ public function setGoogleCookie(Request $request)
         'user'    => $user,
     ])->withCookie($this->jwtCookie($token));
 }
+    public function forgotPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Email tidak ditemukan.'], 404);
+        }
+
+        $this->sendOtp($user);
+
+        return response()->json(['success' => true, 'message' => 'Kode OTP telah dikirim ke emailmu.']);
+    }
+
+    public function verifyForgotOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'otp'   => 'required|string|size:6',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Email tidak ditemukan.'], 404);
+        }
+
+        if ($user->otp_code !== $request->otp) {
+            return response()->json(['success' => false, 'message' => 'Kode OTP salah.'], 422);
+        }
+
+        if (now()->isAfter($user->otp_expires_at)) {
+            return response()->json(['success' => false, 'message' => 'Kode OTP sudah kadaluarsa.'], 422);
+        }
+
+        return response()->json(['success' => true, 'message' => 'OTP valid. Silakan buat password baru.']);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email'                 => 'required|email',
+            'otp'                   => 'required|string|size:6',
+            'password'              => 'required|string|min:8|confirmed',
+        ], [
+            'password.min'       => 'Password minimal 8 karakter.',
+            'password.confirmed' => 'Konfirmasi password tidak cocok.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Email tidak ditemukan.'], 404);
+        }
+
+        if ($user->otp_code !== $request->otp) {
+            return response()->json(['success' => false, 'message' => 'Kode OTP tidak valid.'], 422);
+        }
+
+        if (now()->isAfter($user->otp_expires_at)) {
+            return response()->json(['success' => false, 'message' => 'Kode OTP sudah kadaluarsa.'], 422);
+        }
+
+        $user->update([
+            'password'       => Hash::make($request->password),
+            'otp_code'       => null,
+            'otp_expires_at' => null,
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Password berhasil diubah!']);
+    }
+
     public function logout()
     {
         auth('api')->logout();

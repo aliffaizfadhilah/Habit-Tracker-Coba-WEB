@@ -105,7 +105,7 @@ export default function HabitPage() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: tokens.bg, fontFamily: tokens.fontBody }}>
-      <Sidebar open={sidebarOpen} isMobile={isMobile} currentPageId="kelola-habit"
+      <Sidebar open={sidebarOpen} isMobile={isMobile} currentPageId="habits"
         displayUser={displayUser} onClose={() => setSidebarOpen(false)} onLogout={() => setShowLogoutConfirm(true)} />
 
       <main style={{ flex: 1, overflowY: 'auto', minWidth: 0, padding: isMobile ? '20px 16px' : '32px 40px' }}>

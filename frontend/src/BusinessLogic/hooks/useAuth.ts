@@ -38,6 +38,7 @@ export function useAuth() {
 
   const logout = async () => {
     await http.post('/api/auth/logout', {})
+    localStorage.removeItem('jwt_token')
     setState({ user: null, loading: false, isLoggedIn: false })
     window.location.href = '/login'
   }

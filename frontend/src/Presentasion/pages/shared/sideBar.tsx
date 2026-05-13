@@ -19,7 +19,7 @@ export { useSidebar } from '../../../BusinessLogic/hooks/useSidebar'
 const NAV_ITEMS = [
   { id: 'dashboard',  icon: '🏠', label: 'Dashboard',      path: '/dashboard'  },
   { id: 'habits',     icon: '✅', label: 'Semua Habit',     path: '/habits'     },
-  { id: 'streak',     icon: '🔥', label: 'Streak',          path: '/streak'     },
+  { id: 'streak',     icon: '🔥', label: 'Streak',          path: '/dashboard'  },
   { id: 'reminder',   icon: '🔔', label: 'Reminder',        path: '/reminder'   },
   { id: 'postingan',  icon: '🖼',  label: 'Wall Pribadi',   path: '/postingan'  },
   { id: 'profile',    icon: '👤', label: 'Profil',          path: '/profile'    },

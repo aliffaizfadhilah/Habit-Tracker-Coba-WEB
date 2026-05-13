@@ -298,7 +298,7 @@ export default function Dashboard() {
               {!isMobile && <div style={{ fontSize: 13, color: tokens.textMuted, marginTop: 2 }}>{dateStr} — Semangat hari ini!</div>}
             </div>
           </div>
-          <button onClick={() => navigate('/kelola-habit')} style={{
+          <button onClick={() => navigate('/habits')} style={{
             padding: '9px 20px', background: tokens.primary, color: tokens.white,
             border: 'none', borderRadius: 10, fontFamily: tokens.fontBody,
             fontSize: 13, fontWeight: 700, cursor: 'pointer',
@@ -420,7 +420,7 @@ export default function Dashboard() {
               <h2 style={{ fontFamily: tokens.fontHeading, fontSize: 18, fontWeight: 700, color: tokens.text, margin: 0 }}>Streak & Progress Habitmu</h2>
               <Badge color="green">{summary.total_habits} habit</Badge>
             </div>
-            <button onClick={() => navigate('/kelola-habit')} style={{
+            <button onClick={() => navigate('/habits')} style={{
               padding: '8px 18px', background: tokens.primary, color: tokens.white,
               border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700,
               cursor: 'pointer', boxShadow: tokens.shadowMd,
@@ -452,7 +452,7 @@ export default function Dashboard() {
             <EmptyState icon="🌱" title="Belum ada habit"
               description="Tambahkan habit pertamamu untuk mulai melacak streak dan progress!"
               action={
-                <button onClick={() => navigate('/kelola-habit')} style={{ padding: '8px 18px', background: tokens.primary, color: tokens.white, border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                <button onClick={() => navigate('/habits')} style={{ padding: '8px 18px', background: tokens.primary, color: tokens.white, border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                   + Tambah Habit
                 </button>
               }

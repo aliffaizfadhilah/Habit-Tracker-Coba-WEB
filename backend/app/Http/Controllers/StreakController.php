@@ -45,8 +45,9 @@ class StreakController extends Controller
                 ->build();                      // Ambil hasil
 
         $checkedToday = $habit->activityLogs()
-        ->whereDate('date', today())
-        ->exists();
+            ->whereDate('date', today())
+            ->where('status', 1)
+            ->exists();
 
             return [
                 'id_habit'             => $habit->id_habit,
@@ -78,30 +79,69 @@ class StreakController extends Controller
         ]);
     }
 
-   public function show(Request $request, int $id): JsonResponse
-{
-    $username = $request->user()->username;
+    public function summary(Request $request): JsonResponse
+    {
+        $username = $request->user()->username;
 
-    $habit = Habit::where('id_habit', $id)
-        ->where('username', $username)
-        ->firstOrFail();
+        $habits = Habit::where('username', $username)
+            ->where('status', 1)
+            ->get();
 
-    $stats = app(StreakBuilderService::class)
-        ->loadActivityLogs($habit)
-        ->calculatePeriodDays($habit)
-        ->calculateCurrentStreak()
-        ->calculateLongestStreak()
-        ->calculateProgress()
-        ->saveToHabit($habit)
-        ->build();
+        if ($habits->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'data'    => [
+                    'total_habits'         => 0,
+                    'total_current_streak' => 0,
+                    'longest_streak'       => 0,
+                    'avg_progress'         => 0,
+                ],
+            ]);
+        }
 
-    $checkedToday = $habit->activityLogs()
-    ->whereDate('date', today())
-    ->exists();
+        $results = $habits->map(fn (Habit $habit) => [
+            'current_streak'   => $habit->current_streak,
+            'longest_streak'   => $habit->longest_streak,
+            'progress_percent' => $habit->progress_percent,
+        ]);
 
-    return response()->json([
-        'success' => true,
-        'data'    => array_merge(['id_habit' => $habit->id_habit, 'title' => $habit->title,'checked_today' => $checkedToday], $stats),
-    ]);
-}
+        return response()->json([
+            'success' => true,
+            'data'    => [
+                'total_habits'         => $results->count(),
+                'total_current_streak' => $results->sum('current_streak'),
+                'longest_streak'       => $results->max('longest_streak'),
+                'avg_progress'         => round($results->avg('progress_percent'), 2),
+            ],
+        ]);
+    }
+
+    public function show(Request $request, int $id): JsonResponse
+    {
+        $username = $request->user()->username;
+
+        $habit = Habit::where('id_habit', $id)
+            ->where('username', $username)
+            ->where('status', 1)
+            ->firstOrFail();
+
+        $stats = app(StreakBuilderService::class)
+            ->loadActivityLogs($habit)
+            ->calculatePeriodDays($habit)
+            ->calculateCurrentStreak()
+            ->calculateLongestStreak()
+            ->calculateProgress()
+            ->saveToHabit($habit)
+            ->build();
+
+        $checkedToday = $habit->activityLogs()
+            ->whereDate('date', today())
+            ->where('status', 1)
+            ->exists();
+
+        return response()->json([
+            'success' => true,
+            'data'    => array_merge(['id_habit' => $habit->id_habit, 'title' => $habit->title, 'checked_today' => $checkedToday], $stats),
+        ]);
+    }
 }
