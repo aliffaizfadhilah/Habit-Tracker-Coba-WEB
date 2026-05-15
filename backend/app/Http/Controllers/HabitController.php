@@ -34,12 +34,15 @@ class HabitController extends Controller
             'category'      => 'required|string|max:30',
             'periode_start' => 'required|date',
             'periode_end'   => 'required|date|after_or_equal:periode_start',
+            'reminder_time' => 'required|date_format:H:i',
         ], [
-            'title.required'         => 'Judul habit wajib diisi.',
-            'category.required'      => 'Kategori wajib dipilih.',
-            'periode_start.required' => 'Tanggal mulai wajib diisi.',
-            'periode_end.required'   => 'Tanggal selesai wajib diisi.',
+            'title.required'             => 'Judul habit wajib diisi.',
+            'category.required'          => 'Kategori wajib dipilih.',
+            'periode_start.required'     => 'Tanggal mulai wajib diisi.',
+            'periode_end.required'       => 'Tanggal selesai wajib diisi.',
             'periode_end.after_or_equal' => 'Tanggal selesai harus setelah tanggal mulai.',
+            'reminder_time.required'     => 'Waktu pengingat wajib diisi.',
+            'reminder_time.date_format'  => 'Format waktu tidak valid.',
         ]);
 
         if ($validator->fails()) {
@@ -61,6 +64,8 @@ class HabitController extends Controller
             'periode_end'       => $request->periode_end,
             'total_period_days' => $periodDays,
             'status'            => 1,
+            'reminder_time'     => $request->reminder_time,
+            'reminder_enabled'  => true,
         ]);
 
         return response()->json([
@@ -113,12 +118,15 @@ class HabitController extends Controller
             'category'      => 'required|string|max:30',
             'periode_start' => 'required|date',
             'periode_end'   => 'required|date|after_or_equal:periode_start',
+            'reminder_time' => 'required|date_format:H:i',
         ], [
-            'title.required'         => 'Judul habit wajib diisi.',
-            'category.required'      => 'Kategori wajib dipilih.',
-            'periode_start.required' => 'Tanggal mulai wajib diisi.',
-            'periode_end.required'   => 'Tanggal selesai wajib diisi.',
+            'title.required'             => 'Judul habit wajib diisi.',
+            'category.required'          => 'Kategori wajib dipilih.',
+            'periode_start.required'     => 'Tanggal mulai wajib diisi.',
+            'periode_end.required'       => 'Tanggal selesai wajib diisi.',
             'periode_end.after_or_equal' => 'Tanggal selesai harus setelah tanggal mulai.',
+            'reminder_time.required'     => 'Waktu pengingat wajib diisi.',
+            'reminder_time.date_format'  => 'Format waktu tidak valid.',
         ]);
 
         if ($validator->fails()) {
@@ -138,6 +146,7 @@ class HabitController extends Controller
             'periode_start'     => $request->periode_start,
             'periode_end'       => $request->periode_end,
             'total_period_days' => $periodDays,
+            'reminder_time'     => $request->reminder_time,
         ]);
 
         $updated = $habit->fresh();
@@ -182,8 +191,46 @@ class HabitController extends Controller
         ]);
     }
 
+    public function updateReminder(Request $request, int $id): JsonResponse
+    {
+        $habit = Habit::where('id_habit', $id)
+            ->where('username', $request->user()->username)
+            ->where('status', 1)
+            ->first();
+
+        if (!$habit) {
+            return response()->json(['success' => false, 'message' => 'Habit tidak ditemukan.'], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'reminder_time'    => 'nullable|date_format:H:i',
+            'reminder_enabled' => 'required|boolean',
+        ], [
+            'reminder_time.date_format'  => 'Format waktu tidak valid.',
+            'reminder_enabled.required'  => 'Status pengingat wajib diisi.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        $habit->update([
+            'reminder_time'    => $request->reminder_time,
+            'reminder_enabled' => $request->reminder_enabled,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pengingat berhasil diperbarui!',
+            'data'    => $this->formatHabit($habit->fresh()),
+        ]);
+    }
+
     private function formatHabit(Habit $habit): array
     {
+        $rawTime = $habit->reminder_time;
+        $reminderTime = $rawTime ? substr($rawTime, 0, 5) : null;
+
         return [
             'id_habit'             => $habit->id_habit,
             'title'                => $habit->title,
@@ -195,6 +242,8 @@ class HabitController extends Controller
             'progress_percent'     => $habit->progress_percent,
             'total_period_days'    => $habit->total_period_days,
             'total_completed_days' => $habit->total_completed_days,
+            'reminder_time'        => $reminderTime,
+            'reminder_enabled'     => (bool) $habit->reminder_enabled,
             'checked_today'        => $habit->activityLogs()
                 ->whereDate('date', today())
                 ->where('status', 1)

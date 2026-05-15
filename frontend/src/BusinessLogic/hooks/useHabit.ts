@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { http } from '../services/HttpService'
+import { reminderService } from '../services/ReminderService'
 import type { HabitGridItem, HabitFormData } from '../factories/HabitFormFactory'
 
 export interface HabitState {
@@ -25,6 +26,8 @@ export function useHabit() {
         return
       }
       setState({ habits: data.data, loading: false, error: '' })
+      reminderService.update(data.data)
+      reminderService.start()
     } catch {
       setState(prev => ({ ...prev, loading: false, error: 'Terjadi kesalahan. Coba lagi.' }))
     }
@@ -39,6 +42,7 @@ export function useHabit() {
         category:      form.category === 'lainnya' ? form.customCategory.trim() : form.category,
         periode_start: form.periode_start,
         periode_end:   form.periode_end,
+        reminder_time: form.reminder_time,
       }
       const data = await http.post<{ success: boolean; message: string }>('/api/habits', payload)
       if (data.success) await fetchHabits()
@@ -55,6 +59,7 @@ export function useHabit() {
         category:      form.category === 'lainnya' ? form.customCategory.trim() : form.category,
         periode_start: form.periode_start,
         periode_end:   form.periode_end,
+        reminder_time: form.reminder_time,
       }
       const data = await http.put<{ success: boolean; message: string }>(`/api/habits/${id}`, payload)
       if (data.success) await fetchHabits()

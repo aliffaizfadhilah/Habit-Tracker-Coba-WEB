@@ -23,13 +23,16 @@ class Habit extends Model
         'longest_streak',
         'progress_percent',
         'status',
+        'reminder_time',
+        'reminder_enabled',
     ];
 
     protected $casts = [
-        'periode_start'        => 'date',
-        'periode_end'          => 'date',
-        'progress_percent'     => 'decimal:2',
-        'status'               => 'boolean',
+        'periode_start'    => 'date',
+        'periode_end'      => 'date',
+        'progress_percent' => 'decimal:2',
+        'status'           => 'boolean',
+        'reminder_enabled' => 'boolean',
     ];
 
     public function user(): BelongsTo

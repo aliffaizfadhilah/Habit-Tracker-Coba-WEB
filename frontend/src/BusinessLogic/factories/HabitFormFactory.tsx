@@ -1,13 +1,15 @@
 
 import React from 'react'
 import { tokens, Button, Input, Badge } from './ComponentFactory'
+import { habitCompletionService } from '../services/HabitCompletionService'
 
 export interface HabitFormData {
-  title:         string
-  category:      string
+  title:          string
+  category:       string
   customCategory: string
-  periode_start: string
-  periode_end:   string
+  periode_start:  string
+  periode_end:    string
+  reminder_time:  string
 }
 
 export interface HabitGridItem {
@@ -22,6 +24,8 @@ export interface HabitGridItem {
   total_completed_days: number
   total_period_days:    number
   checked_today:        boolean
+  reminder_time:        string | null
+  reminder_enabled:     boolean
 }
 
 export const HABIT_CATEGORIES = [
@@ -266,6 +270,27 @@ export const HabitFormCard: React.FC<HabitFormCardProps> = ({
             error={errors.periode_end}
           />
         </div>
+
+        {/* Reminder */}
+        <div style={{ borderTop: `1px solid ${tokens.border}`, paddingTop: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <span style={{ fontSize: 16 }}>⏰</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: tokens.textBody, fontFamily: tokens.fontBody }}>
+              Pengingat Harian
+            </span>
+            <span style={{ fontSize: 11, color: tokens.error, fontWeight: 600 }}>*wajib</span>
+          </div>
+          <Input
+            label="Jam pengingat"
+            type="time"
+            value={form.reminder_time}
+            onChange={e => onChange('reminder_time', e.target.value)}
+            error={errors.reminder_time}
+          />
+          <p style={{ fontSize: 12, color: tokens.textMuted, fontFamily: tokens.fontBody, marginTop: 6 }}>
+            Notifikasi akan muncul setiap hari pada jam ini saat browser terbuka.
+          </p>
+        </div>
       </div>
 
       {/* Actions */}
@@ -282,29 +307,37 @@ export const HabitFormCard: React.FC<HabitFormCardProps> = ({
 }
 
 export interface HabitGridCardProps {
-  habit:    HabitGridItem
-  onEdit:   (habit: HabitGridItem) => void
-  onDelete: (habit: HabitGridItem) => void
+  habit:      HabitGridItem
+  onEdit:     (habit: HabitGridItem) => void
+  onDelete:   (habit: HabitGridItem) => void
+  onReport?:  (habit: HabitGridItem) => void
 }
 
-export const HabitGridCard: React.FC<HabitGridCardProps> = ({ habit, onEdit, onDelete }) => {
-  const progress = Number(habit.progress_percent)
-  const isDone   = progress === 100
+export const HabitGridCard: React.FC<HabitGridCardProps> = ({ habit, onEdit, onDelete, onReport }) => {
+  const progress   = Number(habit.progress_percent)
+  const isComplete = habitCompletionService.isComplete(habit)
+
+  const lockedBtnStyle: React.CSSProperties = {
+    width: 32, height: 32, borderRadius: 8, border: `1px solid ${tokens.border}`,
+    background: '#f9fafb', fontSize: 14, display: 'flex',
+    alignItems: 'center', justifyContent: 'center',
+    opacity: 0.35, cursor: 'not-allowed', pointerEvents: 'none',
+  }
 
   return (
     <div style={{
       background: tokens.white,
-      border: `1.5px solid ${isDone ? '#a7f3d0' : tokens.border}`,
+      border: `1.5px solid ${isComplete ? tokens.borderMid : tokens.border}`,
       borderRadius: tokens.radiusLg, padding: '20px 22px',
       boxShadow: tokens.shadow, transition: 'all 0.2s',
       position: 'relative', overflow: 'hidden',
       display: 'flex', flexDirection: 'column', gap: 12,
     }}>
       {/* Top accent jika selesai */}
-      {isDone && (
+      {isComplete && (
         <div style={{
           position: 'absolute', top: 0, left: 0, right: 0, height: 3,
-          background: 'linear-gradient(90deg, #10b981, #34d399)',
+          background: `linear-gradient(90deg, ${tokens.primary}, ${tokens.accent})`,
         }} />
       )}
 
@@ -318,7 +351,7 @@ export const HabitGridCard: React.FC<HabitGridCardProps> = ({ habit, onEdit, onD
             }}>
               {habit.title}
             </span>
-            {isDone && <Badge color="green">Selesai ✓</Badge>}
+            {isComplete && <Badge color="emerald">Selesai 🎉</Badge>}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <Badge color="green">{getCategoryLabel(habit.category)}</Badge>
@@ -327,26 +360,51 @@ export const HabitGridCard: React.FC<HabitGridCardProps> = ({ habit, onEdit, onD
 
         {/* Action Buttons */}
         <div style={{ display: 'flex', gap: 6, flexShrink: 0, marginLeft: 8 }}>
-          <button
-            onClick={() => onEdit(habit)}
-            title="Edit"
-            style={{
-              width: 32, height: 32, borderRadius: 8,
-              border: `1px solid ${tokens.border}`, background: tokens.bg,
-              cursor: 'pointer', fontSize: 14, display: 'flex',
-              alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s',
-            }}
-          >✏️</button>
-          <button
-            onClick={() => onDelete(habit)}
-            title="Hapus"
-            style={{
-              width: 32, height: 32, borderRadius: 8,
-              border: '1px solid #fecaca', background: '#fef2f2',
-              cursor: 'pointer', fontSize: 14, display: 'flex',
-              alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s',
-            }}
-          >🗑</button>
+          {/* Laporan — always visible */}
+          {onReport && (
+            <button
+              onClick={() => onReport(habit)}
+              title="Lihat laporan"
+              style={{
+                width: 32, height: 32, borderRadius: 8,
+                border: `1px solid ${tokens.border}`, background: tokens.primaryLight,
+                cursor: 'pointer', fontSize: 14, display: 'flex',
+                alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s',
+              }}
+            >📊</button>
+          )}
+
+          {/* Edit — dikunci jika selesai */}
+          {isComplete ? (
+            <div style={lockedBtnStyle} title="Habit selesai — tidak bisa diedit">✏️</div>
+          ) : (
+            <button
+              onClick={() => onEdit(habit)}
+              title="Edit"
+              style={{
+                width: 32, height: 32, borderRadius: 8,
+                border: `1px solid ${tokens.border}`, background: tokens.bg,
+                cursor: 'pointer', fontSize: 14, display: 'flex',
+                alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s',
+              }}
+            >✏️</button>
+          )}
+
+          {/* Delete — dikunci jika selesai */}
+          {isComplete ? (
+            <div style={lockedBtnStyle} title="Habit selesai — tidak bisa dihapus">🗑</div>
+          ) : (
+            <button
+              onClick={() => onDelete(habit)}
+              title="Hapus"
+              style={{
+                width: 32, height: 32, borderRadius: 8,
+                border: '1px solid #fecaca', background: '#fef2f2',
+                cursor: 'pointer', fontSize: 14, display: 'flex',
+                alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s',
+              }}
+            >🗑</button>
+          )}
         </div>
       </div>
 
@@ -354,6 +412,18 @@ export const HabitGridCard: React.FC<HabitGridCardProps> = ({ habit, onEdit, onD
       <span style={{ fontSize: 12, color: tokens.textMuted, fontFamily: tokens.fontBody }}>
         📅 {habit.periode_start} s/d {habit.periode_end}
       </span>
+
+      {/* Locked banner */}
+      {isComplete && (
+        <div style={{
+          background: tokens.primaryLight, border: `1px solid ${tokens.borderMid}`,
+          borderRadius: tokens.radiusSm, padding: '8px 12px',
+          fontSize: 12, color: tokens.primaryMid, fontFamily: tokens.fontBody,
+          display: 'flex', alignItems: 'center', gap: 6,
+        }}>
+          🔒 Habit ini sudah selesai dan tidak dapat diubah lagi.
+        </div>
+      )}
 
       {/* Progress */}
       <div>
@@ -363,7 +433,7 @@ export const HabitGridCard: React.FC<HabitGridCardProps> = ({ habit, onEdit, onD
           </span>
           <span style={{
             fontSize: 12, fontWeight: 700, fontFamily: tokens.fontBody,
-            color: isDone ? '#10b981' : tokens.primary,
+            color: isComplete ? tokens.primary : tokens.primary,
           }}>
             {progress}%
           </span>
@@ -372,8 +442,8 @@ export const HabitGridCard: React.FC<HabitGridCardProps> = ({ habit, onEdit, onD
           <div style={{
             height: '100%', borderRadius: 100, transition: 'width 0.6s ease',
             width: `${progress}%`,
-            background: isDone
-              ? '#10b981'
+            background: isComplete
+              ? `linear-gradient(90deg, ${tokens.primary}, ${tokens.accent})`
               : `linear-gradient(90deg, ${tokens.primary}, #6b8fff)`,
           }} />
         </div>

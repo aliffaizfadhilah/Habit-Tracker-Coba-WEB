@@ -43,22 +43,25 @@ class AuthController extends Controller
         }
 
         $user = User::create([
-            'username'  => $request->username,
-            'email'     => $request->email,
-            'password'  => Hash::make($request->password),
-            'salt'      => bin2hex(random_bytes(32)),
-            'full_name' => $request->full_name,
+            'username'    => $request->username,
+            'email'       => $request->email,
+            'password'    => Hash::make($request->password),
+            'salt'        => bin2hex(random_bytes(32)),
+            'full_name'   => $request->full_name,
+            'is_verified' => true,
         ]);
 
         $userRole = Role::where('role_name', 'USER')->first();
         if ($userRole) $user->roles()->attach($userRole->id);
 
-        $this->sendOtp($user);
+        $token = JWTAuth::fromUser($user);
 
         return response()->json([
             'success' => true,
-            'message' => 'Registrasi berhasil! Cek email untuk kode OTP.',
-        ], 201);
+            'message' => 'Registrasi berhasil!',
+            'token'   => $token,
+            'user'    => $user,
+        ], 201)->withCookie($this->jwtCookie($token));
     }
 
     public function login(Request $request)
@@ -77,16 +80,6 @@ class AuthController extends Controller
         }
 
         $user = auth('api')->user();
-
-        if (!$user->is_verified) {
-            $this->sendOtp($user);
-            return response()->json([
-                'success'      => false,
-                'message'      => 'Email belum diverifikasi. Kode OTP telah dikirim.',
-                'requires_otp' => true,
-                'email'        => $user->email,
-            ], 403);
-        }
 
         return response()->json([
             'success' => true,

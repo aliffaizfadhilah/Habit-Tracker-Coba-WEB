@@ -1,31 +1,13 @@
 import React, { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStreak, type HabitStreak } from '../../BusinessLogic/hooks/useStreak'
+import { useDashboard } from '../../BusinessLogic/hooks/useDashboard'
 import { useAuth } from '../../BusinessLogic/hooks/useAuth'
 import { http } from '../../BusinessLogic/services/HttpService'
 import { Sidebar, LogoutModal, useSidebar } from './shared/sideBar'
 import { tokens } from '../../BusinessLogic/factories/tokens'
-
-const WEEKLY_DATA = [
-  { day: 'Sen', val: 3 },
-  { day: 'Sel', val: 2 },
-  { day: 'Rab', val: 4 },
-  { day: 'Kam', val: 1 },
-  { day: 'Jum', val: 3 },
-  { day: 'Sab', val: 2 },
-  { day: 'Min', val: 4, isToday: true },
-]
-const INSIGHTS = [
-  { icon: '🔥', bg: '#fff7ed', title: 'Baca Buku paling konsisten minggu ini', sub: '7/7 hari selesai — sempurna!' },
-  { icon: '📈', bg: tokens.primaryLighter, title: 'Progress naik 12% vs minggu lalu', sub: 'Pertahankan ritme ini!' },
-  { icon: '⭐', bg: '#eef1ff', title: 'Senin–Rabu paling produktif', sub: 'Rata-rata 3.2 habit selesai/hari' },
-  { icon: '⚡', bg: tokens.errorBg, title: 'Olahraga butuh perhatian lebih', sub: 'Hanya 3/7 hari selesai minggu ini' },
-]
-const AT_RISK = [
-  { name: 'Olahraga',     label: '4 hari absen', level: 'high' as const },
-  { name: 'Coding 30min', label: '2 hari absen', level: 'mid'  as const },
-  { name: 'Meditasi',     label: 'On track ✓',   level: 'ok'   as const },
-]
+import HabitReportModal from '../components/HabitReportModal'
+import { habitCompletionService } from '../../BusinessLogic/services/HabitCompletionService'
 
 type FilterType = 'semua' | 'selesai_hari_ini' | 'selesai' | 'belum_selesai'
 
@@ -139,11 +121,17 @@ const EmptyState: React.FC<{
 )
 
 // ─── HabitStreakCard ───────────────────────────────────────────────────────────
-const HabitStreakCard: React.FC<{ habit: HabitStreak; onRefetch: () => Promise<void> }> = ({ habit, onRefetch }) => {
-  const progress = Number(habit.progress_percent)
+const HabitStreakCard: React.FC<{
+  habit:     HabitStreak
+  onRefetch: () => Promise<void>
+  onReport:  (habit: HabitStreak) => void
+}> = ({ habit, onRefetch, onReport }) => {
+  const progress   = Number(habit.progress_percent)
+  const isComplete = habitCompletionService.isComplete(habit)
   const [checking, setChecking] = useState(false)
 
   const handleToggleCheck = async () => {
+    if (isComplete) return
     setChecking(true)
     try {
       await http.post(`/api/habits/${habit.id_habit}/check-today`, {})
@@ -163,21 +151,15 @@ const HabitStreakCard: React.FC<{ habit: HabitStreak; onRefetch: () => Promise<v
   return (
     <div style={{
       background: tokens.white,
-      border: `1.5px solid ${progress === 100 ? tokens.borderMid : tokens.border}`,
+      border: `1.5px solid ${isComplete ? tokens.borderMid : tokens.border}`,
       borderRadius: 16, padding: '20px 24px', boxShadow: tokens.shadow,
       transition: tokens.transitionBase, position: 'relative', overflow: 'hidden',
     }}
-      onMouseEnter={e => {
-        e.currentTarget.style.borderColor = tokens.borderMid
-        e.currentTarget.style.boxShadow = tokens.shadowMd
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.borderColor = progress === 100 ? tokens.borderMid : tokens.border
-        e.currentTarget.style.boxShadow = tokens.shadow
-      }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = tokens.borderMid; e.currentTarget.style.boxShadow = tokens.shadowMd }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = isComplete ? tokens.borderMid : tokens.border; e.currentTarget.style.boxShadow = tokens.shadow }}
     >
-      {/* top accent bar jika 100% */}
-      {progress === 100 && (
+      {/* Top accent bar */}
+      {isComplete && (
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg,${tokens.primary},${tokens.accent})` }} />
       )}
 
@@ -186,29 +168,51 @@ const HabitStreakCard: React.FC<{ habit: HabitStreak; onRefetch: () => Promise<v
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
             <span style={{ fontWeight: 600, fontSize: 15, color: tokens.text }}>{habit.title}</span>
             <Badge color="green">{habit.category}</Badge>
-            {progress === 100 && <Badge color="emerald">Selesai ✓</Badge>}
-            {habit.checked_today && <Badge color="emerald">Hari Ini ✓</Badge>}
+            {isComplete  && <Badge color="emerald">Selesai 🎉</Badge>}
+            {!isComplete && habit.checked_today && <Badge color="emerald">Hari Ini ✓</Badge>}
           </div>
           <span style={{ fontSize: 12, color: tokens.textMuted }}>{habit.periode_start} s/d {habit.periode_end}</span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {/* Detail button */}
           <button
-            onClick={handleToggleCheck}
-            disabled={checking}
-            title={habit.checked_today ? 'Klik untuk batalkan check hari ini' : 'Klik untuk check hari ini'}
+            onClick={() => onReport(habit)}
+            title="Lihat laporan"
             style={{
-              width: 40, height: 40, borderRadius: '50%',
-              border: `2px solid ${habit.checked_today ? tokens.primary : tokens.border}`,
-              background: habit.checked_today ? tokens.primary : checking ? tokens.primaryLight : tokens.white,
-              color: habit.checked_today ? tokens.white : tokens.primary,
-              cursor: checking ? 'wait' : 'pointer',
-              fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              transition: tokens.transitionFast, flexShrink: 0,
+              width: 36, height: 36, borderRadius: 9,
+              border: `1px solid ${tokens.border}`, background: tokens.primaryLight,
+              cursor: 'pointer', fontSize: 15, display: 'flex',
+              alignItems: 'center', justifyContent: 'center', transition: tokens.transitionFast,
             }}
-          >
-            {checking ? '⏳' : '✓'}
-          </button>
+          >📊</button>
+
+          {/* Check button — dikunci jika selesai */}
+          {isComplete ? (
+            <div style={{
+              width: 40, height: 40, borderRadius: '50%',
+              border: `2px solid ${tokens.borderMid}`, background: tokens.primaryLight,
+              fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              opacity: 0.5, cursor: 'not-allowed', flexShrink: 0,
+            }} title="Habit selesai — tidak bisa diubah">🔒</div>
+          ) : (
+            <button
+              onClick={handleToggleCheck}
+              disabled={checking}
+              title={habit.checked_today ? 'Batalkan check hari ini' : 'Check hari ini'}
+              style={{
+                width: 40, height: 40, borderRadius: '50%',
+                border: `2px solid ${habit.checked_today ? tokens.primary : tokens.border}`,
+                background: habit.checked_today ? tokens.primary : checking ? tokens.primaryLight : tokens.white,
+                color: habit.checked_today ? tokens.white : tokens.primary,
+                cursor: checking ? 'wait' : 'pointer',
+                fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: tokens.transitionFast, flexShrink: 0,
+              }}
+            >
+              {checking ? '⏳' : '✓'}
+            </button>
+          )}
 
           <div style={{ textAlign: 'right' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end' }}>
@@ -220,18 +224,27 @@ const HabitStreakCard: React.FC<{ habit: HabitStreak; onRefetch: () => Promise<v
         </div>
       </div>
 
+      {/* Locked banner */}
+      {isComplete && (
+        <div style={{
+          background: tokens.primaryLight, border: `1px solid ${tokens.borderMid}`,
+          borderRadius: 8, padding: '7px 12px', marginBottom: 10,
+          fontSize: 12, color: tokens.primaryMid, display: 'flex', alignItems: 'center', gap: 6,
+        }}>
+          🔒 Habit ini sudah selesai dan tidak dapat diubah lagi.
+        </div>
+      )}
+
       <div style={{ marginBottom: 10 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
           <span style={{ fontSize: 12, color: tokens.textMuted }}>Progress ({habit.total_completed_days}/{habit.total_period_days} hari)</span>
-          <span style={{ fontSize: 12, fontWeight: 700, color: progress === 100 ? tokens.primary : tokens.textMuted }}>{progress}%</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: isComplete ? tokens.primary : tokens.textMuted }}>{progress}%</span>
         </div>
         <div style={{ height: 8, background: tokens.primaryLight, borderRadius: 100, overflow: 'hidden' }}>
           <div style={{
             height: '100%', borderRadius: 100, transition: 'width 0.6s ease',
             width: `${progress}%`,
-            background: progress === 100
-              ? `linear-gradient(90deg,${tokens.primary},${tokens.accent})`
-              : barColor,
+            background: isComplete ? `linear-gradient(90deg,${tokens.primary},${tokens.accent})` : barColor,
           }} />
         </div>
       </div>
@@ -250,8 +263,11 @@ export default function Dashboard() {
   const { isMobile, sidebarOpen, setSidebarOpen } = useSidebar()
   const [showLogout, setShowLogout] = useState(false)
   const [filter, setFilter] = useState<FilterType>('semua')
+  const [detailTarget, setDetailTarget] = useState<HabitStreak | null>(null)
   const { habits, summary, loading, error, refetch } = useStreak()
   const { user, logout } = useAuth()
+
+  const { weeklyData, insights, atRisk } = useDashboard(habits)
 
   const completedToday = useMemo(() => habits.filter(h => h.checked_today).length, [habits])
   const displayUser = {
@@ -260,7 +276,7 @@ export default function Dashboard() {
     username:  user?.username ?? 'Pengguna',
   }
   const dateStr = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
-  const maxBar = Math.max(...WEEKLY_DATA.map(d => d.val))
+  const maxBar = Math.max(...weeklyData.map(d => d.val), 1)
 
   const filteredHabits = useMemo(() => {
     if (filter === 'selesai_hari_ini') return habits.filter(h => h.checked_today)
@@ -361,7 +377,7 @@ export default function Dashboard() {
               <span style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 20, background: tokens.primaryLight, color: tokens.primary }}>7 hari</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 120 }}>
-              {WEEKLY_DATA.map(d => {
+              {weeklyData.map(d => {
                 const h = Math.max(8, (d.val / maxBar) * 100)
                 const isToday = d.isToday ?? false
                 return (
@@ -396,7 +412,7 @@ export default function Dashboard() {
               <span style={{ fontSize: 18 }}>✨</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {INSIGHTS.map((ins, i) => (
+              {insights.map((ins, i) => (
                 <div key={i} style={{
                   display: 'flex', alignItems: 'flex-start', gap: 10,
                   padding: '12px 14px', borderRadius: 12,
@@ -472,7 +488,7 @@ export default function Dashboard() {
           {!loading && filteredHabits.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {filteredHabits.map(habit => (
-                <HabitStreakCard key={habit.id_habit} habit={habit} onRefetch={refetch} />
+                <HabitStreakCard key={habit.id_habit} habit={habit} onRefetch={refetch} onReport={(h: HabitStreak) => setDetailTarget(h)} />
               ))}
             </div>
           )}
@@ -482,7 +498,7 @@ export default function Dashboard() {
         <Card style={{ maxWidth: 600 }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: tokens.text, fontFamily: tokens.fontHeading, marginBottom: 12 }}>⚠ Perlu Perhatian</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {AT_RISK.map(r => {
+            {atRisk.map(r => {
               const s = {
                 high: { bg: tokens.errorBg,      color: tokens.error,   itemBg: '#fff8f8' },
                 mid:  { bg: '#fff7ed',            color: '#ea580c',      itemBg: '#fffbf5' },
@@ -500,6 +516,10 @@ export default function Dashboard() {
         </Card>
 
       </main>
+
+      {detailTarget && (
+        <HabitReportModal habit={detailTarget} onClose={() => setDetailTarget(null)} />
+      )}
 
       {showLogout && (
         <LogoutModal

@@ -34,15 +34,6 @@ class AuthService {
     return http.post<ApiResponse>('/api/auth/register', form)
   }
 
-  // ── OTP (dipertahankan untuk backend, tidak dipakai di flow registrasi) ────
-  verifyOtp(email: string, otp: string) {
-    return http.post<ApiResponse>('/api/auth/otp/verify', { email, otp })
-  }
-
-  resendOtp(email: string) {
-    return http.post<ApiResponse>('/api/auth/otp/resend', { email })
-  }
-
   // ── Forgot Password (3-step: email → OTP → reset) ─────────────────────────
   forgotPassword(email: string) {
     return http.post<ApiResponse>('/api/auth/forgot-password', { email })

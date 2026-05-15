@@ -116,13 +116,22 @@ class StreakBuilderService
 
     public function saveToHabit(Habit $habit): static
     {
-        $habit->update([
+        $data = [
             'current_streak'       => $this->currentStreak,
             'longest_streak'       => $this->longestStreak,
             'progress_percent'     => $this->progressPercent,
             'total_period_days'    => $this->periodDays,
             'total_completed_days' => $this->completedDays,
-        ]);
+        ];
+
+        $periodEnded = $habit->periode_end && Carbon::today()->isAfter($habit->periode_end);
+        $isComplete  = $this->progressPercent >= 100.0;
+
+        if (($isComplete || $periodEnded) && $habit->reminder_enabled) {
+            $data['reminder_enabled'] = false;
+        }
+
+        $habit->update($data);
 
         return $this;
     }

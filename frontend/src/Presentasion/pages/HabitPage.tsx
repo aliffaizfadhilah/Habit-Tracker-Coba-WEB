@@ -9,8 +9,10 @@ import {
 import { useHabit } from '../../BusinessLogic/hooks/useHabit'
 import { useAuth } from '../../BusinessLogic/hooks/useAuth'
 import { Sidebar, LogoutModal, useSidebar } from './shared/sideBar'
+import HabitReportModal from '../components/HabitReportModal'
+import { habitCompletionService } from '../../BusinessLogic/services/HabitCompletionService'
 
-const defaultForm = (): HabitFormData => ({ title: '', category: '', customCategory: '', periode_start: '', periode_end: '' })
+const defaultForm = (): HabitFormData => ({ title: '', category: '', customCategory: '', periode_start: '', periode_end: '', reminder_time: '' })
 
 const validateForm = (form: HabitFormData): Partial<Record<keyof HabitFormData, string>> => {
   const errors: Partial<Record<keyof HabitFormData, string>> = {}
@@ -21,6 +23,7 @@ const validateForm = (form: HabitFormData): Partial<Record<keyof HabitFormData, 
   if (!form.periode_end)    errors.periode_end   = 'Tanggal selesai wajib diisi.'
   if (form.periode_start && form.periode_end && form.periode_start > form.periode_end)
     errors.periode_end = 'Tanggal selesai harus setelah tanggal mulai.'
+  if (!form.reminder_time) errors.reminder_time = 'Waktu pengingat wajib diisi.'
   return errors
 }
 
@@ -35,6 +38,7 @@ export default function HabitPage() {
   const [showForm, setShowForm]     = useState(false)
   const [editTarget, setEditTarget] = useState<HabitGridItem | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<HabitGridItem | null>(null)
+  const [reportTarget, setReportTarget] = useState<HabitGridItem | null>(null)
   const [form, setForm]             = useState<HabitFormData>(defaultForm())
   const [formErrors, setFormErrors] = useState<Partial<Record<keyof HabitFormData, string>>>({})
   const [submitting, setSubmitting] = useState(false)
@@ -78,9 +82,10 @@ export default function HabitPage() {
   }
 
   const handleEdit = (habit: HabitGridItem) => {
+    if (habitCompletionService.isComplete(habit)) return
     setEditTarget(habit)
     const isCustom = !['kesehatan','ilmu_pengetahuan','spiritual','finansial','personal'].includes(habit.category)
-    setForm({ title: habit.title, category: isCustom ? 'lainnya' : habit.category, customCategory: isCustom ? habit.category : '', periode_start: habit.periode_start, periode_end: habit.periode_end })
+    setForm({ title: habit.title, category: isCustom ? 'lainnya' : habit.category, customCategory: isCustom ? habit.category : '', periode_start: habit.periode_start, periode_end: habit.periode_end, reminder_time: habit.reminder_time ?? '' })
     setFormErrors({}); setShowForm(true)
   }
 
@@ -149,7 +154,7 @@ export default function HabitPage() {
         {!loading && filteredHabits.length > 0 && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 16, marginTop: 16 }}>
             {filteredHabits.map(habit => (
-              <HabitGridCard key={habit.id_habit} habit={habit} onEdit={handleEdit} onDelete={setDeleteTarget} />
+              <HabitGridCard key={habit.id_habit} habit={habit} onEdit={handleEdit} onDelete={setDeleteTarget} onReport={setReportTarget} />
             ))}
           </div>
         )}
@@ -165,6 +170,10 @@ export default function HabitPage() {
         <ModalOverlay onClose={() => setDeleteTarget(null)}>
           <DeleteConfirmCard habitTitle={deleteTarget.title} loading={deleting} onConfirm={handleDeleteConfirm} onCancel={() => setDeleteTarget(null)} />
         </ModalOverlay>
+      )}
+
+      {reportTarget && (
+        <HabitReportModal habit={reportTarget} onClose={() => setReportTarget(null)} />
       )}
 
       {showLogoutConfirm && <LogoutModal onCancel={() => setShowLogoutConfirm(false)} onConfirm={async () => { setShowLogoutConfirm(false); await logout() }} />}

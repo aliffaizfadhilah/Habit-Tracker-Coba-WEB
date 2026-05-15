@@ -13,7 +13,8 @@ class HttpService {
 
   private getHeaders(): HeadersInit {
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Accept':       'application/json',
     }
     const token = localStorage.getItem('jwt_token')
     if (token) {
@@ -32,6 +33,7 @@ class HttpService {
   private async parseResponse<T>(res: Response): Promise<T> {
     if (res.status === 401) {
       this.handleUnauthorized()
+      throw new Error('Unauthorized')
     }
     const data = await res.json() as any
     if (data?.token) localStorage.setItem('jwt_token', data.token)
@@ -68,11 +70,34 @@ class HttpService {
     return this.parseResponse<T>(res)
   }
 
+  async patch<T = unknown>(url: string, body: unknown): Promise<T> {
+    const res = await fetch(url, {
+      method: 'PATCH',
+      headers: this.getHeaders(),
+      credentials: 'include',
+      body: JSON.stringify(body),
+    })
+    return this.parseResponse<T>(res)
+  }
+
   async delete<T = unknown>(url: string): Promise<T> {
     const res = await fetch(url, {
       method: 'DELETE',
       headers: this.getHeaders(),
       credentials: 'include',
+    })
+    return this.parseResponse<T>(res)
+  }
+
+  async postMultipart<T = unknown>(url: string, formData: FormData): Promise<T> {
+    const token = localStorage.getItem('jwt_token')
+    const headers: Record<string, string> = { 'Accept': 'application/json' }
+    if (token) headers['Authorization'] = `Bearer ${token}`
+    const res = await fetch(url, {
+      method: 'POST',
+      headers,
+      credentials: 'include',
+      body: formData,
     })
     return this.parseResponse<T>(res)
   }

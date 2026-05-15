@@ -6,6 +6,7 @@ use App\Http\Controllers\HabitController;
 use App\Http\Controllers\StreakController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\PostController;
 
 // ─── AUTH (Public) ────────────────────────────────────────────────────────────
 Route::prefix('auth')->group(function () {
@@ -40,9 +41,10 @@ Route::middleware('jwt.auth')->group(function () {
     Route::prefix('habits')->group(function () {
         Route::get('/',        [HabitController::class, 'index']);
         Route::post('/',       [HabitController::class, 'store']);
-        Route::get('/{id}',    [HabitController::class, 'show']);
-        Route::put('/{id}',    [HabitController::class, 'update']);
-        Route::delete('/{id}', [HabitController::class, 'destroy']);
+        Route::get('/{id}',              [HabitController::class, 'show']);
+        Route::put('/{id}',              [HabitController::class, 'update']);
+        Route::delete('/{id}',           [HabitController::class, 'destroy']);
+        Route::patch('/{id}/reminder',   [HabitController::class, 'updateReminder']);
 
         // Check harian
         Route::post('/{id}/check-today', [ActivityLogController::class, 'checkToday']);
@@ -58,6 +60,17 @@ Route::middleware('jwt.auth')->group(function () {
 
     // ── Activity Log ──────────────────────────────────────────────────────────
     Route::get('/activity-logs', [ActivityLogController::class, 'index']);
+
+    // ── Posts (Public Feed) ───────────────────────────────────────────────────
+    Route::prefix('posts')->group(function () {
+        Route::get('/',                                    [PostController::class, 'index']);
+        Route::post('/',                                   [PostController::class, 'store']);
+        Route::delete('/{id}',                             [PostController::class, 'destroy']);
+        Route::post('/{id}/like',                          [PostController::class, 'toggleLike']);
+        Route::get('/{id}/comments',                       [PostController::class, 'comments']);
+        Route::post('/{id}/comments',                      [PostController::class, 'storeComment']);
+        Route::delete('/{postId}/comments/{commentId}',    [PostController::class, 'destroyComment']);
+    });
 });
 
 // ─── VISITOR TRACKING (Public) ───────────────────────────────────────────────
