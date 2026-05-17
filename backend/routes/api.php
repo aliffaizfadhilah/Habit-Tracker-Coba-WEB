@@ -80,38 +80,23 @@ Route::post('/track', function (\Illuminate\Http\Request $request) {
     $detect->setUserAgent($request->userAgent());
     $device = $detect->isMobile() ? 'mobile' : ($detect->isTablet() ? 'tablet' : 'desktop');
 
-    \Shetabit\Visitor\Models\Visit::create([
-        'method'    => $request->method(),
-        'request'   => json_encode($request->all()),
-        'url'       => $request->input('page', 'landing'),
-        'referer'   => $request->headers->get('referer'),
-        'languages' => json_encode($request->getLanguages()),
-        'useragent' => $request->userAgent(),
-        'headers'   => json_encode($request->headers->all()),
-        'ip'        => $request->ip(),
-        'device'    => $device,
-        'platform'  => $ua->os->family,
-        'browser'   => $ua->ua->family,
+    $langs    = $request->getLanguages();
+    $language = count($langs) > 0 ? substr($langs[0], 0, 20) : null;
+
+    $version = trim(($ua->ua->major ?? '') . '.' . ($ua->ua->minor ?? ''), '.');
+
+    \App\Models\VisitorLog::create([
+        'session_id'      => $request->input('session_id'),
+        'ip_address'      => $request->ip(),
+        'device_type'     => $device,
+        'browser'         => $ua->ua->family,
+        'browser_version' => $version ?: null,
+        'os'              => $ua->os->family,
+        'language'        => $language,
+        'page'            => $request->input('page', 'landing'),
+        'referer'         => $request->headers->get('referer'),
     ]);
 
     return response()->json(['success' => true]);
 });
 
-// ─── ADMIN ────────────────────────────────────────────────────────────────────
-Route::prefix('admin')->group(function () {
-    Route::get('/visitors', function () {
-        return response()->json([
-            'total'  => \App\Models\VisitorLog::count(),
-            'today'  => \App\Models\VisitorLog::whereDate('created_at', today())->count(),
-            'latest' => \App\Models\VisitorLog::latest()->take(20)->get(),
-        ]);
-    });
-
-    Route::get('/visits', function () {
-        return response()->json([
-            'total'  => \Shetabit\Visitor\Models\Visit::count(),
-            'today'  => \Shetabit\Visitor\Models\Visit::whereDate('created_at', today())->count(),
-            'latest' => \Shetabit\Visitor\Models\Visit::latest()->take(20)->get(),
-        ]);
-    });
-});

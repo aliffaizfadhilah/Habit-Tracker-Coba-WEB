@@ -3,51 +3,41 @@
 namespace App\Http\Controllers;
 
 use App\Models\Habit;
-use App\Services\StreakBuilderService;
+use App\Services\Streak\StreakBuilder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class StreakController extends Controller
 {
-    public function __construct(
-        private StreakBuilderService $streakBuilder
-    ) {}
+    public function __construct(private readonly StreakBuilder $streakBuilder) {}
 
     public function index(Request $request): JsonResponse
     {
         $username = $request->user()->username;
-
-        $habits = Habit::where('username', $username)
-            ->where('status', 1)
-            ->get();
+        $habits   = Habit::where('username', $username)->where('status', 1)->get();
 
         if ($habits->isEmpty()) {
             return response()->json([
                 'success' => true,
                 'data'    => [],
-                'summary' => [
-                    'total_habits'         => 0,
-                    'total_current_streak' => 0,
-                    'longest_streak'       => 0,
-                    'avg_progress'         => 0,
-                ],
+                'summary' => ['total_habits' => 0, 'total_current_streak' => 0, 'longest_streak' => 0, 'avg_progress' => 0],
             ]);
         }
 
         $results = $habits->map(function (Habit $habit) {
-            $stats = (new StreakBuilderService())
-                ->loadActivityLogs($habit)      // Step 1
-                ->calculatePeriodDays($habit)   // Step 2
-                ->calculateCurrentStreak()      // Step 3
-                ->calculateLongestStreak()      // Step 4
-                ->calculateProgress()           // Step 5
-                ->saveToHabit($habit)           // Step 6
-                ->build();                      // Ambil hasil
+            $stats = (new StreakBuilder())
+                ->loadActivityLogs($habit)
+                ->calculatePeriodDays($habit)
+                ->calculateCurrentStreak()
+                ->calculateLongestStreak()
+                ->calculateProgress()
+                ->saveToHabit($habit)
+                ->build();
 
-        $checkedToday = $habit->activityLogs()
-            ->whereDate('date', today())
-            ->where('status', 1)
-            ->exists();
+            $checkedToday = $habit->activityLogs()
+                ->whereDate('date', today())
+                ->where('status', 1)
+                ->exists();
 
             return [
                 'id_habit'             => $habit->id_habit,
@@ -64,45 +54,33 @@ class StreakController extends Controller
             ];
         });
 
-        // Summary keseluruhan untuk ditampilkan di StatCard Dashboard
-        $summary = [
-            'total_habits'         => $results->count(),
-            'total_current_streak' => $results->sum('current_streak'),
-            'longest_streak'       => $results->max('longest_streak'),
-            'avg_progress'         => round($results->avg('progress_percent'), 2),
-        ];
-
         return response()->json([
             'success' => true,
             'data'    => $results,
-            'summary' => $summary,
+            'summary' => [
+                'total_habits'         => $results->count(),
+                'total_current_streak' => $results->sum('current_streak'),
+                'longest_streak'       => $results->max('longest_streak'),
+                'avg_progress'         => round($results->avg('progress_percent'), 2),
+            ],
         ]);
     }
 
     public function summary(Request $request): JsonResponse
     {
-        $username = $request->user()->username;
-
-        $habits = Habit::where('username', $username)
-            ->where('status', 1)
-            ->get();
+        $habits = Habit::where('username', $request->user()->username)->where('status', 1)->get();
 
         if ($habits->isEmpty()) {
             return response()->json([
                 'success' => true,
-                'data'    => [
-                    'total_habits'         => 0,
-                    'total_current_streak' => 0,
-                    'longest_streak'       => 0,
-                    'avg_progress'         => 0,
-                ],
+                'data'    => ['total_habits' => 0, 'total_current_streak' => 0, 'longest_streak' => 0, 'avg_progress' => 0],
             ]);
         }
 
-        $results = $habits->map(fn (Habit $habit) => [
-            'current_streak'   => $habit->current_streak,
-            'longest_streak'   => $habit->longest_streak,
-            'progress_percent' => $habit->progress_percent,
+        $results = $habits->map(fn(Habit $h) => [
+            'current_streak'   => $h->current_streak,
+            'longest_streak'   => $h->longest_streak,
+            'progress_percent' => $h->progress_percent,
         ]);
 
         return response()->json([
@@ -118,14 +96,12 @@ class StreakController extends Controller
 
     public function show(Request $request, int $id): JsonResponse
     {
-        $username = $request->user()->username;
-
         $habit = Habit::where('id_habit', $id)
-            ->where('username', $username)
+            ->where('username', $request->user()->username)
             ->where('status', 1)
             ->firstOrFail();
 
-        $stats = app(StreakBuilderService::class)
+        $stats = (new StreakBuilder())
             ->loadActivityLogs($habit)
             ->calculatePeriodDays($habit)
             ->calculateCurrentStreak()

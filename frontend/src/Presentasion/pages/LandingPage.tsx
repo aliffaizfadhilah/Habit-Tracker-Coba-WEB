@@ -29,7 +29,28 @@ interface CookiePreferences { essential: boolean; analytics: boolean; marketing:
 interface CookieConsent     { accepted: boolean; timestamp: string; preferences: CookiePreferences }
 
 const COOKIE_KEY   = 'habittracker_cookie_consent'
+const SESSION_KEY  = 'habittracker_session_id'
+const TRACKED_KEY  = 'habittracker_tracked'
 const defaultPrefs: CookiePreferences = { essential: true, analytics: false, marketing: false, preferences: false }
+
+function getOrCreateSessionId(): string {
+  let sid = sessionStorage.getItem(SESSION_KEY)
+  if (!sid) {
+    sid = crypto.randomUUID()
+    sessionStorage.setItem(SESSION_KEY, sid)
+  }
+  return sid
+}
+
+function sendTrackingHit(): void {
+  if (sessionStorage.getItem(TRACKED_KEY)) return
+  sessionStorage.setItem(TRACKED_KEY, '1')
+  fetch('/api/track', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ page: 'landing', session_id: getOrCreateSessionId() }),
+  }).catch(() => {})
+}
 
 export default function LandingPage() {
   const navigate = useNavigate()
@@ -44,17 +65,21 @@ export default function LandingPage() {
   const [cookiePrefs,      setCookiePrefs]      = useState<CookiePreferences>(defaultPrefs)
 
   useEffect(() => {
-    if (!sessionStorage.getItem('tracked')) {
-      sessionStorage.setItem('tracked', '1')
-      fetch('/api/track', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ page: 'landing' }) }).catch(() => {})
-    }
     const stored = localStorage.getItem(COOKIE_KEY)
     if (!stored) {
+      // Belum ada consent → tampil banner, jangan track dulu
       const timer = setTimeout(() => setShowCookieBanner(true), 800)
-      return () => clearTimeout(timer)
-    } else {
-      setCookiePrefs((JSON.parse(stored) as CookieConsent).preferences)
+      const onScroll = () => setScrollY(window.scrollY)
+      window.addEventListener('scroll', onScroll)
+      return () => { clearTimeout(timer); window.removeEventListener('scroll', onScroll) }
     }
+
+    const consent = JSON.parse(stored) as CookieConsent
+    setCookiePrefs(consent.preferences)
+
+    // Consent sudah ada dan analytics disetujui → tracking langsung
+    if (consent.preferences.analytics) sendTrackingHit()
+
     const onScroll = () => setScrollY(window.scrollY)
     window.addEventListener('scroll', onScroll)
     return () => window.removeEventListener('scroll', onScroll)
@@ -74,7 +99,11 @@ export default function LandingPage() {
   const saveCookieConsent = (prefs: CookiePreferences) => {
     const consent: CookieConsent = { accepted: true, timestamp: new Date().toISOString(), preferences: prefs }
     localStorage.setItem(COOKIE_KEY, JSON.stringify(consent))
-    setCookiePrefs(prefs); setShowCookieBanner(false); setShowCookieModal(false)
+    setCookiePrefs(prefs)
+    setShowCookieBanner(false)
+    setShowCookieModal(false)
+    // Jika analytics disetujui → kirim tracking saat itu juga (real-time, tanpa delay)
+    if (prefs.analytics) sendTrackingHit()
   }
   const acceptAllCookies  = () => saveCookieConsent({ essential: true, analytics: true, marketing: true, preferences: true })
   const rejectAllCookies  = () => saveCookieConsent({ essential: true, analytics: false, marketing: false, preferences: false })
