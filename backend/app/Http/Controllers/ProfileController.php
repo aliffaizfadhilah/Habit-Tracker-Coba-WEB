@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class ProfileController extends Controller
 {
@@ -33,8 +34,8 @@ class ProfileController extends Controller
 
         $validator = Validator::make($request->all(), [
             'full_name' => 'required|string|max:100',
-            'username'  => 'required|string|max:50|unique:users,username,' . $user->username . ',username',
-            'email'     => 'required|email|unique:users,email,' . $user->email . ',email',
+            'username'  => ['required', 'string', 'max:50', Rule::unique('users', 'username')->ignore($user->username, 'username')],
+            'email'     => ['required', 'email', Rule::unique('users', 'email')->ignore($user->email, 'email')],
         ], [
             'full_name.required' => 'Nama lengkap wajib diisi.',
             'username.required'  => 'Username wajib diisi.',

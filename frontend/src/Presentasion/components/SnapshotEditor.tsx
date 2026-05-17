@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import html2canvas from 'html2canvas'
-import { tokens } from '../../BusinessLogic/factories/tokens'
+import { Camera, X, BarChart2, Circle, Moon, Target, Info, ClipboardList, Loader2, Download, Send, FolderOpen } from 'lucide-react'
 import {
   SnapshotBuilder,
   type DiagramType, type ElementId, type SnapshotElement,
@@ -89,22 +89,20 @@ const ArcChart: React.FC<{ progress: number; size: number }> = ({ progress, size
 export default function SnapshotEditor({ habit, onClose, onPosted }: Props) {
   const progress = Number(habit.progress_percent)
 
-  // State
-  const [elements,      setElements]      = useState<SnapshotElement[]>(
+  const [elements,       setElements]      = useState<SnapshotElement[]>(
     () => new SnapshotBuilder().build().elements
   )
-  const [bgImage,       setBgImage]       = useState<string | null>(null)
-  const [diagramType,   setDiagramType]   = useState<DiagramType>('donut')
-  const [selectedId,    setSelectedId]    = useState<ElementId | null>(null)
-  const [exporting,     setExporting]     = useState(false)
-  const [showPostForm,  setShowPostForm]  = useState(false)
-  const [postBlob,      setPostBlob]      = useState<Blob | null>(null)
+  const [bgImage,        setBgImage]       = useState<string | null>(null)
+  const [diagramType,    setDiagramType]   = useState<DiagramType>('donut')
+  const [selectedId,     setSelectedId]    = useState<ElementId | null>(null)
+  const [exporting,      setExporting]     = useState(false)
+  const [showPostForm,   setShowPostForm]  = useState(false)
+  const [postBlob,       setPostBlob]      = useState<Blob | null>(null)
   const [postPreviewUrl, setPostPreviewUrl] = useState<string>('')
 
-  // Drag state
-  const draggingId  = useRef<ElementId | null>(null)
-  const dragOffset  = useRef<{ dx: number; dy: number }>({ dx: 0, dy: 0 })
-  const previewRef  = useRef<HTMLDivElement>(null)
+  const draggingId   = useRef<ElementId | null>(null)
+  const dragOffset   = useRef<{ dx: number; dy: number }>({ dx: 0, dy: 0 })
+  const previewRef   = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const selectedEl = elements.find(e => e.id === selectedId) ?? null
@@ -149,14 +147,12 @@ export default function SnapshotEditor({ habit, onClose, onPosted }: Props) {
     }
   }, [])
 
-  // ─── Font size ────────────────────────────────────────────────────────────
   const changeFontSize = (id: ElementId, delta: number) => {
     setElements(prev => prev.map(el =>
       el.id === id ? { ...el, fontSize: Math.max(8, Math.min(48, el.fontSize + delta)) } : el
     ))
   }
 
-  // ─── Background upload ────────────────────────────────────────────────────
   const handleBgUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -165,7 +161,6 @@ export default function SnapshotEditor({ habit, onClose, onPosted }: Props) {
     reader.readAsDataURL(file)
   }
 
-  // ─── Capture canvas → Blob ────────────────────────────────────────────────
   const captureCanvas = async (): Promise<{ blob: Blob; url: string } | null> => {
     if (!previewRef.current) return null
     const canvas = await html2canvas(previewRef.current, {
@@ -177,7 +172,6 @@ export default function SnapshotEditor({ habit, onClose, onPosted }: Props) {
     return { blob, url }
   }
 
-  // ─── Export (download / share) ────────────────────────────────────────────
   const handleExport = async () => {
     if (!previewRef.current) return
     setExporting(true)
@@ -205,7 +199,6 @@ export default function SnapshotEditor({ habit, onClose, onPosted }: Props) {
     }
   }
 
-  // ─── Capture for posting ──────────────────────────────────────────────────
   const handleOpenPostForm = async () => {
     setExporting(true)
     try {
@@ -219,7 +212,7 @@ export default function SnapshotEditor({ habit, onClose, onPosted }: Props) {
     }
   }
 
-  // ─── Element content ──────────────────────────────────────────────────────
+  // ─── Element content (inline styles preserved for html2canvas compatibility) ─
   const renderElementContent = (el: SnapshotElement) => {
     const fs = el.fontSize
     switch (el.id) {
@@ -290,83 +283,62 @@ export default function SnapshotEditor({ habit, onClose, onPosted }: Props) {
     <>
     <div
       onClick={onClose}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 500,
-        background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
-      }}
+      className="fixed inset-0 z-[500] bg-black/75 backdrop-blur-[6px] flex items-center justify-center p-4"
     >
       <div
         onClick={e => e.stopPropagation()}
-        style={{
-          background: tokens.white, borderRadius: tokens.radiusXl,
-          boxShadow: tokens.shadowLg, width: '100%', maxWidth: 720,
-          maxHeight: '95vh', overflowY: 'auto',
-          display: 'flex', flexDirection: 'column',
-        }}
+        className="bg-white rounded-xl shadow-float w-full max-w-[720px] max-h-[95vh] overflow-y-auto flex flex-col"
       >
         {/* Header */}
-        <div style={{
-          padding: '18px 24px', borderBottom: `1px solid ${tokens.border}`,
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          position: 'sticky', top: 0, background: tokens.white, zIndex: 1,
-          borderRadius: `${tokens.radiusXl} ${tokens.radiusXl} 0 0`,
-        }}>
+        <div className="px-6 py-[18px] border-b border-border flex justify-between items-center sticky top-0 bg-white z-[1] rounded-t-xl">
           <div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: tokens.text, fontFamily: tokens.fontHeading }}>
-              📸 Buat Snapshot
+            <div className="text-base font-bold text-ink font-heading flex items-center gap-1.5">
+              <Camera size={16} /> Buat Snapshot
             </div>
-            <div style={{ fontSize: 12, color: tokens.textMuted, marginTop: 2 }}>
+            <div className="text-xs text-muted mt-0.5">
               Drag elemen untuk memindahkan • Klik untuk memilih & ubah ukuran
             </div>
           </div>
-          <button onClick={onClose} style={{
-            width: 32, height: 32, borderRadius: 8, border: `1px solid ${tokens.border}`,
-            background: tokens.bg, cursor: 'pointer', fontSize: 16,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>✕</button>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-sm border border-border bg-surface cursor-pointer flex items-center justify-center"
+          >
+            <X size={16} />
+          </button>
         </div>
 
         {/* Body */}
-        <div style={{
-          display: 'flex', flexWrap: 'wrap', gap: 20, padding: 20,
-          alignItems: 'flex-start', justifyContent: 'center',
-        }}>
+        <div className="flex flex-wrap gap-5 p-5 items-start justify-center">
 
           {/* ── Preview ── */}
-          <div style={{ flexShrink: 0 }}>
+          <div className="flex-shrink-0">
             <div
               ref={previewRef}
               onClick={() => setSelectedId(null)}
+              className="relative overflow-hidden rounded-[20px] border-2 border-border shadow-float cursor-default"
               style={{
-                width: PREVIEW_W, height: PREVIEW_H,
-                position: 'relative', overflow: 'hidden',
-                borderRadius: 20,
+                width: PREVIEW_W,
+                height: PREVIEW_H,
                 backgroundImage:    bgImage ? `url(${bgImage})` : undefined,
                 backgroundColor:    bgImage ? undefined : '#0f2018',
                 backgroundSize:     'cover',
                 backgroundPosition: 'center',
-                cursor: 'default',
-                boxShadow: tokens.shadowLg,
-                border: `2px solid ${tokens.border}`,
               }}
             >
               {/* Gradient overlay */}
-              <div style={{
-                position: 'absolute', inset: 0, zIndex: 0,
-                background: bgImage
-                  ? 'linear-gradient(180deg,rgba(0,0,0,0.28) 0%,rgba(0,0,0,0.62) 100%)'
-                  : 'linear-gradient(145deg,rgba(43,89,255,0.55) 0%,rgba(16,185,129,0.35) 100%)',
-              }} />
+              <div
+                className="absolute inset-0 z-0"
+                style={{
+                  background: bgImage
+                    ? 'linear-gradient(180deg,rgba(0,0,0,0.28) 0%,rgba(0,0,0,0.62) 100%)'
+                    : 'linear-gradient(145deg,rgba(43,89,255,0.55) 0%,rgba(16,185,129,0.35) 100%)',
+                }}
+              />
 
               {/* No background hint */}
               {!bgImage && (
-                <div style={{
-                  position: 'absolute', inset: 0, zIndex: 0,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  pointerEvents: 'none',
-                }}>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
+                <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none">
+                  <div className="text-xs text-white/40 text-center">
                     Pilih foto latar dari panel kanan
                   </div>
                 </div>
@@ -381,22 +353,17 @@ export default function SnapshotEditor({ habit, onClose, onPosted }: Props) {
                     onMouseDown={e => { e.stopPropagation(); startDrag(el.id, e.clientX, e.clientY) }}
                     onTouchStart={e => { e.stopPropagation(); startDrag(el.id, e.touches[0].clientX, e.touches[0].clientY) }}
                     onClick={e => { e.stopPropagation(); setSelectedId(el.id) }}
+                    className="absolute cursor-grab select-none touch-none px-2.5 py-1.5 rounded-sm"
                     style={{
-                      position: 'absolute',
-                      left:      `${el.x}%`,
-                      top:       `${el.y}%`,
-                      transform: 'translate(-50%, -50%)',
-                      zIndex:    isSelected ? 3 : 2,
-                      cursor:    'grab',
-                      userSelect: 'none',
-                      touchAction: 'none',
-                      padding:   '6px 10px',
-                      borderRadius: 8,
-                      outline:   isSelected ? '2px dashed rgba(255,255,255,0.8)' : 'none',
+                      left:          `${el.x}%`,
+                      top:           `${el.y}%`,
+                      transform:     'translate(-50%, -50%)',
+                      zIndex:        isSelected ? 3 : 2,
+                      outline:       isSelected ? '2px dashed rgba(255,255,255,0.8)' : 'none',
                       outlineOffset: 4,
-                      background: isSelected ? 'rgba(255,255,255,0.12)' : 'transparent',
+                      background:    isSelected ? 'rgba(255,255,255,0.12)' : 'transparent',
                       backdropFilter: isSelected ? 'blur(2px)' : 'none',
-                      transition: 'outline 0.15s, background 0.15s',
+                      transition:    'outline 0.15s, background 0.15s',
                     }}
                   >
                     {renderElementContent(el)}
@@ -407,141 +374,115 @@ export default function SnapshotEditor({ habit, onClose, onPosted }: Props) {
           </div>
 
           {/* ── Controls Panel ── */}
-          <div style={{
-            flex: 1, minWidth: 220, display: 'flex', flexDirection: 'column', gap: 16,
-          }}>
+          <div className="flex-1 min-w-[220px] flex flex-col gap-4">
 
             {/* Background */}
-            <div style={{ background: tokens.bg, borderRadius: tokens.radius, border: `1px solid ${tokens.border}`, padding: '14px 16px' }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: tokens.textMuted, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                📷 Foto Latar
+            <div className="bg-surface rounded-md border border-border px-4 py-[14px]">
+              <div className="text-xs font-bold text-muted mb-2.5 uppercase tracking-[0.05em] flex items-center gap-1.5">
+                <Camera size={12} /> Foto Latar
               </div>
               <input
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
                 onChange={handleBgUpload}
-                style={{ display: 'none' }}
+                className="hidden"
               />
               <button
                 onClick={() => fileInputRef.current?.click()}
-                style={{
-                  width: '100%', padding: '10px', borderRadius: tokens.radiusSm,
-                  border: `1.5px dashed ${tokens.borderMid}`, background: tokens.white,
-                  cursor: 'pointer', fontSize: 13, color: tokens.primary,
-                  fontWeight: 600, fontFamily: tokens.fontBody,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                }}
+                className="w-full py-2.5 rounded-sm border-[1.5px] border-dashed border-border-mid bg-white cursor-pointer text-[13px] text-primary font-semibold font-body flex items-center justify-center gap-1.5"
               >
-                📁 {bgImage ? 'Ganti Foto' : 'Pilih dari Galeri'}
+                <FolderOpen size={14} /> {bgImage ? 'Ganti Foto' : 'Pilih dari Galeri'}
               </button>
               {bgImage && (
                 <button
                   onClick={() => setBgImage(null)}
-                  style={{
-                    width: '100%', marginTop: 8, padding: '7px', borderRadius: tokens.radiusSm,
-                    border: `1px solid ${tokens.border}`, background: 'transparent',
-                    cursor: 'pointer', fontSize: 12, color: tokens.textMuted,
-                    fontFamily: tokens.fontBody,
-                  }}
+                  className="w-full mt-2 py-[7px] rounded-sm border border-border bg-transparent cursor-pointer text-xs text-muted font-body flex items-center justify-center gap-1"
                 >
-                  ✕ Hapus foto
+                  <X size={12} /> Hapus foto
                 </button>
               )}
             </div>
 
             {/* Diagram type */}
-            <div style={{ background: tokens.bg, borderRadius: tokens.radius, border: `1px solid ${tokens.border}`, padding: '14px 16px' }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: tokens.textMuted, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                📊 Tipe Diagram
+            <div className="bg-surface rounded-md border border-border px-4 py-[14px]">
+              <div className="text-xs font-bold text-muted mb-2.5 uppercase tracking-[0.05em] flex items-center gap-1.5">
+                <BarChart2 size={12} /> Tipe Diagram
               </div>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div className="flex gap-2">
                 {(['donut', 'arc'] as DiagramType[]).map(t => (
                   <button
                     key={t}
                     onClick={() => setDiagramType(t)}
-                    style={{
-                      flex: 1, padding: '9px 8px', borderRadius: tokens.radiusSm,
-                      border: `1.5px solid ${diagramType === t ? tokens.primary : tokens.border}`,
-                      background: diagramType === t ? tokens.primaryLight : tokens.white,
-                      color:      diagramType === t ? tokens.primary : tokens.textMuted,
-                      cursor: 'pointer', fontSize: 13, fontWeight: 600,
-                      fontFamily: tokens.fontBody, transition: 'all 0.15s',
-                    }}
+                    className={`flex-1 py-[9px] px-2 rounded-sm border-[1.5px] cursor-pointer text-[13px] font-semibold font-body transition-all duration-150 flex items-center justify-center gap-1 ${
+                      diagramType === t
+                        ? 'border-primary bg-primary-light text-primary'
+                        : 'border-border bg-white text-muted'
+                    }`}
                   >
-                    {t === 'donut' ? '⭕ Donut' : '🌙 Arc'}
+                    {t === 'donut' ? <><Circle size={13} /> Donut</> : <><Moon size={13} /> Arc</>}
                   </button>
                 ))}
               </div>
             </div>
 
             {/* Element controls */}
-            <div style={{ background: tokens.bg, borderRadius: tokens.radius, border: `1px solid ${tokens.border}`, padding: '14px 16px' }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: tokens.textMuted, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                🎯 Elemen Terpilih
+            <div className="bg-surface rounded-md border border-border px-4 py-[14px]">
+              <div className="text-xs font-bold text-muted mb-2.5 uppercase tracking-[0.05em] flex items-center gap-1.5">
+                <Target size={12} /> Elemen Terpilih
               </div>
               {selectedEl ? (
                 <>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: tokens.text, marginBottom: 12, fontFamily: tokens.fontBody }}>
+                  <div className="text-[13px] font-semibold text-ink mb-3 font-body">
                     {ELEMENT_LABELS[selectedEl.id]}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: 12, color: tokens.textMuted }}>Ukuran:</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-xs text-muted">Ukuran:</span>
+                    <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => changeFontSize(selectedEl.id, -2)}
-                        style={{
-                          width: 28, height: 28, borderRadius: 6, border: `1px solid ${tokens.border}`,
-                          background: tokens.white, cursor: 'pointer', fontSize: 14, fontWeight: 700,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', color: tokens.text,
-                        }}
+                        className="w-7 h-7 rounded-[6px] border border-border bg-white cursor-pointer text-sm font-bold flex items-center justify-center text-ink"
                       >−</button>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: tokens.text, minWidth: 30, textAlign: 'center' }}>
+                      <span className="text-[13px] font-semibold text-ink min-w-[30px] text-center">
                         {selectedEl.fontSize}
                       </span>
                       <button
                         onClick={() => changeFontSize(selectedEl.id, 2)}
-                        style={{
-                          width: 28, height: 28, borderRadius: 6, border: `1px solid ${tokens.border}`,
-                          background: tokens.white, cursor: 'pointer', fontSize: 14, fontWeight: 700,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', color: tokens.text,
-                        }}
+                        className="w-7 h-7 rounded-[6px] border border-border bg-white cursor-pointer text-sm font-bold flex items-center justify-center text-ink"
                       >+</button>
                     </div>
                   </div>
-                  <div style={{ fontSize: 11, color: tokens.textMuted, marginTop: 8 }}>
-                    💡 Drag elemen di preview untuk memindahkan posisinya.
+                  <div className="text-[11px] text-muted mt-2 flex items-center gap-1">
+                    <Info size={11} /> Drag elemen di preview untuk memindahkan posisinya.
                   </div>
                 </>
               ) : (
-                <div style={{ fontSize: 12, color: tokens.textMuted, fontStyle: 'italic' }}>
+                <div className="text-xs text-muted italic">
                   Klik elemen di preview untuk memilihnya.
                 </div>
               )}
             </div>
 
             {/* All elements quick-select */}
-            <div style={{ background: tokens.bg, borderRadius: tokens.radius, border: `1px solid ${tokens.border}`, padding: '14px 16px' }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: tokens.textMuted, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                📋 Semua Elemen
+            <div className="bg-surface rounded-md border border-border px-4 py-[14px]">
+              <div className="text-xs font-bold text-muted mb-2.5 uppercase tracking-[0.05em] flex items-center gap-1.5">
+                <ClipboardList size={12} /> Semua Elemen
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div className="flex flex-col gap-1.5">
                 {elements.map(el => (
                   <button
                     key={el.id}
                     onClick={() => setSelectedId(el.id)}
-                    style={{
-                      padding: '8px 10px', borderRadius: tokens.radiusSm,
-                      border: `1.5px solid ${selectedId === el.id ? tokens.primary : tokens.border}`,
-                      background: selectedId === el.id ? tokens.primaryLight : tokens.white,
-                      cursor: 'pointer', textAlign: 'left', fontFamily: tokens.fontBody,
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    }}
+                    className={`px-2.5 py-2 rounded-sm border-[1.5px] cursor-pointer text-left font-body flex justify-between items-center ${
+                      selectedId === el.id
+                        ? 'border-primary bg-primary-light'
+                        : 'border-border bg-white'
+                    }`}
                   >
-                    <span style={{ fontSize: 12, fontWeight: 600, color: selectedId === el.id ? tokens.primary : tokens.text }}>
+                    <span className={`text-xs font-semibold ${selectedId === el.id ? 'text-primary' : 'text-ink'}`}>
                       {ELEMENT_LABELS[el.id]}
                     </span>
-                    <span style={{ fontSize: 11, color: tokens.textMuted }}>
+                    <span className="text-[11px] text-muted">
                       {el.fontSize}px • ({Math.round(el.x)}%, {Math.round(el.y)}%)
                     </span>
                   </button>
@@ -553,36 +494,27 @@ export default function SnapshotEditor({ habit, onClose, onPosted }: Props) {
             <button
               onClick={handleExport}
               disabled={exporting}
-              style={{
-                width: '100%', padding: '13px', borderRadius: tokens.radius,
-                border: 'none', cursor: exporting ? 'wait' : 'pointer',
-                background: exporting ? tokens.primaryLight : `linear-gradient(135deg, ${tokens.primary}, ${tokens.accent})`,
-                color: exporting ? tokens.primary : 'white',
-                fontSize: 14, fontWeight: 700, fontFamily: tokens.fontBody,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                boxShadow: exporting ? 'none' : tokens.shadowMd,
-                transition: 'all 0.2s',
-              }}
+              className={`w-full py-[13px] rounded-md border-0 text-sm font-bold font-body flex items-center justify-center gap-2 transition-all duration-200 ${
+                exporting
+                  ? 'bg-primary-light text-primary cursor-wait shadow-none'
+                  : 'text-white cursor-pointer shadow-green'
+              }`}
+              style={!exporting ? { background: 'linear-gradient(135deg, #16a34a, #10b981)' } : undefined}
             >
-              {exporting ? '⏳ Membuat gambar...' : '📥 Download / Share'}
+              {exporting
+                ? <><Loader2 size={14} className="animate-spin" /> Membuat gambar...</>
+                : <><Download size={14} /> Download / Share</>}
             </button>
 
             {/* Post ke Feed */}
             <button
               onClick={handleOpenPostForm}
               disabled={exporting}
-              style={{
-                width: '100%', padding: '13px', borderRadius: tokens.radius,
-                border: `2px solid ${tokens.primary}`,
-                cursor: exporting ? 'wait' : 'pointer',
-                background: tokens.white,
-                color: tokens.primary,
-                fontSize: 14, fontWeight: 700, fontFamily: tokens.fontBody,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                transition: 'all 0.2s',
-              }}
+              className={`w-full py-[13px] rounded-md border-2 border-primary bg-white text-primary text-sm font-bold font-body flex items-center justify-center gap-2 transition-all duration-200 ${
+                exporting ? 'cursor-wait' : 'cursor-pointer'
+              }`}
             >
-              📤 Post ke Feed
+              <Send size={14} /> Post ke Feed
             </button>
 
           </div>

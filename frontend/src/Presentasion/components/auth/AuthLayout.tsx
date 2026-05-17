@@ -1,11 +1,7 @@
-// ─── AuthLayout — Green Theme ─────────────────────────────────────────────────
-// Lokasi  : frontend/src/components/auth/AuthLayout.tsx
-// Perubahan: Update gradient panel kiri dari biru → forest green theme
-
 import { type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { GlobalStyles } from '../../../BusinessLogic/factories/ComponentFactory'
-import { tokens } from '../../../BusinessLogic/factories/tokens'
+import { Target, Flame, BarChart2 } from 'lucide-react'
 
 interface AuthLayoutProps {
   children: ReactNode
@@ -17,160 +13,70 @@ export default function AuthLayout({ children, title, subtitle }: AuthLayoutProp
   const navigate = useNavigate()
 
   return (
-    <div style={{
-      minHeight: '100vh', display: 'flex',
-      background: tokens.bg, fontFamily: tokens.fontBody,
-    }}>
+    <div className="min-h-screen flex bg-surface font-body">
       <GlobalStyles />
 
-      {/* ── Left Panel — Branding ──────────────────────────────────────────── */}
+      {/* ── Left Panel ─────────────────────────────────────── */}
       <div
-        className="auth-left-panel"
-        style={{
-          width: 420, flexShrink: 0,
-          background: `linear-gradient(160deg, ${tokens.primaryMid} 0%, ${tokens.primaryDark} 100%)`,
-          display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-          padding: '48px 48px 56px', position: 'relative', overflow: 'hidden',
-        }}
+        className="auth-left-panel w-[420px] shrink-0 flex flex-col justify-between px-12 pt-12 pb-14 relative overflow-hidden"
+        style={{ background: 'linear-gradient(160deg,#166534 0%,#14532d 100%)' }}
       >
         {/* Decorative blobs */}
-        <div style={{
-          position: 'absolute', top: -80, right: -80,
-          width: 280, height: 280, borderRadius: '50%',
-          background: 'rgba(110,231,183,0.07)',
-        }} />
-        <div style={{
-          position: 'absolute', bottom: 60, left: -60,
-          width: 200, height: 200, borderRadius: '50%',
-          background: 'rgba(255,255,255,0.04)',
-        }} />
-        <div style={{
-          position: 'absolute', bottom: -40, right: 40,
-          width: 140, height: 140, borderRadius: '50%',
-          background: 'rgba(22,163,74,0.25)',
-        }} />
-        {/* Subtle grid */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
-          backgroundSize: '40px 40px', pointerEvents: 'none',
-        }} />
+        <div className="absolute -top-20 -right-20 w-[280px] h-[280px] rounded-full" style={{ background: 'rgba(110,231,183,0.07)' }} />
+        <div className="absolute bottom-[60px] -left-[60px] w-[200px] h-[200px] rounded-full" style={{ background: 'rgba(255,255,255,0.04)' }} />
+        <div className="absolute -bottom-10 right-10 w-[140px] h-[140px] rounded-full" style={{ background: 'rgba(22,163,74,0.25)' }} />
+        <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
 
         {/* Logo */}
-        <div
-          onClick={() => navigate('/')}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 10,
-            cursor: 'pointer', position: 'relative', zIndex: 1,
-          }}
-        >
-          <div style={{
-            width: 38, height: 38,
-            background: 'rgba(255,255,255,0.12)',
-            backdropFilter: 'blur(8px)',
-            borderRadius: 10,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 20, border: '1px solid rgba(255,255,255,0.18)',
-          }}>✦</div>
-          <span style={{
-            fontFamily: tokens.fontHeading, fontWeight: 700,
-            fontSize: '20px', color: '#fff',
-          }}>HabitTracker</span>
+        <div onClick={() => navigate('/')} className="flex items-center gap-2.5 cursor-pointer relative z-[1]">
+          <div className="w-[38px] h-[38px] bg-white/10 backdrop-blur-[8px] rounded-[10px] flex items-center justify-center text-xl border border-white/20">✦</div>
+          <span className="font-heading font-bold text-xl text-white">HabitTracker</span>
         </div>
 
         {/* Quote + Features */}
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <p style={{
-            fontFamily: tokens.fontHeading, fontSize: '26px', fontWeight: 700,
-            color: '#fff', lineHeight: 1.4, marginBottom: 24, letterSpacing: '-0.5px',
-          }}>
+        <div className="relative z-[1]">
+          <p className="font-heading text-[26px] font-bold text-white leading-[1.4] mb-6 tracking-tight">
             "Bangun kebiasaan baik,<br />satu hari dalam satu waktu."
           </p>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div className="flex flex-col gap-3">
             {[
-              { icon: '🎯', text: 'Pantau progres harian' },
-              { icon: '🔥', text: 'Jaga streak tetap berjalan' },
-              { icon: '📊', text: 'Lihat laporan mingguan' },
+              { icon: <Target size={16} color="rgba(255,255,255,0.85)" />,    text: 'Pantau progres harian' },
+              { icon: <Flame size={16} color="rgba(255,255,255,0.85)" />,     text: 'Jaga streak tetap berjalan' },
+              { icon: <BarChart2 size={16} color="rgba(255,255,255,0.85)" />, text: 'Lihat laporan mingguan' },
             ].map(item => (
-              <div key={item.text} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{
-                  width: 34, height: 34,
-                  background: 'rgba(255,255,255,0.10)',
-                  borderRadius: 9, border: '1px solid rgba(255,255,255,0.12)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '16px',
-                }}>{item.icon}</div>
-                <span style={{
-                  fontSize: '14px', color: 'rgba(255,255,255,0.75)',
-                  fontFamily: tokens.fontBody,
-                }}>{item.text}</span>
+              <div key={item.text} className="flex items-center gap-2.5">
+                <div className="w-[34px] h-[34px] bg-white/10 rounded-[9px] border border-white/10 flex items-center justify-center">{item.icon}</div>
+                <span className="text-sm text-white/75 font-body">{item.text}</span>
               </div>
             ))}
           </div>
-
-          {/* Stats mini */}
-          <div style={{
-            marginTop: 32, display: 'flex', gap: 20,
-            borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 24,
-          }}>
+          <div className="mt-8 flex gap-5 border-t border-white/10 pt-6">
             {[{ v: '100%', l: 'Gratis' }, { v: '∞', l: 'Habit' }, { v: '4.9★', l: 'Rating' }].map(s => (
               <div key={s.l}>
-                <div style={{
-                  fontFamily: tokens.fontHeading, fontSize: '22px',
-                  fontWeight: 800, color: tokens.accentLight,
-                }}>{s.v}</div>
-                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>
-                  {s.l}
-                </div>
+                <div className="font-heading text-[22px] font-extrabold text-accent-light">{s.v}</div>
+                <div className="text-[11px] text-white/45 mt-0.5">{s.l}</div>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* ── Right Panel — Form ─────────────────────────────────────────────── */}
-      <div style={{
-        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '48px 32px', overflowY: 'auto',
-      }}>
-        <div style={{ width: '100%', maxWidth: 420, animation: 'fadeUp 0.4s ease' }}>
-
-          {/* Brand mark mobile (hidden on desktop via left panel) */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 8, marginBottom: 32,
-          }}>
-            <div style={{
-              width: 32, height: 32, background: tokens.primary, borderRadius: 8,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px',
-            }}>✦</div>
-            <span style={{
-              fontFamily: tokens.fontHeading, fontWeight: 800,
-              fontSize: '17px', color: tokens.text,
-            }}>HabitTracker</span>
+      {/* ── Right Panel ────────────────────────────────────── */}
+      <div className="flex-1 flex items-center justify-center p-12 px-8 overflow-y-auto">
+        <div className="w-full max-w-[420px] animate-fade-up">
+          <div className="flex items-center gap-2 mb-8">
+            <div className="w-8 h-8 bg-primary rounded-[8px] flex items-center justify-center text-sm text-white">✦</div>
+            <span className="font-heading font-extrabold text-[17px] text-ink">HabitTracker</span>
           </div>
-
-          {/* Header */}
-          <div style={{ marginBottom: 28 }}>
-            <h1 style={{
-              fontFamily: tokens.fontHeading, fontSize: '28px', fontWeight: 800,
-              color: tokens.text, margin: '0 0 8px', letterSpacing: '-0.5px',
-            }}>{title}</h1>
-            <p style={{
-              fontSize: '14px', color: tokens.textMuted,
-              lineHeight: 1.65, fontFamily: tokens.fontBody,
-            }}>{subtitle}</p>
+          <div className="mb-7">
+            <h1 className="font-heading text-[28px] font-extrabold text-ink m-0 mb-2 tracking-tight">{title}</h1>
+            <p className="text-sm text-muted leading-relaxed font-body">{subtitle}</p>
           </div>
-
           {children}
         </div>
       </div>
 
-      <style>{`
-        @media (max-width: 768px) {
-          .auth-left-panel { display: none !important; }
-        }
-      `}</style>
+      <style>{`@media (max-width: 768px) { .auth-left-panel { display: none !important; } }`}</style>
     </div>
   )
 }

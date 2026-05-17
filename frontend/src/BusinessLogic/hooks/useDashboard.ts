@@ -17,7 +17,7 @@ export interface WeeklyBar {
 }
 
 export interface DashboardInsight {
-  icon:  string
+  icon:  'flame' | 'trending-up' | 'star' | 'zap'
   bg:    string
   title: string
   sub:   string
@@ -92,14 +92,14 @@ export function useDashboard(habits: HabitStreak[]) {
 
     if (bestHabit && bestCount > 0) {
       result.push({
-        icon: '🔥', bg: '#fff7ed',
+        icon: 'flame', bg: '#fff7ed',
         title: `${bestHabit.title} paling konsisten minggu ini`,
         sub:   `${bestCount}/7 hari selesai — pertahankan!`,
       })
     }
 
     result.push({
-      icon: '📈', bg: '#f0fdf4',
+      icon: 'trending-up', bg: '#f0fdf4',
       title: `Rata-rata progress ${avgProgress}%`,
       sub:   completedFull > 0
         ? `${completedFull} habit sudah selesai 100%!`
@@ -108,7 +108,7 @@ export function useDashboard(habits: HabitStreak[]) {
 
     if (bestDayEntry) {
       result.push({
-        icon: '⭐', bg: '#eef1ff',
+        icon: 'star', bg: '#eef1ff',
         title: `${bestDayEntry[0]} paling produktif minggu ini`,
         sub:   `${bestDayEntry[1]} habit selesai hari ${bestDayEntry[0]}`,
       })
@@ -117,7 +117,7 @@ export function useDashboard(habits: HabitStreak[]) {
     if (needsAttention) {
       const weekCount = byHabit[needsAttention.id_habit] ?? 0
       result.push({
-        icon: '⚡', bg: '#fef2f2',
+        icon: 'zap', bg: '#fef2f2',
         title: `${needsAttention.title} butuh perhatian`,
         sub:   `${weekCount}/7 hari selesai, progress ${Number(needsAttention.progress_percent).toFixed(0)}%`,
       })

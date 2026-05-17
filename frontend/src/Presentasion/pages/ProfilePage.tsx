@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { Button, Input, Alert, Card, tokens } from '../../BusinessLogic/factories/ComponentFactory'
+import { Button, Input, Alert, Card } from '../../BusinessLogic/factories/ComponentFactory'
 import { PageHeader, ModalOverlay } from '../../BusinessLogic/factories/SectionFactory'
 import { useProfile } from '../../BusinessLogic/hooks/useProfile'
 import { useAuth } from '../../BusinessLogic/hooks/useAuth'
 import { Sidebar, LogoutModal, useSidebar } from './shared/sideBar'
+import { Menu, KeyRound, MailOpen, Key, Check, Link2, Lock } from 'lucide-react'
 
 interface ChangePasswordModalProps {
   email: string; onClose: () => void; onSuccess: () => void
@@ -12,27 +13,19 @@ interface ChangePasswordModalProps {
   changePassword: (payload: { otp: string; password: string; password_confirmation: string }) => Promise<{ success: boolean; message: string }>
 }
 
-const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ email, onClose, onSuccess, requestOtp, verifyOtp, changePassword }) => {
-  const [step, setStep]             = useState<'current_password' | 'otp' | 'new_password'>('current_password')
-  const [otp, setOtp]               = useState('')
-  const [password, setPassword]     = useState('')
+const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
+  email, onClose, onSuccess, requestOtp, verifyOtp, changePassword,
+}) => {
+  const [step, setStep]                   = useState<'current_password' | 'otp' | 'new_password'>('current_password')
+  const [otp, setOtp]                     = useState('')
+  const [password, setPassword]           = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [loading, setLoading]       = useState(false)
-  const [error, setError]           = useState('')
-  const [otpCode, setOtpCode]       = useState('')
+  const [loading, setLoading]             = useState(false)
+  const [error, setError]                 = useState('')
+  const [otpCode, setOtpCode]             = useState('')
 
-const TITLES: Record<string, string> = {
-  current_password: 'Verifikasi Identitas',
-  otp:              'Masukkan Kode OTP',
-  new_password:     'Buat Password Baru',
-}
-const SUBTITLES: Record<string, string> = {
-  current_password: 'Kode OTP akan dikirim ke emailmu untuk verifikasi.',
-  otp:              'Masukkan 6 digit kode yang dikirim ke emailmu.',
-  new_password:     'Buat password baru yang kuat minimal 8 karakter.',
-}
-const title    = TITLES[step]    ?? 'Ganti Password'
-const subtitle = SUBTITLES[step] ?? ''
+  const TITLES    = { current_password: 'Verifikasi Identitas', otp: 'Masukkan Kode OTP', new_password: 'Buat Password Baru' }
+  const SUBTITLES = { current_password: 'Kode OTP akan dikirim ke emailmu untuk verifikasi.', otp: 'Masukkan 6 digit kode yang dikirim ke emailmu.', new_password: 'Buat password baru yang kuat minimal 8 karakter.' }
 
   const handleRequestOtp = async () => {
     setLoading(true); setError('')
@@ -58,24 +51,38 @@ const subtitle = SUBTITLES[step] ?? ''
     if (result.success) onSuccess(); else setError(result.message)
   }
 
+  const steps = ['current_password', 'otp', 'new_password'] as const
+  const stepIndex = steps.indexOf(step)
+
   return (
-    <div style={{ background: tokens.white, borderRadius: 20, padding: '32px', boxShadow: tokens.shadow, width: '100%', maxWidth: 440 }}>
-      <div style={{ marginBottom: 24, textAlign: 'center' }}>
-        <div style={{ fontSize: 36, marginBottom: 10 }}>{step === 'current_password' ? '🔐' : step === 'otp' ? '📨' : '🔑'}</div>
-        <h3 style={{ fontFamily: tokens.fontHeading, fontSize: 20, fontWeight: 700, color: tokens.text, marginBottom: 6 }}>{title}</h3>
-        <p style={{ fontSize: 13, color: tokens.textMuted, lineHeight: 1.6 }}>{subtitle}</p>
+    <div className="bg-white rounded-xl p-8 shadow-card w-full max-w-[440px]">
+      <div className="mb-6 text-center">
+        <div className="mb-2.5 flex justify-center text-primary">
+          {step === 'current_password' ? <Lock size={36} /> : step === 'otp' ? <MailOpen size={36} /> : <Key size={36} />}
+        </div>
+        <h3 className="font-heading text-xl font-bold text-ink mb-1.5">{TITLES[step]}</h3>
+        <p className="text-[13px] text-muted leading-relaxed">{SUBTITLES[step]}</p>
       </div>
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 24 }}>
-        {(['current_password', 'otp', 'new_password'] as const).map((s, i) => (
-          <div key={s} style={{ width: step === s ? 24 : 8, height: 8, borderRadius: 100, background: step === s ? tokens.primary : (['current_password','otp','new_password'].indexOf(step) > i ? '#a7f3d0' : tokens.border), transition: 'all 0.3s' }} />
+
+      <div className="flex justify-center gap-2 mb-6">
+        {steps.map((s, i) => (
+          <div
+            key={s}
+            className="h-2 rounded-full transition-all duration-300"
+            style={{
+              width: step === s ? 24 : 8,
+              background: step === s ? '#16a34a' : stepIndex > i ? '#a7f3d0' : '#d1fae5',
+            }}
+          />
         ))}
       </div>
-      {error && <div style={{ marginBottom: 16 }}><Alert type="error" message={error} /></div>}
+
+      {error && <div className="mb-4"><Alert type="error" message={error} /></div>}
 
       {step === 'current_password' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <p style={{ fontSize: 14, color: tokens.textMuted, textAlign: 'center' }}>Kode OTP akan dikirim ke <strong style={{ color: tokens.text }}>{email}</strong></p>
-          <div style={{ display: 'flex', gap: 10 }}>
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-muted text-center">Kode OTP akan dikirim ke <strong className="text-ink">{email}</strong></p>
+          <div className="flex gap-2.5">
             <Button variant="ghost" onClick={onClose} disabled={loading} style={{ flex: 1 }}>Batal</Button>
             <Button variant="primary" onClick={handleRequestOtp} loading={loading} style={{ flex: 2 }}>Kirim Kode OTP</Button>
           </div>
@@ -83,25 +90,32 @@ const subtitle = SUBTITLES[step] ?? ''
       )}
 
       {step === 'otp' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <Input label="Kode OTP (6 digit)" placeholder="000000" value={otp}
+        <div className="flex flex-col gap-4">
+          <Input
+            label="Kode OTP (6 digit)"
+            placeholder="000000"
+            value={otp}
             onChange={e => { setOtp(e.target.value.replace(/\D/g,'').slice(0,6)); setError('') }}
-            maxLength={6} style={{ textAlign: 'center', letterSpacing: 8, fontSize: 20, fontWeight: 700 }} />
-          <div style={{ display: 'flex', gap: 10 }}>
+            maxLength={6}
+            style={{ textAlign: 'center', letterSpacing: 8, fontSize: 20, fontWeight: 700 }}
+          />
+          <div className="flex gap-2.5">
             <Button variant="ghost" onClick={onClose} disabled={loading} style={{ flex: 1 }}>Batal</Button>
             <Button variant="primary" onClick={handleVerifyOtp} loading={loading} style={{ flex: 2 }}>Verifikasi OTP</Button>
           </div>
-          <button onClick={handleRequestOtp} disabled={loading} style={{ background: 'none', border: 'none', cursor: 'pointer', color: tokens.primary, fontSize: 13, textAlign: 'center', opacity: loading ? 0.5 : 1 }}>
-            Kirim ulang OTP
-          </button>
+          <button
+            onClick={handleRequestOtp}
+            disabled={loading}
+            className="bg-transparent border-none cursor-pointer text-primary text-[13px] text-center disabled:opacity-50"
+          >Kirim ulang OTP</button>
         </div>
       )}
 
       {step === 'new_password' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div className="flex flex-col gap-4">
           <Input label="Password Baru" type="password" placeholder="Minimal 8 karakter" value={password} onChange={e => { setPassword(e.target.value); setError('') }} />
           <Input label="Konfirmasi Password Baru" type="password" placeholder="Ulangi password baru" value={confirmPassword} onChange={e => { setConfirmPassword(e.target.value); setError('') }} />
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div className="flex gap-2.5">
             <Button variant="ghost" onClick={onClose} disabled={loading} style={{ flex: 1 }}>Batal</Button>
             <Button variant="primary" onClick={handleChangePassword} loading={loading} style={{ flex: 2 }}>Simpan Password</Button>
           </div>
@@ -110,6 +124,7 @@ const subtitle = SUBTITLES[step] ?? ''
     </div>
   )
 }
+
 export default function ProfilePage() {
   const { user, logout } = useAuth()
   const { profile, loading, error, updateProfile, requestChangePasswordOtp, verifyChangePasswordOtp, changePassword } = useProfile()
@@ -128,11 +143,7 @@ export default function ProfilePage() {
     if (profile) { setFullName(profile.full_name || ''); setUsername(profile.username || ''); setEmail(profile.email || '') }
   }, [profile])
 
-  const displayUser = { 
-  full_name: user?.full_name ?? 'Pengguna', 
-  email: user?.email ?? '', 
-  username: user?.username ?? 'Pengguna' 
-}
+  const displayUser = { full_name: user?.full_name ?? 'Pengguna', email: user?.email ?? '', username: user?.username ?? 'Pengguna' }
   const isGoogleUser = !!profile?.google_id
 
   const showToast = (type: 'success' | 'error', message: string) => {
@@ -159,39 +170,52 @@ export default function ProfilePage() {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: tokens.bg, fontFamily: tokens.fontBody }}>
-      <Sidebar open={sidebarOpen} isMobile={isMobile} currentPageId="profile"
-        displayUser={displayUser} onClose={() => setSidebarOpen(false)} onLogout={() => setShowLogoutConfirm(true)} />
+    <div className="flex min-h-screen bg-surface font-body">
+      <Sidebar
+        open={sidebarOpen} isMobile={isMobile} currentPageId="profile"
+        displayUser={displayUser} onClose={() => setSidebarOpen(false)} onLogout={() => setShowLogoutConfirm(true)}
+      />
 
-      <main style={{ flex: 1, overflowY: 'auto', minWidth: 0, padding: isMobile ? '20px 16px' : '32px 40px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
-          <button onClick={() => setSidebarOpen(o => !o)} style={{ width: 36, height: 36, border: `1px solid ${tokens.border}`, borderRadius: 8, background: tokens.white, cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>☰</button>
-          <PageHeader title="Profil Saya 👤" subtitle="Kelola informasi akun dan keamanan kamu." />
+      <main className={`flex-1 overflow-y-auto min-w-0 ${isMobile ? 'p-5 px-4' : 'p-8 px-10'}`}>
+        <div className="flex items-center gap-4 mb-6">
+          <button
+            onClick={() => setSidebarOpen(o => !o)}
+            className="w-9 h-9 border border-border rounded-[8px] bg-white cursor-pointer flex items-center justify-center shrink-0"
+          ><Menu size={16} /></button>
+          <PageHeader title="Profil Saya" subtitle="Kelola informasi akun dan keamanan kamu." />
         </div>
 
-        {toast && <div style={{ marginBottom: 20 }}><Alert type={toast.type === 'success' ? 'success' : 'error'} message={toast.message} /></div>}
-        {error && <div style={{ marginBottom: 20 }}><Alert type="error" message={error} /></div>}
+        {toast && <div className="mb-5"><Alert type={toast.type} message={toast.message} /></div>}
+        {error && <div className="mb-5"><Alert type="error" message={error} /></div>}
 
         {loading && (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '64px 0' }}>
-            <div style={{ width: 36, height: 36, border: `3px solid ${tokens.border}`, borderTopColor: tokens.primary, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+          <div className="flex justify-center py-16">
+            <div className="w-9 h-9 border-[3px] border-border border-t-primary rounded-full animate-spin-fast" />
           </div>
         )}
 
         {!loading && profile && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 560 }}>
+          <div className="flex flex-col gap-6 max-w-[560px]">
             {/* Avatar */}
             <Card>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
-                <div style={{ width: 72, height: 72, borderRadius: '50%', background: `linear-gradient(135deg,${tokens.primary},#6b8fff)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, color: tokens.white, fontWeight: 700, fontFamily: tokens.fontHeading, flexShrink: 0 }}>
+              <div className="flex items-center gap-5 flex-wrap">
+                <div className="w-[72px] h-[72px] rounded-full bg-gradient-to-br from-primary to-[#6b8fff] flex items-center justify-center text-[28px] text-white font-bold font-heading shrink-0">
                   {(profile.full_name || profile.username || 'U')[0].toUpperCase()}
                 </div>
                 <div>
-                  <div style={{ fontFamily: tokens.fontHeading, fontSize: 20, fontWeight: 700, color: tokens.text }}>{profile.full_name || profile.username}</div>
-                  <div style={{ fontSize: 13, color: tokens.textMuted, marginTop: 2 }}>@{profile.username}</div>
-                  <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-                    {profile.is_verified && <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 10px', borderRadius: 100, background: '#ecfdf5', color: '#065f46' }}>✓ Terverifikasi</span>}
-                    {isGoogleUser && <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 10px', borderRadius: 100, background: '#eff6ff', color: '#1d4ed8' }}>🔗 Google</span>}
+                  <div className="font-heading text-xl font-bold text-ink">{profile.full_name || profile.username}</div>
+                  <div className="text-[13px] text-muted mt-0.5">@{profile.username}</div>
+                  <div className="flex gap-2 mt-2 flex-wrap">
+                    {profile.is_verified && (
+                      <span className="text-[11px] font-semibold px-2.5 py-[2px] rounded-full bg-[#ecfdf5] text-[#065f46] inline-flex items-center gap-1">
+                        <Check size={10} strokeWidth={3} /> Terverifikasi
+                      </span>
+                    )}
+                    {isGoogleUser && (
+                      <span className="text-[11px] font-semibold px-2.5 py-[2px] rounded-full bg-[#eff6ff] text-[#1d4ed8] inline-flex items-center gap-1">
+                        <Link2 size={10} /> Google
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -199,8 +223,8 @@ export default function ProfilePage() {
 
             {/* Edit Profil */}
             <Card>
-              <h3 style={{ fontFamily: tokens.fontHeading, fontSize: 17, fontWeight: 700, color: tokens.text, marginBottom: 20 }}>Informasi Akun</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <h3 className="font-heading text-[17px] font-bold text-ink mb-5">Informasi Akun</h3>
+              <div className="flex flex-col gap-4">
                 <Input label="Nama Lengkap" placeholder="Masukkan nama lengkap" value={fullName} onChange={e => { setFullName(e.target.value); setProfileErrors(p => ({ ...p, full_name: '' })) }} error={profileErrors.full_name} />
                 <Input label="Username" placeholder="Masukkan username" value={username} onChange={e => { setUsername(e.target.value); setProfileErrors(p => ({ ...p, username: '' })) }} error={profileErrors.username} />
                 <Input label="Email" type="email" placeholder="Masukkan email" value={email} onChange={e => { setEmail(e.target.value); setProfileErrors(p => ({ ...p, email: '' })) }} error={profileErrors.email} />
@@ -208,13 +232,18 @@ export default function ProfilePage() {
               </div>
             </Card>
 
-            {/* Ganti Password */}
+            {/* Keamanan */}
             <Card>
-              <h3 style={{ fontFamily: tokens.fontHeading, fontSize: 17, fontWeight: 700, color: tokens.text, marginBottom: 8 }}>Keamanan Akun</h3>
-              <p style={{ fontSize: 13, color: tokens.textMuted, marginBottom: 20, lineHeight: 1.6 }}>
+              <h3 className="font-heading text-[17px] font-bold text-ink mb-2">Keamanan Akun</h3>
+              <p className="text-[13px] text-muted mb-5 leading-relaxed">
                 {isGoogleUser ? 'Akun ini menggunakan Google login. Ganti password tidak tersedia.' : 'Ganti password secara berkala untuk menjaga keamanan akunmu. Kode OTP akan dikirim ke emailmu.'}
               </p>
-              <Button variant="secondary" onClick={() => setShowChangePassword(true)} disabled={isGoogleUser} style={{ width: 'auto' }}>🔐 Ganti Password</Button>
+              <Button
+                variant="secondary"
+                onClick={() => setShowChangePassword(true)}
+                disabled={isGoogleUser}
+                style={{ width: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              ><KeyRound size={14} /> Ganti Password</Button>
             </Card>
           </div>
         )}
@@ -222,13 +251,23 @@ export default function ProfilePage() {
 
       {showChangePassword && profile && (
         <ModalOverlay onClose={() => setShowChangePassword(false)}>
-          <ChangePasswordModal email={profile.email} onClose={() => setShowChangePassword(false)}
+          <ChangePasswordModal
+            email={profile.email}
+            onClose={() => setShowChangePassword(false)}
             onSuccess={() => { setShowChangePassword(false); showToast('success', 'Password berhasil diganti!') }}
-            requestOtp={requestChangePasswordOtp} verifyOtp={verifyChangePasswordOtp} changePassword={changePassword} />
+            requestOtp={requestChangePasswordOtp}
+            verifyOtp={verifyChangePasswordOtp}
+            changePassword={changePassword}
+          />
         </ModalOverlay>
       )}
 
-      {showLogoutConfirm && <LogoutModal onCancel={() => setShowLogoutConfirm(false)} onConfirm={async () => { setShowLogoutConfirm(false); await logout() }} />}
+      {showLogoutConfirm && (
+        <LogoutModal
+          onCancel={() => setShowLogoutConfirm(false)}
+          onConfirm={async () => { setShowLogoutConfirm(false); await logout() }}
+        />
+      )}
     </div>
   )
 }

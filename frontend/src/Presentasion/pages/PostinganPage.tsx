@@ -1,26 +1,25 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../../BusinessLogic/hooks/useAuth'
 import { Sidebar, LogoutModal, useSidebar } from './shared/sideBar'
-import { tokens } from '../../BusinessLogic/factories/tokens'
 import { postService, type Post, type PostComment } from '../../BusinessLogic/services/PostService'
+import {
+  Menu, X, Check, Camera, Heart, MessageCircle,
+  ChevronUp, ChevronDown, Trash2, BarChart2, Inbox,
+} from 'lucide-react'
 
-// ─── Avatar helper ────────────────────────────────────────────────────────────
 function Avatar({ name, size = 36 }: { name: string | null; size?: number }) {
   const initials = (name ?? '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
   return (
-    <div style={{
-      width: size, height: size, borderRadius: '50%',
-      background: `linear-gradient(135deg, ${tokens.primary}, ${tokens.accent})`,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      color: 'white', fontSize: size * 0.38, fontWeight: 700,
-      flexShrink: 0, fontFamily: tokens.fontHeading,
-    }}>
-      {initials}
-    </div>
+    <div
+      className="rounded-full flex items-center justify-center text-white font-bold shrink-0 font-heading"
+      style={{
+        width: size, height: size, fontSize: size * 0.38,
+        background: 'linear-gradient(135deg,#16a34a,#10b981)',
+      }}
+    >{initials}</div>
   )
 }
 
-// ─── Time ago ─────────────────────────────────────────────────────────────────
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
   const m = Math.floor(diff / 60000)
@@ -33,7 +32,6 @@ function timeAgo(iso: string): string {
   return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-// ─── Comment section ──────────────────────────────────────────────────────────
 function CommentSection({ postId, count, currentUsername }: {
   postId: number; count: number; currentUsername: string
 }) {
@@ -47,103 +45,73 @@ function CommentSection({ postId, count, currentUsername }: {
   const load = async () => {
     setLoading(true)
     const data = await postService.getComments(postId)
-    setComments(data)
-    setTotal(data.length)
-    setLoading(false)
+    setComments(data); setTotal(data.length); setLoading(false)
   }
 
-  const toggle = () => {
-    if (!open) load()
-    setOpen(o => !o)
-  }
+  const toggle = () => { if (!open) load(); setOpen(o => !o) }
 
   const send = async () => {
     if (!input.trim() || sending) return
     setSending(true)
     const res = await postService.addComment(postId, input.trim())
-    if (res.success && res.data) {
-      setComments(prev => [...prev, res.data!])
-      setTotal(t => t + 1)
-      setInput('')
-    }
+    if (res.success && res.data) { setComments(prev => [...prev, res.data!]); setTotal(t => t + 1); setInput('') }
     setSending(false)
   }
 
   const remove = async (commentId: number) => {
     const res = await postService.deleteComment(postId, commentId)
-    if (res.success) {
-      setComments(prev => prev.filter(c => c.id !== commentId))
-      setTotal(t => Math.max(0, t - 1))
-    }
+    if (res.success) { setComments(prev => prev.filter(c => c.id !== commentId)); setTotal(t => Math.max(0, t - 1)) }
   }
 
   return (
     <div>
-      <button onClick={toggle} style={{
-        background: 'none', border: 'none', cursor: 'pointer',
-        fontSize: 13, color: tokens.textMuted, padding: 0,
-        display: 'flex', alignItems: 'center', gap: 5,
-        fontFamily: tokens.fontBody,
-      }}>
-        💬 {total} komentar {open ? '▲' : '▼'}
+      <button
+        onClick={toggle}
+        className="bg-transparent border-none cursor-pointer text-[13px] text-muted p-0 flex items-center gap-[5px] font-body"
+      >
+        <MessageCircle size={13} /> {total} komentar {open ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
       </button>
 
       {open && (
-        <div style={{ marginTop: 12, borderTop: `1px solid ${tokens.border}`, paddingTop: 12 }}>
-          {loading && <div style={{ fontSize: 12, color: tokens.textMuted }}>Memuat komentar...</div>}
+        <div className="mt-3 border-t border-border pt-3">
+          {loading && <div className="text-xs text-muted">Memuat komentar...</div>}
           {!loading && comments.length === 0 && (
-            <div style={{ fontSize: 12, color: tokens.textMuted, fontStyle: 'italic' }}>Belum ada komentar.</div>
+            <div className="text-xs text-muted italic">Belum ada komentar.</div>
           )}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 14 }}>
+          <div className="flex flex-col gap-2.5 mb-3.5">
             {comments.map(c => (
-              <div key={c.id} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              <div key={c.id} className="flex gap-2.5 items-start">
                 <Avatar name={c.user.full_name} size={28} />
-                <div style={{ flex: 1 }}>
-                  <div style={{
-                    background: tokens.bg, borderRadius: 10, padding: '8px 12px',
-                    border: `1px solid ${tokens.border}`,
-                  }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: tokens.text, marginBottom: 2 }}>
-                      {c.user.full_name ?? c.user.username}
-                    </div>
-                    <div style={{ fontSize: 13, color: tokens.text, lineHeight: 1.5 }}>{c.content}</div>
+                <div className="flex-1">
+                  <div className="bg-surface rounded-[10px] px-3 py-2 border border-border">
+                    <div className="text-xs font-bold text-ink mb-0.5">{c.user.full_name ?? c.user.username}</div>
+                    <div className="text-[13px] text-ink leading-relaxed">{c.content}</div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4 }}>
-                    <span style={{ fontSize: 11, color: tokens.textMuted }}>{timeAgo(c.created_at)}</span>
+                  <div className="flex items-center gap-2.5 mt-1">
+                    <span className="text-[11px] text-muted">{timeAgo(c.created_at)}</span>
                     {c.user.username === currentUsername && (
-                      <button onClick={() => remove(c.id)} style={{
-                        background: 'none', border: 'none', cursor: 'pointer',
-                        fontSize: 11, color: '#ef4444', padding: 0, fontFamily: tokens.fontBody,
-                      }}>Hapus</button>
+                      <button onClick={() => remove(c.id)} className="bg-transparent border-none cursor-pointer text-[11px] text-[#ef4444] p-0 font-body">Hapus</button>
                     )}
                   </div>
                 </div>
               </div>
             ))}
           </div>
-
-          {/* Input */}
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div className="flex gap-2 items-center">
             <input
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
               placeholder="Tulis komentar..."
               maxLength={500}
-              style={{
-                flex: 1, padding: '8px 12px', borderRadius: 20,
-                border: `1.5px solid ${tokens.border}`, fontSize: 13,
-                fontFamily: tokens.fontBody, outline: 'none', color: tokens.text,
-                background: tokens.bg,
-              }}
+              className="flex-1 px-3 py-2 rounded-full border-[1.5px] border-border text-[13px] font-body outline-none text-ink bg-surface"
             />
-            <button onClick={send} disabled={sending || !input.trim()} style={{
-              padding: '8px 14px', borderRadius: 20, border: 'none',
-              background: input.trim() ? tokens.primary : tokens.border,
-              color: 'white', fontSize: 13, fontWeight: 600,
-              cursor: input.trim() ? 'pointer' : 'default',
-              fontFamily: tokens.fontBody,
-            }}>
+            <button
+              onClick={send}
+              disabled={sending || !input.trim()}
+              className="px-3.5 py-2 rounded-full border-none text-white text-[13px] font-semibold font-body cursor-pointer"
+              style={{ background: input.trim() ? '#16a34a' : '#d1fae5' }}
+            >
               {sending ? '...' : 'Kirim'}
             </button>
           </div>
@@ -153,7 +121,6 @@ function CommentSection({ postId, count, currentUsername }: {
   )
 }
 
-// ─── Post card ────────────────────────────────────────────────────────────────
 function PostCard({ post, currentUsername, onDelete }: {
   post: Post; currentUsername: string; onDelete: (id: number) => void
 }) {
@@ -171,148 +138,92 @@ function PostCard({ post, currentUsername, onDelete }: {
   }
 
   return (
-    <div style={{
-      background: tokens.white, border: `1px solid ${tokens.border}`,
-      borderRadius: tokens.radiusLg, overflow: 'hidden',
-      boxShadow: tokens.shadow,
-    }}>
-      {/* Image */}
+    <div className="bg-white border border-border rounded-lg overflow-hidden shadow-card">
       {!imgError ? (
         <img
-          src={post.image_url}
-          alt={post.title}
+          src={post.image_url} alt={post.title}
           onError={() => setImgError(true)}
-          style={{ width: '100%', aspectRatio: '9/16', objectFit: 'cover', display: 'block' }}
+          className="w-full object-cover block"
+          style={{ aspectRatio: '9/16' }}
         />
       ) : (
-        <div style={{
-          width: '100%', aspectRatio: '9/16',
-          background: `linear-gradient(135deg, ${tokens.primaryLight}, ${tokens.successBg})`,
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          gap: 12,
-        }}>
-          <div style={{ fontSize: 48 }}>📊</div>
-          <div style={{ fontSize: 14, color: tokens.textMuted }}>Gambar tidak tersedia</div>
+        <div
+          className="w-full flex flex-col items-center justify-center gap-3"
+          style={{ aspectRatio: '9/16', background: 'linear-gradient(135deg,#dcfce7,#dcfce7)' }}
+        >
+          <BarChart2 size={48} color="#16a34a" />
+          <div className="text-sm text-muted">Gambar tidak tersedia</div>
         </div>
       )}
 
-      {/* Body */}
-      <div style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-
-        {/* User row */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div className="px-[18px] py-4 flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
             <Avatar name={post.user.full_name} size={36} />
             <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: tokens.text }}>
-                {post.user.full_name ?? post.user.username}
-              </div>
-              <div style={{ fontSize: 11, color: tokens.textMuted }}>
-                @{post.user.username} · {timeAgo(post.created_at)}
-              </div>
+              <div className="text-[13px] font-bold text-ink">{post.user.full_name ?? post.user.username}</div>
+              <div className="text-[11px] text-muted">@{post.user.username} · {timeAgo(post.created_at)}</div>
             </div>
           </div>
           {post.is_mine && (
-            <button onClick={() => onDelete(post.id)} style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              fontSize: 13, color: '#ef4444', fontFamily: tokens.fontBody,
-              padding: '4px 8px',
-            }}>🗑 Hapus</button>
+            <button
+              onClick={() => onDelete(post.id)}
+              className="bg-transparent border-none cursor-pointer text-[13px] text-[#ef4444] font-body px-2 py-1 inline-flex items-center gap-1"
+            ><Trash2 size={13} /> Hapus</button>
           )}
         </div>
 
-        {/* Title & caption */}
         <div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: tokens.text, marginBottom: 4 }}>
-            {post.title}
-          </div>
-          {post.caption && (
-            <div style={{ fontSize: 13, color: tokens.textMuted, lineHeight: 1.6 }}>
-              {post.caption}
-            </div>
-          )}
+          <div className="text-[15px] font-bold text-ink mb-1">{post.title}</div>
+          {post.caption && <div className="text-[13px] text-muted leading-relaxed">{post.caption}</div>}
         </div>
 
-        {/* Habit info */}
         {post.habit_title && (
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            background: tokens.primaryLighter, borderRadius: tokens.radius,
-            padding: '8px 12px',
-          }}>
-            <span style={{ fontSize: 13, color: tokens.primary, fontWeight: 600 }}>
-              📊 {post.habit_title}
+          <div className="flex items-center justify-between bg-primary-lighter rounded-md px-3 py-2">
+            <span className="text-[13px] text-primary font-semibold flex items-center gap-1.5">
+              <BarChart2 size={13} className="shrink-0" /> {post.habit_title}
             </span>
             {post.progress_percent != null && (
-              <span style={{ fontSize: 13, fontWeight: 700, color: tokens.primary }}>
-                {Number(post.progress_percent).toFixed(0)}%
-              </span>
+              <span className="text-[13px] font-bold text-primary">{Number(post.progress_percent).toFixed(0)}%</span>
             )}
           </div>
         )}
 
-        {/* Like row */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <button onClick={toggleLike} disabled={liking} style={{
-            background: 'none', border: 'none', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', gap: 6,
-            fontSize: 13, fontWeight: 600, fontFamily: tokens.fontBody,
-            color: liked ? '#ef4444' : tokens.textMuted,
-            padding: 0, transition: 'color 0.15s',
-          }}>
-            {liked ? '❤️' : '🤍'} {likesCount}
+        <div className="flex items-center gap-4">
+          <button
+            onClick={toggleLike}
+            disabled={liking}
+            className="bg-transparent border-none cursor-pointer flex items-center gap-1.5 text-[13px] font-semibold font-body p-0 transition-colors"
+            style={{ color: liked ? '#ef4444' : '#4b7a54' }}
+          >
+            <Heart size={14} fill={liked ? '#ef4444' : 'none'} color={liked ? '#ef4444' : '#4b7a54'} /> {likesCount}
           </button>
         </div>
 
-        {/* Comments */}
-        <CommentSection
-          postId={post.id}
-          count={post.comments_count}
-          currentUsername={currentUsername}
-        />
+        <CommentSection postId={post.id} count={post.comments_count} currentUsername={currentUsername} />
       </div>
     </div>
   )
 }
 
-// ─── Delete confirm modal ─────────────────────────────────────────────────────
 function DeleteConfirm({ onConfirm, onCancel }: { onConfirm: () => void; onCancel: () => void }) {
   return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 600, background: 'rgba(0,0,0,0.5)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
-    }}>
-      <div style={{
-        background: tokens.white, borderRadius: 16, padding: 28,
-        maxWidth: 360, width: '100%', textAlign: 'center',
-      }}>
-        <div style={{ fontSize: 40, marginBottom: 12 }}>🗑</div>
-        <h3 style={{ margin: '0 0 8px', fontFamily: tokens.fontHeading, fontSize: 18, color: tokens.text }}>
-          Hapus Postingan?
-        </h3>
-        <p style={{ margin: '0 0 20px', fontSize: 13, color: tokens.textMuted }}>
-          Postingan yang dihapus tidak dapat dikembalikan.
-        </p>
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button onClick={onCancel} style={{
-            flex: 1, padding: '10px', borderRadius: 10,
-            border: `1px solid ${tokens.border}`, background: tokens.white,
-            cursor: 'pointer', fontSize: 14, fontFamily: tokens.fontBody, color: tokens.textMuted,
-          }}>Batal</button>
-          <button onClick={onConfirm} style={{
-            flex: 1, padding: '10px', borderRadius: 10, border: 'none',
-            background: '#ef4444', cursor: 'pointer',
-            fontSize: 14, fontWeight: 700, fontFamily: tokens.fontBody, color: 'white',
-          }}>Hapus</button>
+    <div className="fixed inset-0 z-[600] bg-black/50 flex items-center justify-center p-5">
+      <div className="bg-white rounded-[16px] p-7 max-w-[360px] w-full text-center">
+        <div className="mb-3 flex justify-center"><Trash2 size={40} color="#ef4444" /></div>
+        <h3 className="m-0 mb-2 font-heading text-lg text-ink">Hapus Postingan?</h3>
+        <p className="m-0 mb-5 text-[13px] text-muted">Postingan yang dihapus tidak dapat dikembalikan.</p>
+        <div className="flex gap-2.5">
+          <button onClick={onCancel} className="flex-1 py-2.5 rounded-[10px] border border-border bg-white cursor-pointer text-sm font-body text-muted">Batal</button>
+          <button onClick={onConfirm} className="flex-1 py-2.5 rounded-[10px] border-none bg-[#ef4444] cursor-pointer text-sm font-bold font-body text-white">Hapus</button>
         </div>
       </div>
     </div>
   )
 }
 
-// ─── PostinganPage ────────────────────────────────────────────────────────────
 export default function PostinganPage() {
-  const { user, logout }                    = useAuth()
+  const { user, logout }                          = useAuth()
   const { isMobile, sidebarOpen, setSidebarOpen } = useSidebar()
   const [showLogout,   setShowLogout]   = useState(false)
   const [posts,        setPosts]        = useState<Post[]>([])
@@ -322,11 +233,7 @@ export default function PostinganPage() {
   const [toast,        setToast]        = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const displayUser = {
-    full_name: user?.full_name ?? 'Pengguna',
-    email:     user?.email     ?? '',
-    username:  user?.username  ?? 'Pengguna',
-  }
+  const displayUser = { full_name: user?.full_name ?? 'Pengguna', email: user?.email ?? '', username: user?.username ?? 'Pengguna' }
 
   const showToast = (type: 'success' | 'error', msg: string) => {
     setToast({ type, message: msg })
@@ -335,88 +242,58 @@ export default function PostinganPage() {
   }
 
   useEffect(() => {
-    postService.getPosts()
-      .then(data => { setPosts(data) })
-      .catch(() => {})
-      .finally(() => setLoading(false))
+    postService.getPosts().then(data => setPosts(data)).catch(() => {}).finally(() => setLoading(false))
   }, [])
 
   const handleDelete = async () => {
     if (!deleteTarget) return
     setDeleting(true)
     const res = await postService.deletePost(deleteTarget)
-    if (res.success) {
-      setPosts(prev => prev.filter(p => p.id !== deleteTarget))
-      showToast('success', 'Postingan berhasil dihapus.')
-    } else {
-      showToast('error', 'Gagal menghapus postingan. Coba lagi.')
-    }
-    setDeleteTarget(null)
-    setDeleting(false)
+    if (res.success) { setPosts(prev => prev.filter(p => p.id !== deleteTarget)); showToast('success', 'Postingan berhasil dihapus.') }
+    else showToast('error', 'Gagal menghapus postingan. Coba lagi.')
+    setDeleteTarget(null); setDeleting(false)
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: tokens.bg, fontFamily: tokens.fontBody }}>
-      <style>{`
-        @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
-      `}</style>
+    <div className="flex min-h-screen bg-surface font-body">
+      <style>{`@keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }`}</style>
 
-      <Sidebar open={sidebarOpen} isMobile={isMobile} currentPageId="postingan"
-        displayUser={displayUser} onClose={() => setSidebarOpen(false)} onLogout={() => setShowLogout(true)} />
+      <Sidebar
+        open={sidebarOpen} isMobile={isMobile} currentPageId="postingan"
+        displayUser={displayUser} onClose={() => setSidebarOpen(false)} onLogout={() => setShowLogout(true)}
+      />
 
-      <main style={{ flex: 1, overflowY: 'auto', minWidth: 0, padding: isMobile ? '20px 16px' : '32px 40px' }}>
-
+      <main className={`flex-1 overflow-y-auto min-w-0 ${isMobile ? 'p-5 px-4' : 'p-8 px-10'}`}>
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 28 }}>
-          <button onClick={() => setSidebarOpen((o: boolean) => !o)} style={{
-            width: 36, height: 36, border: `1px solid ${tokens.border}`, borderRadius: 8,
-            background: tokens.white, cursor: 'pointer', fontSize: 16, display: 'flex',
-            alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-          }}>☰</button>
+        <div className="flex items-center gap-3.5 mb-7">
+          <button
+            onClick={() => setSidebarOpen((o: boolean) => !o)}
+            className="w-9 h-9 border border-border rounded-[8px] bg-white cursor-pointer flex items-center justify-center shrink-0"
+          ><Menu size={16} /></button>
           <div>
-            <h1 style={{ fontFamily: tokens.fontHeading, fontSize: 24, fontWeight: 800, color: tokens.text, margin: 0 }}>
-              Postingan 📸
-            </h1>
-            <p style={{ fontSize: 13, color: tokens.textMuted, margin: '2px 0 0' }}>
-              Feed publik — bagikan dan lihat progres habit semua pengguna
-            </p>
+            <h1 className="font-heading text-2xl font-extrabold text-ink m-0">Postingan</h1>
+            <p className="text-[13px] text-muted m-0 mt-0.5">Feed publik — bagikan dan lihat progres habit semua pengguna</p>
           </div>
         </div>
 
-        {/* Toast */}
         {toast && (
-          <div style={{
-            marginBottom: 20, padding: '12px 18px', borderRadius: 10,
-            background: toast.type === 'error' ? '#fee2e2' : tokens.successBg,
-            border: `1px solid ${toast.type === 'error' ? '#dc2626' : tokens.success}`,
-            fontSize: 13, color: toast.type === 'error' ? '#dc2626' : tokens.success,
-            fontWeight: 600,
-          }}>
-            {toast.type === 'error' ? '✕' : '✓'} {toast.message}
+          <div className={`mb-5 px-[18px] py-3 rounded-[10px] text-[13px] font-semibold flex items-center gap-1.5 border ${toast.type === 'error' ? 'bg-[#fee2e2] border-error text-error' : 'bg-success-bg border-primary text-primary'}`}>
+            {toast.type === 'error' ? <X size={13} /> : <Check size={13} />} {toast.message}
           </div>
         )}
 
         {/* Stats bar */}
         {!loading && posts.length > 0 && (
-          <div style={{
-            display: 'grid', gridTemplateColumns: 'repeat(3,1fr)',
-            gap: 12, marginBottom: 28,
-          }}>
+          <div className="grid grid-cols-3 gap-3 mb-7">
             {[
-              { icon: '📸', label: 'Total Post',   value: posts.length },
-              { icon: '❤️',  label: 'Total Likes',  value: posts.reduce((a, p) => a + p.likes_count, 0) },
-              { icon: '💬', label: 'Total Komentar', value: posts.reduce((a, p) => a + p.comments_count, 0) },
+              { icon: <Camera size={20} color="#16a34a" />,       label: 'Total Post',      value: posts.length },
+              { icon: <Heart size={20} color="#ef4444" />,         label: 'Total Likes',     value: posts.reduce((a, p) => a + p.likes_count, 0) },
+              { icon: <MessageCircle size={20} color="#16a34a" />, label: 'Total Komentar',  value: posts.reduce((a, p) => a + p.comments_count, 0) },
             ].map(s => (
-              <div key={s.label} style={{
-                background: tokens.white, border: `1px solid ${tokens.border}`,
-                borderRadius: tokens.radiusLg, padding: '14px 16px',
-                boxShadow: tokens.shadow, textAlign: 'center',
-              }}>
-                <div style={{ fontSize: 20, marginBottom: 4 }}>{s.icon}</div>
-                <div style={{ fontSize: 20, fontWeight: 700, fontFamily: tokens.fontHeading, color: tokens.text }}>
-                  {s.value}
-                </div>
-                <div style={{ fontSize: 11, color: tokens.textMuted }}>{s.label}</div>
+              <div key={s.label} className="bg-white border border-border rounded-lg px-4 py-3.5 shadow-card text-center">
+                <div className="flex justify-center mb-1">{s.icon}</div>
+                <div className="text-xl font-bold font-heading text-ink">{s.value}</div>
+                <div className="text-[11px] text-muted">{s.label}</div>
               </div>
             ))}
           </div>
@@ -424,72 +301,45 @@ export default function PostinganPage() {
 
         {/* Loading skeleton */}
         {loading && (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(280px, 1fr))',
-            gap: 20,
-          }}>
-            {[1, 2, 3].map(i => (
-              <div key={i} style={{
-                height: 500, background: tokens.border,
-                borderRadius: tokens.radiusLg, opacity: 0.5,
-              }} />
-            ))}
+          <div className="grid gap-5" style={{ gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill,minmax(280px,1fr))' }}>
+            {[1,2,3].map(i => <div key={i} className="h-[500px] bg-border rounded-lg opacity-50" />)}
           </div>
         )}
 
         {/* Empty */}
         {!loading && posts.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '60px 24px' }}>
-            <div style={{ fontSize: 56, marginBottom: 16 }}>📭</div>
-            <h3 style={{ fontFamily: tokens.fontHeading, fontSize: 20, fontWeight: 700, color: tokens.text, margin: '0 0 8px' }}>
-              Belum ada postingan
-            </h3>
-            <p style={{ fontSize: 14, color: tokens.textMuted, margin: 0 }}>
+          <div className="text-center py-[60px] px-6">
+            <div className="mb-4 flex justify-center"><Inbox size={56} color="#4b7a54" /></div>
+            <h3 className="font-heading text-xl font-bold text-ink m-0 mb-2">Belum ada postingan</h3>
+            <p className="text-sm text-muted m-0">
               Jadilah yang pertama berbagi progres habit kamu!<br />
-              Buka laporan habit → klik 📸 Share → Post ke Feed.
+              Buka laporan habit → klik Share → Post ke Feed.
             </p>
           </div>
         )}
 
         {/* Feed grid */}
         {!loading && posts.length > 0 && (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(280px, 1fr))',
-            gap: 20,
-          }}>
+          <div className="grid gap-5" style={{ gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill,minmax(280px,1fr))' }}>
             {posts.map((post, i) => (
               <div key={post.id} style={{ animation: `fadeUp 0.3s ease ${i * 0.05}s both` }}>
-                <PostCard
-                  post={post}
-                  currentUsername={user?.username ?? ''}
-                  onDelete={id => setDeleteTarget(id)}
-                />
+                <PostCard post={post} currentUsername={user?.username ?? ''} onDelete={id => setDeleteTarget(id)} />
               </div>
             ))}
           </div>
         )}
       </main>
 
-      {deleteTarget && (
-        <DeleteConfirm
-          onConfirm={handleDelete}
-          onCancel={() => setDeleteTarget(null)}
-        />
-      )}
+      {deleteTarget && <DeleteConfirm onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} />}
 
       {deleting && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ fontSize: 14, color: tokens.textMuted }}>Menghapus...</div>
+        <div className="fixed inset-0 z-[700] flex items-center justify-center">
+          <div className="text-sm text-muted">Menghapus...</div>
         </div>
       )}
 
       {showLogout && (
-        <LogoutModal
-          onCancel={() => setShowLogout(false)}
-          onConfirm={async () => { setShowLogout(false); await logout() }}
-        />
+        <LogoutModal onCancel={() => setShowLogout(false)} onConfirm={async () => { setShowLogout(false); await logout() }} />
       )}
     </div>
   )

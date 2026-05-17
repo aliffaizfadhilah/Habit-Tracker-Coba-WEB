@@ -5,71 +5,46 @@ import { useDashboard } from '../../BusinessLogic/hooks/useDashboard'
 import { useAuth } from '../../BusinessLogic/hooks/useAuth'
 import { http } from '../../BusinessLogic/services/HttpService'
 import { Sidebar, LogoutModal, useSidebar } from './shared/sideBar'
-import { tokens } from '../../BusinessLogic/factories/tokens'
 import HabitReportModal from '../components/HabitReportModal'
 import { habitCompletionService } from '../../BusinessLogic/services/HabitCompletionService'
+import {
+  CheckSquare, Flame, Trophy, TrendingUp,
+  BarChart2, Lock, Loader2, Check, Sprout,
+  Search, AlertTriangle, Menu, Sparkles, Star, Zap,
+} from 'lucide-react'
+
+const INSIGHT_ICONS: Record<string, React.ReactNode> = {
+  'flame':       <Flame size={16} color="#f97316" />,
+  'trending-up': <TrendingUp size={16} color="#16a34a" />,
+  'star':        <Star size={16} color="#f59e0b" />,
+  'zap':         <Zap size={16} color="#ef4444" />,
+}
 
 type FilterType = 'semua' | 'selesai_hari_ini' | 'selesai' | 'belum_selesai'
 
 // ─── StatCard ─────────────────────────────────────────────────────────────────
 const StatCard: React.FC<{
-  label: string; value: string; icon: string
+  label: string; value: string; icon: React.ReactNode
   iconBg: string; barColor: string; barWidth: number
 }> = ({ label, value, icon, iconBg, barColor, barWidth }) => (
-  <div
-    style={{
-      background: tokens.white, border: `1px solid ${tokens.border}`,
-      borderRadius: 16, padding: '18px 20px', boxShadow: tokens.shadow,
-      transition: tokens.transitionBase, cursor: 'default',
-    }}
-    onMouseEnter={e => {
-      e.currentTarget.style.transform = 'translateY(-2px)'
-      e.currentTarget.style.boxShadow = tokens.shadowMd
-      e.currentTarget.style.borderColor = tokens.borderMid
-    }}
-    onMouseLeave={e => {
-      e.currentTarget.style.transform = 'translateY(0)'
-      e.currentTarget.style.boxShadow = tokens.shadow
-      e.currentTarget.style.borderColor = tokens.border
-    }}
-  >
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-      <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase', color: tokens.textMuted }}>{label}</span>
-      <div style={{ width: 34, height: 34, borderRadius: 10, background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>{icon}</div>
+  <div className="bg-white border border-border rounded-[16px] px-5 py-[18px] shadow-card transition-all cursor-default hover:-translate-y-0.5 hover:shadow-green hover:border-border-mid">
+    <div className="flex justify-between items-start mb-3">
+      <span className="text-[11px] font-bold tracking-[.05em] uppercase text-muted">{label}</span>
+      <div className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center" style={{ background: iconBg }}>{icon}</div>
     </div>
-    <div style={{ fontSize: 28, fontWeight: 800, color: tokens.text, letterSpacing: '-.5px', fontFamily: tokens.fontHeading, lineHeight: 1 }}>{value}</div>
-    <div style={{ height: 3, background: tokens.primaryLight, borderRadius: 100, marginTop: 12, overflow: 'hidden' }}>
-      <div style={{ height: '100%', borderRadius: 100, width: `${barWidth}%`, background: barColor, transition: 'width .8s ease' }} />
+    <div className="text-[28px] font-extrabold text-ink tracking-tight font-heading leading-none">{value}</div>
+    <div className="h-[3px] bg-primary-light rounded-full mt-3 overflow-hidden">
+      <div className="h-full rounded-full transition-[width_0.8s_ease]" style={{ width: `${barWidth}%`, background: barColor }} />
     </div>
   </div>
 )
 
-// ─── Card ─────────────────────────────────────────────────────────────────────
-const Card: React.FC<{ children: React.ReactNode; style?: React.CSSProperties }> = ({ children, style }) => (
-  <div style={{
-    background: tokens.white, border: `1px solid ${tokens.border}`,
-    borderRadius: 18, padding: '22px 24px', boxShadow: tokens.shadow, ...style,
-  }}>
+// ─── DashCard ─────────────────────────────────────────────────────────────────
+const DashCard: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
+  <div className={`bg-white border border-border rounded-[18px] p-[22px_24px] shadow-card ${className}`}>
     {children}
   </div>
 )
-
-// ─── Badge ────────────────────────────────────────────────────────────────────
-const Badge: React.FC<{ color: 'green' | 'emerald' | 'orange' | 'red' | 'gray'; children: React.ReactNode }> = ({ color, children }) => {
-  const c = {
-    green:   { bg: tokens.primaryLight,  text: tokens.primary },
-    emerald: { bg: tokens.successBg,     text: '#065f46' },
-    orange:  { bg: '#fff7ed',            text: '#c2410c' },
-    red:     { bg: tokens.errorBg,       text: tokens.error },
-    gray:    { bg: '#f3f4f6',            text: tokens.textMuted },
-  }[color]
-  return (
-    <span style={{
-      fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20,
-      background: c.bg, color: c.text, display: 'inline-flex', alignItems: 'center', gap: 4,
-    }}>{children}</span>
-  )
-}
 
 // ─── FilterTabBar ─────────────────────────────────────────────────────────────
 const FilterTabBar: React.FC<{
@@ -78,47 +53,29 @@ const FilterTabBar: React.FC<{
   counts: Record<FilterType, number>
 }> = ({ active, onChange, counts }) => {
   const tabs: { key: FilterType; label: string }[] = [
-    { key: 'semua',          label: 'Semua'           },
+    { key: 'semua',            label: 'Semua'           },
     { key: 'selesai_hari_ini', label: 'Selesai Hari Ini' },
-    { key: 'selesai',        label: 'Selesai'         },
-    { key: 'belum_selesai',  label: 'Belum Selesai'   },
+    { key: 'selesai',          label: 'Selesai'         },
+    { key: 'belum_selesai',    label: 'Belum Selesai'   },
   ]
   return (
-    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+    <div className="flex gap-1.5 flex-wrap">
       {tabs.map(t => (
-        <button key={t.key} onClick={() => onChange(t.key)} style={{
-          padding: '7px 14px', borderRadius: 10,
-          border: `1.5px solid ${active === t.key ? tokens.primary : tokens.border}`,
-          background: active === t.key ? tokens.primaryLight : tokens.white,
-          color: active === t.key ? tokens.primary : tokens.textMuted,
-          fontFamily: tokens.fontBody, fontSize: 13,
-          fontWeight: active === t.key ? 700 : 500,
-          cursor: 'pointer', transition: tokens.transitionFast,
-          display: 'flex', alignItems: 'center', gap: 6,
-        }}>
+        <button
+          key={t.key}
+          onClick={() => onChange(t.key)}
+          className={`px-3.5 py-[7px] rounded-[10px] border-[1.5px] font-body text-[13px] cursor-pointer transition-all flex items-center gap-1.5
+            ${active === t.key ? 'border-primary bg-primary-light text-primary font-bold' : 'border-border bg-white text-muted font-medium'}`}
+        >
           {t.label}
-          <span style={{
-            fontSize: 11, fontWeight: 700, padding: '1px 7px', borderRadius: 10,
-            background: active === t.key ? tokens.primary : tokens.primaryLight,
-            color: active === t.key ? tokens.white : tokens.primary,
-          }}>{counts[t.key]}</span>
+          <span className={`text-[11px] font-bold px-[7px] py-[1px] rounded-[10px] ${active === t.key ? 'bg-primary text-white' : 'bg-primary-light text-primary'}`}>
+            {counts[t.key]}
+          </span>
         </button>
       ))}
     </div>
   )
 }
-
-// ─── EmptyState ───────────────────────────────────────────────────────────────
-const EmptyState: React.FC<{
-  icon: string; title: string; description: string; action?: React.ReactNode
-}> = ({ icon, title, description, action }) => (
-  <div style={{ textAlign: 'center', padding: '48px 24px' }}>
-    <div style={{ width: 72, height: 72, borderRadius: '50%', background: tokens.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, margin: '0 auto 16px' }}>{icon}</div>
-    <div style={{ fontSize: 16, fontWeight: 700, color: tokens.text, marginBottom: 8, fontFamily: tokens.fontHeading }}>{title}</div>
-    <div style={{ fontSize: 14, color: tokens.textMuted, marginBottom: 20, lineHeight: 1.6 }}>{description}</div>
-    {action}
-  </div>
-)
 
 // ─── HabitStreakCard ───────────────────────────────────────────────────────────
 const HabitStreakCard: React.FC<{
@@ -133,125 +90,101 @@ const HabitStreakCard: React.FC<{
   const handleToggleCheck = async () => {
     if (isComplete) return
     setChecking(true)
-    try {
-      await http.post(`/api/habits/${habit.id_habit}/check-today`, {})
-      await onRefetch()
-    } catch { /* silent */ }
+    try { await http.post(`/api/habits/${habit.id_habit}/check-today`, {}); await onRefetch() }
+    catch { /* silent */ }
     finally { setChecking(false) }
   }
 
   const catColor: Record<string, string> = {
-    'Ilmu Pengetahuan': tokens.accent,
+    'Ilmu Pengetahuan': '#10b981',
     'Kesehatan':        '#f97316',
-    'Mental':           tokens.primary,
+    'Mental':           '#16a34a',
     'Produktivitas':    '#7c3aed',
   }
-  const barColor = catColor[habit.category] ?? tokens.primary
+  const barColor = catColor[habit.category] ?? '#16a34a'
 
   return (
-    <div style={{
-      background: tokens.white,
-      border: `1.5px solid ${isComplete ? tokens.borderMid : tokens.border}`,
-      borderRadius: 16, padding: '20px 24px', boxShadow: tokens.shadow,
-      transition: tokens.transitionBase, position: 'relative', overflow: 'hidden',
-    }}
-      onMouseEnter={e => { e.currentTarget.style.borderColor = tokens.borderMid; e.currentTarget.style.boxShadow = tokens.shadowMd }}
-      onMouseLeave={e => { e.currentTarget.style.borderColor = isComplete ? tokens.borderMid : tokens.border; e.currentTarget.style.boxShadow = tokens.shadow }}
-    >
-      {/* Top accent bar */}
+    <div className={`bg-white border-[1.5px] ${isComplete ? 'border-border-mid' : 'border-border'} rounded-[16px] px-6 py-5 shadow-card transition-all relative overflow-hidden hover:border-border-mid hover:shadow-green`}>
       {isComplete && (
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg,${tokens.primary},${tokens.accent})` }} />
+        <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-primary to-accent" />
       )}
-
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-            <span style={{ fontWeight: 600, fontSize: 15, color: tokens.text }}>{habit.title}</span>
-            <Badge color="green">{habit.category}</Badge>
-            {isComplete  && <Badge color="emerald">Selesai 🎉</Badge>}
-            {!isComplete && habit.checked_today && <Badge color="emerald">Hari Ini ✓</Badge>}
+      <div className="flex justify-between items-start mb-3">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <span className="font-semibold text-[15px] text-ink">{habit.title}</span>
+            <span className="inline-flex items-center px-2.5 py-[3px] rounded-full text-[11px] font-semibold bg-primary-light text-primary">
+              {habit.category}
+            </span>
+            {isComplete && (
+              <span className="inline-flex items-center px-2.5 py-[3px] rounded-full text-[11px] font-semibold bg-success-bg text-[#065f46]">Selesai</span>
+            )}
+            {!isComplete && habit.checked_today && (
+              <span className="inline-flex items-center px-2.5 py-[3px] rounded-full text-[11px] font-semibold bg-success-bg text-[#065f46]">Hari Ini ✓</span>
+            )}
           </div>
-          <span style={{ fontSize: 12, color: tokens.textMuted }}>{habit.periode_start} s/d {habit.periode_end}</span>
+          <span className="text-xs text-muted">{habit.periode_start} s/d {habit.periode_end}</span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {/* Detail button */}
+        <div className="flex items-center gap-2">
           <button
             onClick={() => onReport(habit)}
             title="Lihat laporan"
-            style={{
-              width: 36, height: 36, borderRadius: 9,
-              border: `1px solid ${tokens.border}`, background: tokens.primaryLight,
-              cursor: 'pointer', fontSize: 15, display: 'flex',
-              alignItems: 'center', justifyContent: 'center', transition: tokens.transitionFast,
-            }}
-          >📊</button>
+            className="w-9 h-9 rounded-[9px] border border-border bg-primary-light cursor-pointer flex items-center justify-center transition-all"
+          ><BarChart2 size={16} color="#16a34a" /></button>
 
-          {/* Check button — dikunci jika selesai */}
           {isComplete ? (
-            <div style={{
-              width: 40, height: 40, borderRadius: '50%',
-              border: `2px solid ${tokens.borderMid}`, background: tokens.primaryLight,
-              fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              opacity: 0.5, cursor: 'not-allowed', flexShrink: 0,
-            }} title="Habit selesai — tidak bisa diubah">🔒</div>
+            <div className="w-10 h-10 rounded-full border-2 border-border-mid bg-primary-light flex items-center justify-center opacity-50 cursor-not-allowed shrink-0" title="Habit selesai">
+              <Lock size={16} />
+            </div>
           ) : (
             <button
               onClick={handleToggleCheck}
               disabled={checking}
               title={habit.checked_today ? 'Batalkan check hari ini' : 'Check hari ini'}
+              className="w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all shrink-0"
               style={{
-                width: 40, height: 40, borderRadius: '50%',
-                border: `2px solid ${habit.checked_today ? tokens.primary : tokens.border}`,
-                background: habit.checked_today ? tokens.primary : checking ? tokens.primaryLight : tokens.white,
-                color: habit.checked_today ? tokens.white : tokens.primary,
+                borderColor: habit.checked_today ? '#16a34a' : '#d1fae5',
+                background: habit.checked_today ? '#16a34a' : checking ? '#dcfce7' : '#fff',
+                color: habit.checked_today ? '#fff' : '#16a34a',
                 cursor: checking ? 'wait' : 'pointer',
-                fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: tokens.transitionFast, flexShrink: 0,
               }}
             >
-              {checking ? '⏳' : '✓'}
+              {checking ? <Loader2 size={18} className="animate-spin-fast" /> : <Check size={18} />}
             </button>
           )}
 
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end' }}>
-              <span>🔥</span>
-              <span style={{ fontSize: 18, fontWeight: 700, color: '#f97316', fontFamily: tokens.fontHeading }}>{habit.current_streak}</span>
+          <div className="text-right">
+            <div className="flex items-center gap-1 justify-end">
+              <Flame size={16} color="#f97316" />
+              <span className="text-lg font-bold text-[#f97316] font-heading">{habit.current_streak}</span>
             </div>
-            <span style={{ fontSize: 11, color: tokens.textMuted }}>current streak</span>
+            <span className="text-[11px] text-muted">current streak</span>
           </div>
         </div>
       </div>
 
-      {/* Locked banner */}
       {isComplete && (
-        <div style={{
-          background: tokens.primaryLight, border: `1px solid ${tokens.borderMid}`,
-          borderRadius: 8, padding: '7px 12px', marginBottom: 10,
-          fontSize: 12, color: tokens.primaryMid, display: 'flex', alignItems: 'center', gap: 6,
-        }}>
-          🔒 Habit ini sudah selesai dan tidak dapat diubah lagi.
+        <div className="bg-primary-light border border-border-mid rounded-[8px] px-3 py-[7px] mb-2.5 text-xs text-primary-mid flex items-center gap-1.5">
+          <Lock size={13} /> Habit ini sudah selesai dan tidak dapat diubah lagi.
         </div>
       )}
 
-      <div style={{ marginBottom: 10 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-          <span style={{ fontSize: 12, color: tokens.textMuted }}>Progress ({habit.total_completed_days}/{habit.total_period_days} hari)</span>
-          <span style={{ fontSize: 12, fontWeight: 700, color: isComplete ? tokens.primary : tokens.textMuted }}>{progress}%</span>
+      <div className="mb-2.5">
+        <div className="flex justify-between mb-1.5">
+          <span className="text-xs text-muted">Progress ({habit.total_completed_days}/{habit.total_period_days} hari)</span>
+          <span className={`text-xs font-bold ${isComplete ? 'text-primary' : 'text-muted'}`}>{progress}%</span>
         </div>
-        <div style={{ height: 8, background: tokens.primaryLight, borderRadius: 100, overflow: 'hidden' }}>
-          <div style={{
-            height: '100%', borderRadius: 100, transition: 'width 0.6s ease',
-            width: `${progress}%`,
-            background: isComplete ? `linear-gradient(90deg,${tokens.primary},${tokens.accent})` : barColor,
-          }} />
+        <div className="h-2 bg-primary-light rounded-full overflow-hidden">
+          <div
+            className="h-full rounded-full transition-[width_0.6s_ease]"
+            style={{ width: `${progress}%`, background: isComplete ? 'linear-gradient(90deg,#16a34a,#10b981)' : barColor }}
+          />
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <span style={{ fontSize: 12, color: tokens.textMuted }}>🏆 Longest streak:</span>
-        <span style={{ fontSize: 12, fontWeight: 600, color: tokens.text }}>{habit.longest_streak} hari</span>
+      <div className="flex items-center gap-1.5">
+        <span className="text-xs text-muted flex items-center gap-1"><Trophy size={12} color="#10b981" /> Longest streak:</span>
+        <span className="text-xs font-semibold text-ink">{habit.longest_streak} hari</span>
       </div>
     </div>
   )
@@ -261,12 +194,11 @@ const HabitStreakCard: React.FC<{
 export default function Dashboard() {
   const navigate = useNavigate()
   const { isMobile, sidebarOpen, setSidebarOpen } = useSidebar()
-  const [showLogout, setShowLogout] = useState(false)
-  const [filter, setFilter] = useState<FilterType>('semua')
-  const [detailTarget, setDetailTarget] = useState<HabitStreak | null>(null)
+  const [showLogout, setShowLogout]       = useState(false)
+  const [filter, setFilter]               = useState<FilterType>('semua')
+  const [detailTarget, setDetailTarget]   = useState<HabitStreak | null>(null)
   const { habits, summary, loading, error, refetch } = useStreak()
   const { user, logout } = useAuth()
-
   const { weeklyData, insights, atRisk } = useDashboard(habits)
 
   const completedToday = useMemo(() => habits.filter(h => h.checked_today).length, [habits])
@@ -293,200 +225,189 @@ export default function Dashboard() {
   }), [habits])
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: tokens.bg, fontFamily: tokens.fontBody }}>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    <div className="flex min-h-screen bg-surface font-body">
+      <Sidebar
+        open={sidebarOpen} isMobile={isMobile} currentPageId="dashboard"
+        displayUser={displayUser} onClose={() => setSidebarOpen(false)} onLogout={() => setShowLogout(true)}
+      />
 
-      <Sidebar open={sidebarOpen} isMobile={isMobile} currentPageId="dashboard"
-        displayUser={displayUser} onClose={() => setSidebarOpen(false)} onLogout={() => setShowLogout(true)} />
-
-      <main style={{ flex: 1, overflowY: 'auto', minWidth: 0, padding: isMobile ? '20px 16px' : '28px 32px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <main className={`flex-1 overflow-y-auto min-w-0 flex flex-col gap-6 ${isMobile ? 'p-5 px-4' : 'p-7 px-8'}`}>
 
         {/* TOP BAR */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <button onClick={() => setSidebarOpen((o: boolean) => !o)} style={{
-              width: 34, height: 34, border: `1px solid ${tokens.border}`, borderRadius: 8,
-              background: tokens.white, cursor: 'pointer', fontSize: 15,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-            }}>☰</button>
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-3.5">
+            <button
+              onClick={() => setSidebarOpen((o: boolean) => !o)}
+              className="w-[34px] h-[34px] border border-border rounded-[8px] bg-white cursor-pointer flex items-center justify-center shrink-0"
+            ><Menu size={16} /></button>
             <div>
-              <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, color: tokens.text, letterSpacing: '-.3px', fontFamily: tokens.fontHeading }}>Dashboard</div>
-              {!isMobile && <div style={{ fontSize: 13, color: tokens.textMuted, marginTop: 2 }}>{dateStr} — Semangat hari ini!</div>}
+              <div className={`${isMobile ? 'text-lg' : 'text-[22px]'} font-extrabold text-ink tracking-tight font-heading`}>Dashboard</div>
+              {!isMobile && <div className="text-[13px] text-muted mt-0.5">{dateStr} — Semangat hari ini!</div>}
             </div>
           </div>
-          <button onClick={() => navigate('/habits')} style={{
-            padding: '9px 20px', background: tokens.primary, color: tokens.white,
-            border: 'none', borderRadius: 10, fontFamily: tokens.fontBody,
-            fontSize: 13, fontWeight: 700, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', gap: 6,
-            boxShadow: tokens.shadowMd,
-          }}>
-            ＋ Tambah Habit
-          </button>
+          <button
+            onClick={() => navigate('/habits')}
+            className="px-5 py-[9px] bg-primary text-white border-none rounded-[10px] font-body text-[13px] font-bold cursor-pointer flex items-center gap-1.5 shadow-green"
+          >＋ Tambah Habit</button>
         </div>
 
         {/* GREETING BANNER */}
-        <div style={{
-          background: `linear-gradient(125deg,${tokens.primary} 0%,${tokens.accent} 60%,#34d399 100%)`,
-          borderRadius: 20, padding: isMobile ? '20px' : '24px 28px',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          overflow: 'hidden', position: 'relative',
-        }}>
-          <div style={{ position: 'absolute', right: -40, top: -40, width: 220, height: 220, borderRadius: '50%', background: 'rgba(255,255,255,.07)' }} />
-          <div style={{ position: 'absolute', right: 60, bottom: -60, width: 140, height: 140, borderRadius: '50%', background: 'rgba(255,255,255,.05)' }} />
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            <h1 style={{ fontSize: isMobile ? 17 : 21, fontWeight: 800, color: tokens.white, letterSpacing: '-.2px', marginBottom: 4, fontFamily: tokens.fontHeading }}>
+        <div
+          className={`rounded-xl ${isMobile ? 'p-5' : 'p-6 px-7'} flex items-center justify-between overflow-hidden relative`}
+          style={{ background: 'linear-gradient(125deg,#16a34a 0%,#10b981 60%,#34d399 100%)' }}
+        >
+          <div className="absolute -right-10 -top-10 w-[220px] h-[220px] rounded-full bg-white/[.07]" />
+          <div className="absolute right-[60px] -bottom-[60px] w-[140px] h-[140px] rounded-full bg-white/[.05]" />
+          <div className="relative z-[1]">
+            <h1 className={`${isMobile ? 'text-[17px]' : 'text-[21px]'} font-extrabold text-white tracking-tight mb-1 font-heading`}>
               Halo, {displayUser.full_name || displayUser.username}! 👋
             </h1>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,.85)', margin: 0 }}>
+            <p className="text-[13px] text-white/85 m-0">
               Kamu sudah {summary.total_current_streak} hari berturut-turut — terus pertahankan!
             </p>
-            <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
+            <div className="flex gap-2 mt-3.5 flex-wrap">
               {[
-                `🔥 ${summary.total_current_streak} hari streak`,
-                `✅ ${completedToday}/${summary.total_habits} selesai hari ini`,
-                `📈 ${summary.avg_progress}% avg progress`,
-              ].map(b => (
-                <span key={b} style={{
-                  background: 'rgba(255,255,255,.18)', border: '1px solid rgba(255,255,255,.25)',
-                  borderRadius: 30, padding: '5px 12px', fontSize: 12, fontWeight: 600, color: tokens.white,
-                }}>{b}</span>
+                { icon: <Flame size={12} />,       text: `${summary.total_current_streak} hari streak` },
+                { icon: <CheckSquare size={12} />, text: `${completedToday}/${summary.total_habits} selesai hari ini` },
+                { icon: <TrendingUp size={12} />,  text: `${summary.avg_progress}% avg progress` },
+              ].map((b, i) => (
+                <span key={i} className="bg-white/[.18] border border-white/25 rounded-[30px] px-3 py-[5px] text-xs font-semibold text-white inline-flex items-center gap-[5px]">
+                  {b.icon}{b.text}
+                </span>
               ))}
             </div>
           </div>
-          {!isMobile && <div style={{ fontSize: 64, position: 'relative', zIndex: 1, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,.15))' }}>🌿</div>}
+          {!isMobile && <div className="text-[64px] relative z-[1] drop-shadow-[0_4px_12px_rgba(0,0,0,.15)]">🌿</div>}
         </div>
 
         {/* STAT CARDS */}
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 14 }}>
-          <StatCard label="Total Habit"    value={loading ? '...' : String(summary.total_habits)}       icon="✅" iconBg={tokens.primaryLight}  barColor={tokens.primary} barWidth={80} />
-          <StatCard label="Total Streak"   value={loading ? '...' : `${summary.total_current_streak}d`} icon="🔥" iconBg="#fff7ed"              barColor="#f97316"        barWidth={65} />
-          <StatCard label="Longest Streak" value={loading ? '...' : `${summary.longest_streak}d`}       icon="🏆" iconBg={tokens.successBg}     barColor={tokens.accent}  barWidth={90} />
-          <StatCard label="Avg Progress"   value={loading ? '...' : `${summary.avg_progress}%`}         icon="📈" iconBg={tokens.primaryLighter} barColor={tokens.primary} barWidth={summary.avg_progress} />
+        <div className={`grid gap-3.5 ${isMobile ? 'grid-cols-2' : 'grid-cols-4'}`}>
+          <StatCard label="Total Habit"    value={loading ? '...' : String(summary.total_habits)}        icon={<CheckSquare size={18} color="#16a34a" />}  iconBg="#dcfce7"  barColor="#16a34a"  barWidth={80} />
+          <StatCard label="Total Streak"   value={loading ? '...' : `${summary.total_current_streak}d`}  icon={<Flame size={18} color="#f97316" />}         iconBg="#fff7ed"  barColor="#f97316"  barWidth={65} />
+          <StatCard label="Longest Streak" value={loading ? '...' : `${summary.longest_streak}d`}        icon={<Trophy size={18} color="#10b981" />}        iconBg="#dcfce7"  barColor="#10b981"  barWidth={90} />
+          <StatCard label="Avg Progress"   value={loading ? '...' : `${summary.avg_progress}%`}          icon={<TrendingUp size={18} color="#16a34a" />}    iconBg="#f0fdf4"  barColor="#16a34a"  barWidth={summary.avg_progress} />
         </div>
 
-        {/* WEEKLY CHART + INSIGHTS */}
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 340px', gap: 20 }}>
-          {/* Chart */}
-          <Card>
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18 }}>
+        {/* CHART + INSIGHTS */}
+        <div className={`grid gap-5 ${isMobile ? 'grid-cols-1' : 'grid-cols-[1fr_340px]'}`}>
+          <DashCard>
+            <div className="flex items-start justify-between mb-[18px]">
               <div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: tokens.text, fontFamily: tokens.fontHeading }}>Penyelesaian Mingguan</div>
-                <div style={{ fontSize: 12, color: tokens.textMuted, marginTop: 2 }}>Jumlah habit selesai per hari</div>
+                <div className="text-[15px] font-bold text-ink font-heading">Penyelesaian Mingguan</div>
+                <div className="text-xs text-muted mt-0.5">Jumlah habit selesai per hari</div>
               </div>
-              <span style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 20, background: tokens.primaryLight, color: tokens.primary }}>7 hari</span>
+              <span className="text-[11px] font-semibold px-2.5 py-1 rounded-[20px] bg-primary-light text-primary">7 hari</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 120 }}>
+            <div className="flex items-end gap-2 h-[120px]">
               {weeklyData.map(d => {
                 const h = Math.max(8, (d.val / maxBar) * 100)
                 const isToday = d.isToday ?? false
                 return (
-                  <div key={d.day} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: tokens.textMuted }}>{d.val}</span>
-                    <div style={{
-                      width: '100%', borderRadius: '6px 6px 0 0',
-                      background: isToday ? tokens.primary : tokens.borderMid,
-                      height: h, transition: 'all .6s cubic-bezier(.34,1.56,.64,1)',
-                    }} />
-                    <span style={{ fontSize: 11, color: isToday ? tokens.primary : tokens.textMuted, fontWeight: isToday ? 700 : 500 }}>{d.day}</span>
+                  <div key={d.day} className="flex-1 flex flex-col items-center gap-1">
+                    <span className="text-[11px] font-bold text-muted">{d.val}</span>
+                    <div
+                      className="w-full rounded-t-[6px] transition-all duration-[600ms] cubic-bezier(.34,1.56,.64,1)"
+                      style={{ background: isToday ? '#16a34a' : '#a7f3d0', height: h }}
+                    />
+                    <span className={`text-[11px] ${isToday ? 'text-primary font-bold' : 'text-muted font-medium'}`}>{d.day}</span>
                   </div>
                 )
               })}
             </div>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 14 }}>
-              {([[tokens.borderMid, 'Hari lalu'], [tokens.primary, 'Hari ini']] as [string, string][]).map(([color, label]) => (
-                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: tokens.textMuted }}>
-                  <div style={{ width: 10, height: 10, borderRadius: 3, background: color }} />{label}
+            <div className="flex justify-center gap-4 mt-3.5">
+              {[['#a7f3d0', 'Hari lalu'], ['#16a34a', 'Hari ini']].map(([color, label]) => (
+                <div key={label} className="flex items-center gap-[5px] text-[11px] text-muted">
+                  <div className="w-[10px] h-[10px] rounded-[3px]" style={{ background: color }} />{label}
                 </div>
               ))}
             </div>
-          </Card>
+          </DashCard>
 
-          {/* Insights */}
-          <Card>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+          <DashCard>
+            <div className="flex items-center justify-between mb-[18px]">
               <div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: tokens.text, fontFamily: tokens.fontHeading }}>Insight Minggu Ini</div>
-                <div style={{ fontSize: 12, color: tokens.textMuted, marginTop: 2 }}>Analisis otomatis untukmu</div>
+                <div className="text-[15px] font-bold text-ink font-heading">Insight Minggu Ini</div>
+                <div className="text-xs text-muted mt-0.5">Analisis otomatis untukmu</div>
               </div>
-              <span style={{ fontSize: 18 }}>✨</span>
+              <Sparkles size={18} color="#16a34a" />
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div className="flex flex-col gap-2.5">
               {insights.map((ins, i) => (
-                <div key={i} style={{
-                  display: 'flex', alignItems: 'flex-start', gap: 10,
-                  padding: '12px 14px', borderRadius: 12,
-                  background: tokens.bg, border: `1px solid ${tokens.border}`,
-                }}>
-                  <div style={{ width: 30, height: 30, borderRadius: 9, background: ins.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>{ins.icon}</div>
+                <div key={i} className="flex items-start gap-2.5 px-3.5 py-3 rounded-[12px] bg-surface border border-border">
+                  <div className="w-[30px] h-[30px] rounded-[9px] flex items-center justify-center shrink-0" style={{ background: ins.bg }}>
+                    {INSIGHT_ICONS[ins.icon] ?? null}
+                  </div>
                   <div>
-                    <div style={{ fontSize: 12.5, fontWeight: 600, color: tokens.text, lineHeight: 1.5 }}>{ins.title}</div>
-                    <div style={{ fontSize: 11, color: tokens.textMuted, marginTop: 2 }}>{ins.sub}</div>
+                    <div className="text-[12.5px] font-semibold text-ink leading-snug">{ins.title}</div>
+                    <div className="text-[11px] text-muted mt-0.5">{ins.sub}</div>
                   </div>
                 </div>
               ))}
             </div>
-          </Card>
+          </DashCard>
         </div>
 
         {/* HABIT STREAK LIST */}
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <h2 style={{ fontFamily: tokens.fontHeading, fontSize: 18, fontWeight: 700, color: tokens.text, margin: 0 }}>Streak & Progress Habitmu</h2>
-              <Badge color="green">{summary.total_habits} habit</Badge>
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+            <div className="flex items-center gap-2.5">
+              <h2 className="font-heading text-lg font-bold text-ink m-0">Streak & Progress Habitmu</h2>
+              <span className="inline-flex items-center px-2.5 py-[3px] rounded-full text-[11px] font-semibold bg-primary-light text-primary">
+                {summary.total_habits} habit
+              </span>
             </div>
-            <button onClick={() => navigate('/habits')} style={{
-              padding: '8px 18px', background: tokens.primary, color: tokens.white,
-              border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700,
-              cursor: 'pointer', boxShadow: tokens.shadowMd,
-            }}>+ Tambah Habit</button>
+            <button
+              onClick={() => navigate('/habits')}
+              className="px-[18px] py-2 bg-primary text-white border-none rounded-[10px] text-[13px] font-bold cursor-pointer shadow-green"
+            >+ Tambah Habit</button>
           </div>
 
           {error && (
-            <div style={{ background: tokens.errorBg, border: `1px solid #fecaca`, borderRadius: 12, padding: '16px 20px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 14, color: tokens.error }}>⚠ {error}</span>
-              <button onClick={refetch} style={{ padding: '6px 14px', borderRadius: 8, border: `1px solid ${tokens.border}`, background: tokens.white, color: tokens.text, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>Coba Lagi</button>
+            <div className="bg-error-bg border border-[#fecaca] rounded-md px-5 py-4 mb-6 flex items-center justify-between">
+              <span className="text-sm text-error flex items-center gap-1.5"><AlertTriangle size={14} /> {error}</span>
+              <button onClick={refetch} className="px-3.5 py-1.5 rounded-[8px] border border-border bg-white text-ink cursor-pointer text-[13px] font-semibold">Coba Lagi</button>
             </div>
           )}
 
           {!loading && habits.length > 0 && (
-            <div style={{ marginBottom: 20 }}>
-              <FilterTabBar active={filter} onChange={setFilter} counts={filterCounts} />
-            </div>
+            <div className="mb-5"><FilterTabBar active={filter} onChange={setFilter} counts={filterCounts} /></div>
           )}
 
           {loading && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {[1,2,3].map(i => (
-                <div key={i} style={{ height: 120, background: tokens.primaryLight, borderRadius: 16, opacity: 0.4 }} />
-              ))}
+            <div className="flex flex-col gap-3">
+              {[1,2,3].map(i => <div key={i} className="h-[120px] bg-primary-light rounded-[16px] opacity-40" />)}
             </div>
           )}
 
           {!loading && habits.length === 0 && (
-            <EmptyState icon="🌱" title="Belum ada habit"
-              description="Tambahkan habit pertamamu untuk mulai melacak streak dan progress!"
-              action={
-                <button onClick={() => navigate('/habits')} style={{ padding: '8px 18px', background: tokens.primary, color: tokens.white, border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-                  + Tambah Habit
-                </button>
-              }
-            />
+            <div className="text-center py-12 px-6">
+              <div className="w-[72px] h-[72px] rounded-full bg-primary-light flex items-center justify-center mx-auto mb-4">
+                <Sprout size={32} color="#16a34a" />
+              </div>
+              <div className="text-base font-bold text-ink mb-2 font-heading">Belum ada habit</div>
+              <div className="text-sm text-muted mb-5 leading-relaxed">Tambahkan habit pertamamu untuk mulai melacak streak dan progress!</div>
+              <button onClick={() => navigate('/habits')} className="px-[18px] py-2 bg-primary text-white border-none rounded-[10px] text-[13px] font-bold cursor-pointer">
+                + Tambah Habit
+              </button>
+            </div>
           )}
 
           {!loading && habits.length > 0 && filteredHabits.length === 0 && (
-            <EmptyState icon="🔍" title="Tidak ada habit"
-              description={
-                filter === 'selesai'          ? 'Belum ada habit yang selesai 100%.' :
-                filter === 'selesai_hari_ini' ? 'Belum ada habit yang diceklis hari ini.' :
-                'Semua habit sudah selesai! 🎉'
-              }
-            />
+            <div className="text-center py-12 px-6">
+              <div className="w-[72px] h-[72px] rounded-full bg-primary-light flex items-center justify-center mx-auto mb-4">
+                <Search size={32} color="#16a34a" />
+              </div>
+              <div className="text-base font-bold text-ink mb-2 font-heading">Tidak ada habit</div>
+              <div className="text-sm text-muted leading-relaxed">
+                {filter === 'selesai'          ? 'Belum ada habit yang selesai 100%.' :
+                 filter === 'selesai_hari_ini' ? 'Belum ada habit yang diceklis hari ini.' :
+                 'Semua habit sudah selesai!'}
+              </div>
+            </div>
           )}
 
           {!loading && filteredHabits.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div className="flex flex-col gap-3">
               {filteredHabits.map(habit => (
                 <HabitStreakCard key={habit.id_habit} habit={habit} onRefetch={refetch} onReport={(h: HabitStreak) => setDetailTarget(h)} />
               ))}
@@ -495,38 +416,35 @@ export default function Dashboard() {
         </div>
 
         {/* AT RISK */}
-        <Card style={{ maxWidth: 600 }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: tokens.text, fontFamily: tokens.fontHeading, marginBottom: 12 }}>⚠ Perlu Perhatian</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <DashCard className="max-w-[600px]">
+          <div className="text-[15px] font-bold text-ink font-heading mb-3 flex items-center gap-1.5">
+            <AlertTriangle size={15} color="#f97316" /> Perlu Perhatian
+          </div>
+          <div className="flex flex-col gap-2">
             {atRisk.map(r => {
               const s = {
-                high: { bg: tokens.errorBg,      color: tokens.error,   itemBg: '#fff8f8' },
-                mid:  { bg: '#fff7ed',            color: '#ea580c',      itemBg: '#fffbf5' },
-                ok:   { bg: tokens.primaryLight,  color: tokens.primary, itemBg: tokens.primaryLighter },
+                high: { bg: '#fef2f2',  color: '#dc2626', itemBg: '#fff8f8' },
+                mid:  { bg: '#fff7ed',  color: '#ea580c', itemBg: '#fffbf5' },
+                ok:   { bg: '#dcfce7',  color: '#16a34a', itemBg: '#f0fdf4' },
               }[r.level]
               return (
-                <div key={r.name} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, background: s.itemBg, border: `1px solid ${tokens.border}` }}>
-                  <span style={{ fontSize: 17 }}>{r.level === 'high' ? '🔴' : r.level === 'mid' ? '🟡' : '🟢'}</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: tokens.text, flex: 1 }}>{r.name}</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 20, background: s.bg, color: s.color }}>{r.label}</span>
+                <div key={r.name} className="flex items-center gap-2.5 px-3 py-2.5 rounded-[12px] border border-border" style={{ background: s.itemBg }}>
+                  <div
+                    className="w-[10px] h-[10px] rounded-full shrink-0"
+                    style={{ background: r.level === 'high' ? '#ef4444' : r.level === 'mid' ? '#f59e0b' : '#22c55e' }}
+                  />
+                  <span className="text-[13px] font-semibold text-ink flex-1">{r.name}</span>
+                  <span className="text-[11px] font-bold px-[9px] py-[3px] rounded-[20px]" style={{ background: s.bg, color: s.color }}>{r.label}</span>
                 </div>
               )
             })}
           </div>
-        </Card>
+        </DashCard>
 
       </main>
 
-      {detailTarget && (
-        <HabitReportModal habit={detailTarget} onClose={() => setDetailTarget(null)} />
-      )}
-
-      {showLogout && (
-        <LogoutModal
-          onCancel={() => setShowLogout(false)}
-          onConfirm={async () => { setShowLogout(false); await logout() }}
-        />
-      )}
+      {detailTarget && <HabitReportModal habit={detailTarget} onClose={() => setDetailTarget(null)} />}
+      {showLogout && <LogoutModal onCancel={() => setShowLogout(false)} onConfirm={async () => { setShowLogout(false); await logout() }} />}
     </div>
   )
 }

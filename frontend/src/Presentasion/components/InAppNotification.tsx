@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { IN_APP_NOTIFICATION_EVENT } from '../../BusinessLogic/services/NotificationService'
-import { tokens } from '../../BusinessLogic/factories/tokens'
+import { Bell, X } from 'lucide-react'
 
 interface ToastItem {
   id: number
@@ -31,81 +31,26 @@ export default function InAppNotification() {
   if (toasts.length === 0) return null
 
   return (
-    <>
-      <style>{`
-        @keyframes ht-slide-in {
-          from { opacity: 0; transform: translateX(40px); }
-          to   { opacity: 1; transform: translateX(0); }
-        }
-      `}</style>
-      <div style={{
-        position: 'fixed',
-        top: 20,
-        right: 20,
-        zIndex: 9999,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 10,
-        width: 320,
-        pointerEvents: 'none',
-      }}>
-        {toasts.map(toast => (
-          <div
-            key={toast.id}
-            style={{
-              background: tokens.white,
-              border: `1.5px solid ${tokens.border}`,
-              borderLeft: `4px solid ${tokens.primary}`,
-              borderRadius: tokens.radius,
-              padding: '14px 16px',
-              boxShadow: tokens.shadowLg,
-              display: 'flex',
-              gap: 12,
-              alignItems: 'flex-start',
-              animation: 'ht-slide-in 0.25s ease',
-              pointerEvents: 'auto',
-            }}
-          >
-            <span style={{ fontSize: 20, lineHeight: 1, flexShrink: 0 }}>🔔</span>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{
-                margin: 0,
-                fontSize: 13,
-                fontWeight: 700,
-                color: tokens.text,
-                fontFamily: tokens.fontHeading,
-              }}>
-                {toast.title}
-              </p>
-              <p style={{
-                margin: '3px 0 0',
-                fontSize: 12,
-                color: tokens.textMuted,
-                fontFamily: tokens.fontBody,
-                lineHeight: 1.4,
-              }}>
-                {toast.body}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => removeToast(toast.id)}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: 15,
-                color: tokens.textLight,
-                lineHeight: 1,
-                padding: 0,
-                flexShrink: 0,
-              }}
-            >
-              ✕
-            </button>
+    <div className="fixed top-5 right-5 z-[9999] flex flex-col gap-2.5 w-80 pointer-events-none">
+      {toasts.map(toast => (
+        <div
+          key={toast.id}
+          className="bg-white border-[1.5px] border-border border-l-[4px] border-l-primary rounded-md p-3.5 px-4 shadow-float flex gap-3 items-start animate-slide-in-right pointer-events-auto"
+        >
+          <Bell size={18} color="#16a34a" className="shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="m-0 text-[13px] font-bold text-ink font-heading">{toast.title}</p>
+            <p className="m-0 mt-[3px] text-xs text-muted font-body leading-snug">{toast.body}</p>
           </div>
-        ))}
-      </div>
-    </>
+          <button
+            type="button"
+            onClick={() => removeToast(toast.id)}
+            className="bg-transparent border-none cursor-pointer text-subtle p-0 shrink-0 flex"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      ))}
+    </div>
   )
 }

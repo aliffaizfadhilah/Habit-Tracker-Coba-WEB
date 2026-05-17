@@ -1,7 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom'
 import AuthLayout from '../../components/auth/AuthLayout'
 import { Alert, Button } from '../../../BusinessLogic/factories/ComponentFactory'
-import { tokens } from '../../../BusinessLogic/factories/tokens'
 import { OtpInputGroup } from '../../components/auth/OtpInputGroup'
 import { useOtp } from '../../../BusinessLogic/hooks/UseOtp'
 
@@ -14,17 +13,15 @@ export default function OtpVerify() {
   return (
     <AuthLayout
       title="Verifikasi Email"
-      subtitle={<>Kode OTP dikirim ke <strong style={{ color: tokens.primary }}>{email}</strong></>}
+      subtitle={<>Kode OTP dikirim ke <strong className="text-primary">{email}</strong></>}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div className="flex flex-col gap-6">
         {error   && <Alert type="error"   message={error} />}
         {success && <Alert type="success" message={success} />}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           <div>
-            <p style={{ fontSize: 13, color: tokens.textMuted, textAlign: 'center', marginBottom: 16, fontFamily: tokens.fontBody }}>
-              Masukkan 6 digit kode OTP
-            </p>
+            <p className="text-[13px] text-muted text-center mb-4 font-body">Masukkan 6 digit kode OTP</p>
             <OtpInputGroup value={digits} onChange={setDigits} />
           </div>
           <Button type="submit" variant="primary" loading={loading} disabled={digits.join('').length < 6}>
@@ -32,28 +29,19 @@ export default function OtpVerify() {
           </Button>
         </form>
 
-        <div style={{ textAlign: 'center', fontSize: 13, color: tokens.textMuted, fontFamily: tokens.fontBody }}>
+        <div className="text-center text-[13px] text-muted font-body">
           {countdown > 0 ? (
-            <span>Kirim ulang dalam <strong style={{ color: tokens.primary }}>{countdown}s</strong></span>
+            <span>Kirim ulang dalam <strong className="text-primary">{countdown}s</strong></span>
           ) : (
-            <button onClick={handleResend} disabled={resending} style={{
-              background: 'none', border: 'none', color: tokens.primary, fontWeight: 600,
-              cursor: 'pointer', fontSize: 13, fontFamily: tokens.fontBody,
-            }}>
+            <button onClick={handleResend} disabled={resending} className="bg-transparent border-none text-primary font-semibold cursor-pointer text-[13px] font-body">
               {resending ? 'Mengirim...' : 'Kirim ulang OTP'}
             </button>
           )}
         </div>
 
-        <div style={{
-          textAlign: 'center', fontSize: 13, color: tokens.textMuted,
-          borderTop: `1px solid ${tokens.border}`, paddingTop: 20, fontFamily: tokens.fontBody,
-        }}>
+        <div className="text-center text-[13px] text-muted border-t border-border pt-5 font-body">
           Salah email?{' '}
-          <button onClick={() => navigate('/login')} style={{
-            background: 'none', border: 'none', color: tokens.primary,
-            fontWeight: 600, cursor: 'pointer', fontSize: 13, fontFamily: tokens.fontBody,
-          }}>
+          <button onClick={() => navigate('/login')} className="bg-transparent border-none text-primary font-semibold cursor-pointer text-[13px] font-body">
             Kembali ke Login
           </button>
         </div>

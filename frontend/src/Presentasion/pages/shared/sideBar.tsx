@@ -1,9 +1,11 @@
 // ─── Sidebar Component ─────────────────────────────────────────────────────────
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { tokens } from '../../../BusinessLogic/factories/tokens'
+import {
+  Home, CheckSquare, Bell, Camera, User,
+  LogOut, X,
+} from 'lucide-react'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 export interface SidebarProps {
   open?: boolean
   isMobile?: boolean
@@ -15,13 +17,12 @@ export interface SidebarProps {
 
 export { useSidebar } from '../../../BusinessLogic/hooks/useSidebar'
 
-// ─── Nav config ───────────────────────────────────────────────────────────────
 const NAV_ITEMS = [
-  { id: 'dashboard',  icon: '🏠', label: 'Dashboard',      path: '/dashboard'  },
-  { id: 'habits',     icon: '✅', label: 'Kelola Habit',    path: '/habits'     },
-  { id: 'reminder',   icon: '🔔', label: 'Reminder',        path: '/reminder'   },
-  { id: 'postingan',  icon: '📸',  label: 'Postingan',      path: '/postingan'  },
-  { id: 'profile',    icon: '👤', label: 'Profil',          path: '/profile'    },
+  { id: 'dashboard',  Icon: Home,        label: 'Dashboard',    path: '/dashboard'  },
+  { id: 'habits',     Icon: CheckSquare, label: 'Kelola Habit', path: '/habits'     },
+  { id: 'reminder',   Icon: Bell,        label: 'Reminder',     path: '/reminder'   },
+  { id: 'postingan',  Icon: Camera,      label: 'Postingan',    path: '/postingan'  },
+  { id: 'profile',    Icon: User,        label: 'Profil',       path: '/profile'    },
 ]
 
 // ─── LogoutModal ──────────────────────────────────────────────────────────────
@@ -29,34 +30,28 @@ export const LogoutModal: React.FC<{
   onCancel: () => void
   onConfirm: () => Promise<void>
 }> = ({ onCancel, onConfirm }) => (
-  <div onClick={onCancel} style={{
-    position: 'fixed', inset: 0, background: 'rgba(11,26,14,0.55)',
-    backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center',
-    justifyContent: 'center', zIndex: 400, padding: 24,
-  }}>
-    <div onClick={e => e.stopPropagation()} style={{
-      background: tokens.white, borderRadius: tokens.radiusXl, padding: 32,
-      boxShadow: tokens.shadowLg, width: '100%', maxWidth: 380, textAlign: 'center',
-    }}>
-      <div style={{ fontSize: 44, marginBottom: 12 }}>👋</div>
-      <h3 style={{ fontFamily: tokens.fontHeading, fontSize: 20, fontWeight: 700, color: tokens.text, marginBottom: 8 }}>
-        Keluar dari Akun?
-      </h3>
-      <p style={{ fontSize: 14, color: tokens.textMuted, marginBottom: 28, lineHeight: 1.6 }}>
+  <div
+    onClick={onCancel}
+    className="fixed inset-0 bg-[rgba(11,26,14,0.55)] backdrop-blur-[4px] flex items-center justify-center z-[400] p-6"
+  >
+    <div
+      onClick={e => e.stopPropagation()}
+      className="bg-white rounded-xl p-8 shadow-float w-full max-w-[380px] text-center"
+    >
+      <div className="text-[44px] mb-3">👋</div>
+      <h3 className="font-heading text-xl font-bold text-ink mb-2">Keluar dari Akun?</h3>
+      <p className="text-sm text-muted mb-7 leading-relaxed">
         Kamu akan keluar dari sesi ini. Progress habit tetap tersimpan.
       </p>
-      <div style={{ display: 'flex', gap: 10 }}>
-        <button onClick={onCancel} style={{
-          flex: 1, padding: '11px', borderRadius: tokens.radiusSm,
-          border: `1.5px solid ${tokens.border}`, background: tokens.white,
-          color: tokens.text, cursor: 'pointer', fontFamily: tokens.fontBody,
-          fontSize: 14, fontWeight: 600,
-        }}>Batal</button>
-        <button onClick={onConfirm} style={{
-          flex: 2, padding: '11px', borderRadius: tokens.radiusSm,
-          border: 'none', background: tokens.error, color: tokens.white,
-          cursor: 'pointer', fontFamily: tokens.fontBody, fontSize: 14, fontWeight: 700,
-        }}>Ya, Keluar</button>
+      <div className="flex gap-2.5">
+        <button
+          onClick={onCancel}
+          className="flex-1 py-[11px] rounded-sm border-[1.5px] border-border bg-white text-ink cursor-pointer font-body text-sm font-semibold"
+        >Batal</button>
+        <button
+          onClick={onConfirm}
+          className="flex-[2] py-[11px] rounded-sm border-none bg-error text-white cursor-pointer font-body text-sm font-bold"
+        >Ya, Keluar</button>
       </div>
     </div>
   </div>
@@ -84,132 +79,96 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <>
-      {/* Overlay mobile */}
       {isMobile && (
-        <div onClick={onClose} style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)',
-          zIndex: 190, backdropFilter: 'blur(2px)',
-        }} />
+        <div
+          onClick={onClose}
+          className="fixed inset-0 bg-black/35 z-[190] backdrop-blur-[2px]"
+        />
       )}
 
-      <aside style={{
-        width: 230, flexShrink: 0,
-        background: tokens.white,
-        borderRight: `1px solid ${tokens.border}`,
-        display: 'flex', flexDirection: 'column',
-        height: '100vh',
-        position: isMobile ? 'fixed' : 'sticky',
-        top: 0, left: 0,
-        zIndex: isMobile ? 200 : 'auto',
-        boxShadow: isMobile ? tokens.shadowLg : 'none',
-        transition: tokens.transitionBase,
-        overflowY: 'auto',
-      }}>
+      <aside className={`
+        w-[230px] shrink-0 bg-white border-r border-border flex flex-col h-screen
+        ${isMobile ? 'fixed top-0 left-0 z-[200] shadow-float' : 'sticky top-0'}
+        overflow-y-auto transition-all
+      `}>
         {/* Logo */}
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '20px 16px 18px',
-          borderBottom: `1px solid ${tokens.primaryLighter}`,
-        }}>
-          <div onClick={() => handleNav('/dashboard')} style={{
-            display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer',
-          }}>
-            <div style={{
-              width: 32, height: 32, borderRadius: 9, flexShrink: 0,
-              background: `linear-gradient(135deg,${tokens.primary},${tokens.accent})`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 15, color: tokens.white,
-            }}>✦</div>
-            <span style={{
-              fontFamily: tokens.fontHeading, fontWeight: 700,
-              fontSize: 15, color: tokens.text,
-            }}>HabitTracker</span>
+        <div className="flex items-center justify-between px-4 pt-5 pb-[18px] border-b border-primary-lighter">
+          <div
+            onClick={() => handleNav('/dashboard')}
+            className="flex items-center gap-2.5 cursor-pointer"
+          >
+            <div className="w-8 h-8 rounded-[9px] shrink-0 bg-gradient-to-br from-primary to-accent flex items-center justify-center text-[15px] text-white">
+              ✦
+            </div>
+            <span className="font-heading font-bold text-[15px] text-ink">HabitTracker</span>
           </div>
           {isMobile && (
-            <button onClick={onClose} style={{
-              width: 28, height: 28, border: `1px solid ${tokens.border}`,
-              borderRadius: 6, background: 'none', cursor: 'pointer', fontSize: 12,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: tokens.textMuted,
-            }}>✕</button>
+            <button
+              onClick={onClose}
+              className="w-7 h-7 border border-border rounded-[6px] bg-transparent cursor-pointer flex items-center justify-center text-muted"
+            ><X size={12} /></button>
           )}
         </div>
 
         {/* User info */}
         {displayUser && (
-          <div style={{
-            margin: '12px 10px 4px', padding: '12px 12px',
-            background: tokens.primaryLighter, borderRadius: tokens.radius,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{
-                width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
-                background: `linear-gradient(135deg,${tokens.primary},${tokens.accent})`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 14, color: tokens.white, fontWeight: 700,
-              }}>
+          <div className="mx-2.5 mt-3 mb-1 px-3 py-3 bg-primary-lighter rounded-md">
+            <div className="flex items-center gap-2.5">
+              <div className="w-[34px] h-[34px] rounded-full shrink-0 bg-gradient-to-br from-primary to-accent flex items-center justify-center text-sm text-white font-bold">
                 {(displayUser.full_name || displayUser.username || 'U')[0].toUpperCase()}
               </div>
-              <div style={{ minWidth: 0 }}>
-                <div style={{
-                  fontSize: 13, fontWeight: 600, color: tokens.text,
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                }}>{displayUser.full_name || displayUser.username}</div>
-                <div style={{
-                  fontSize: 11, color: tokens.textMuted,
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                }}>@{displayUser.username}</div>
+              <div className="min-w-0">
+                <div className="text-[13px] font-semibold text-ink truncate">
+                  {displayUser.full_name || displayUser.username}
+                </div>
+                <div className="text-[11px] text-muted truncate">@{displayUser.username}</div>
               </div>
             </div>
           </div>
         )}
 
         {/* Nav items */}
-        <nav style={{ flex: 1, padding: '10px 8px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <nav className="flex-1 px-2 py-2.5 flex flex-col gap-0.5">
           {NAV_ITEMS.map(item => {
-            const active = currentPageId === item.id
+            const active  = currentPageId === item.id
             const hovered = hoveredId === item.id
             return (
-              <button key={item.id}
+              <button
+                key={item.id}
                 onClick={() => handleNav(item.path)}
                 onMouseEnter={() => setHoveredId(item.id)}
                 onMouseLeave={() => setHoveredId(null)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  width: '100%', padding: '9px 12px', borderRadius: 10,
-                  border: 'none', cursor: 'pointer', textAlign: 'left',
-                  background: active ? tokens.primaryLight : hovered ? tokens.primaryLighter : 'transparent',
-                  color: active ? tokens.primaryMid : hovered ? tokens.primary : tokens.textMuted,
-                  fontFamily: tokens.fontBody, fontSize: 13.5,
-                  fontWeight: active ? 600 : 400,
-                  transition: tokens.transitionFast,
-                }}
+                className={`
+                  flex items-center gap-2.5 w-full px-3 py-[9px] rounded-[10px]
+                  border-none cursor-pointer text-left font-body text-[13.5px]
+                  transition-[background,color_0.15s_ease]
+                  ${active   ? 'bg-primary-light text-primary-mid font-semibold' :
+                    hovered  ? 'bg-primary-lighter text-primary' :
+                    'bg-transparent text-muted font-normal'}
+                `}
               >
-                <span style={{ fontSize: 15, width: 22, textAlign: 'center', flexShrink: 0 }}>{item.icon}</span>
-                <span style={{ flex: 1 }}>{item.label}</span>
-                {active && <span style={{ width: 5, height: 5, borderRadius: '50%', background: tokens.primary, flexShrink: 0 }} />}
+                <item.Icon size={16} className="shrink-0" />
+                <span className="flex-1">{item.label}</span>
+                {active && <span className="w-[5px] h-[5px] rounded-full bg-primary shrink-0" />}
               </button>
             )
           })}
         </nav>
 
         {/* Logout */}
-        <div style={{ padding: '10px 8px 16px', borderTop: `1px solid ${tokens.primaryLighter}` }}>
+        <div className="px-2 pb-4 pt-2.5 border-t border-primary-lighter">
           <button
             onClick={onLogout}
             onMouseEnter={() => setHoveredLogout(true)}
             onMouseLeave={() => setHoveredLogout(false)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              width: '100%', padding: '9px 12px', borderRadius: 10,
-              border: 'none', cursor: 'pointer', textAlign: 'left',
-              background: hoveredLogout ? tokens.errorBg : 'transparent',
-              color: hoveredLogout ? tokens.error : tokens.textMuted,
-              fontFamily: tokens.fontBody, fontSize: 13.5, fontWeight: 500,
-              transition: tokens.transitionFast,
-            }}
+            className={`
+              flex items-center gap-2.5 w-full px-3 py-[9px] rounded-[10px]
+              border-none cursor-pointer text-left font-body text-[13.5px] font-medium
+              transition-all
+              ${hoveredLogout ? 'bg-error-bg text-error' : 'bg-transparent text-muted'}
+            `}
           >
-            <span style={{ fontSize: 15, width: 22, textAlign: 'center', flexShrink: 0 }}>🚪</span>
+            <LogOut size={16} className="shrink-0" />
             <span>Keluar</span>
           </button>
         </div>
