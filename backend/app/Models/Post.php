@@ -11,11 +11,12 @@ class Post extends Model
     protected $fillable = [
         'user_id', 'habit_id', 'title', 'caption',
         'image_path', 'habit_title', 'progress_percent',
-        'likes_count', 'comments_count',
+        'likes_count', 'comments_count', 'is_private', 'frame_style',
     ];
 
     protected $casts = [
         'progress_percent' => 'decimal:2',
+        'is_private'       => 'boolean',
     ];
 
     public function user(): BelongsTo

@@ -1,10 +1,14 @@
+export type FrameStyle = 'rect' | 'circle' | 'ring'
+
 export interface PostPayload {
-  title:           string
-  caption:         string
-  image:           Blob
-  habitId?:        number
-  habitTitle?:     string
+  title:            string
+  caption:          string
+  image:            Blob
+  habitId?:         number
+  habitTitle?:      string
   progressPercent?: number
+  isPrivate:        boolean
+  frameStyle:       FrameStyle
 }
 
 export class PostBuilder {
@@ -14,6 +18,8 @@ export class PostBuilder {
   private habitId?:       number
   private habitTitle?:    string
   private progressPercent?: number
+  private isPrivate       = false
+  private frameStyle: FrameStyle = 'rect'
 
   withTitle(title: string): this {
     this.title = title
@@ -37,6 +43,16 @@ export class PostBuilder {
     return this
   }
 
+  withPrivacy(isPrivate: boolean): this {
+    this.isPrivate = isPrivate
+    return this
+  }
+
+  withFrameStyle(style: FrameStyle): this {
+    this.frameStyle = style
+    return this
+  }
+
   build(): PostPayload {
     if (!this.image)        throw new Error('Gambar snapshot wajib ada.')
     if (!this.title.trim()) throw new Error('Judul postingan wajib diisi.')
@@ -47,6 +63,8 @@ export class PostBuilder {
       habitId:         this.habitId,
       habitTitle:      this.habitTitle,
       progressPercent: this.progressPercent,
+      isPrivate:       this.isPrivate,
+      frameStyle:      this.frameStyle,
     }
   }
 }

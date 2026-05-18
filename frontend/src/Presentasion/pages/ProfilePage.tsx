@@ -2,10 +2,15 @@ import React, { useState, useEffect } from 'react'
 import { Button, Input, Alert, Card } from '../../BusinessLogic/factories/ComponentFactory'
 import { PageHeader, ModalOverlay } from '../../BusinessLogic/factories/SectionFactory'
 import { useProfile } from '../../BusinessLogic/hooks/useProfile'
-import { useAuth } from '../../BusinessLogic/hooks/useAuth'
+import { useAuth } from '../../BusinessLogic/context/AuthContext'
 import { Sidebar, LogoutModal, useSidebar } from './shared/sideBar'
-import { Menu, KeyRound, MailOpen, Key, Check, Link2, Lock } from 'lucide-react'
+import { postService, type Post } from '../../BusinessLogic/services/PostService'
+import {
+  Menu, KeyRound, MailOpen, Key, Check, Link2, Lock,
+  Camera, Heart, MessageCircle, BarChart2, Trash2, X, ImageOff,
+} from 'lucide-react'
 
+// ─── ChangePasswordModal ───────────────────────────────────────────────────────
 interface ChangePasswordModalProps {
   email: string; onClose: () => void; onSuccess: () => void
   requestOtp:     () => Promise<{ success: boolean; message: string }>
@@ -125,23 +130,272 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
   )
 }
 
+// ─── Helpers ───────────────────────────────────────────────────────────────────
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime()
+  const m = Math.floor(diff / 60000)
+  if (m < 1)  return 'Baru saja'
+  if (m < 60) return `${m} menit lalu`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h} jam lalu`
+  const d = Math.floor(h / 24)
+  if (d < 7)  return `${d} hari lalu`
+  return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+// ─── Post Lightbox ─────────────────────────────────────────────────────────────
+function PostLightbox({ post, onClose, onDelete }: {
+  post: Post; onClose: () => void; onDelete: (id: number) => void
+}) {
+  const [imgError,       setImgError]       = useState(false)
+  const [liked,          setLiked]          = useState(post.liked_by_me)
+  const [likesCount,     setLikesCount]     = useState(post.likes_count)
+  const [liking,         setLiking]         = useState(false)
+  const [confirmDelete,  setConfirmDelete]  = useState(false)
+  const [deleting,       setDeleting]       = useState(false)
+
+  const toggleLike = async () => {
+    if (liking) return
+    setLiking(true)
+    const res = await postService.toggleLike(post.id)
+    if (res.success) { setLiked(res.liked); setLikesCount(res.likes_count) }
+    setLiking(false)
+  }
+
+  const handleDelete = async () => {
+    setDeleting(true)
+    const res = await postService.deletePost(post.id)
+    if (res.success) { onDelete(post.id); onClose() }
+    setDeleting(false)
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-[600] flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.82)' }}
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl overflow-hidden w-full shadow-2xl flex flex-col"
+        style={{ maxWidth: 420, maxHeight: '90vh' }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Gambar */}
+        <div className="relative shrink-0" style={{ overflow: 'hidden' }}>
+          {post.frame_style !== 'rect' ? (
+            <div className="w-full flex items-center justify-center py-6" style={{ background: '#f5f5f5' }}>
+              <div style={{ width: '72%', aspectRatio: '1/1', borderRadius: '50%', overflow: 'hidden', background: 'linear-gradient(135deg,#dcfce7,#bbf7d0)' }}>
+                {!imgError && (
+                  <img src={post.image_url} alt={post.title} onError={() => setImgError(true)} className="w-full h-full object-cover block" />
+                )}
+                {imgError && (
+                  <div className="w-full h-full flex items-center justify-center"><ImageOff size={44} color="#16a34a" /></div>
+                )}
+              </div>
+            </div>
+          ) : (
+            !imgError ? (
+              <img src={post.image_url} alt={post.title} onError={() => setImgError(true)} className="w-full object-cover block" style={{ maxHeight: 380 }} />
+            ) : (
+              <div className="w-full flex flex-col items-center justify-center gap-3" style={{ height: 260, background: 'linear-gradient(135deg,#dcfce7,#bbf7d0)' }}>
+                <ImageOff size={44} color="#16a34a" />
+                <span className="text-sm text-muted">Gambar tidak tersedia</span>
+              </div>
+            )
+          )}
+          <button
+            onClick={onClose}
+            className="absolute top-3 right-3 w-8 h-8 rounded-full border-none cursor-pointer flex items-center justify-center text-white"
+            style={{ background: 'rgba(0,0,0,0.5)' }}
+          ><X size={16} /></button>
+        </div>
+
+        {/* Info */}
+        <div className="p-5 flex flex-col gap-3 overflow-y-auto">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <div className="font-heading font-bold text-ink text-[16px] leading-tight">{post.title}</div>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-[11px] text-muted">{timeAgo(post.created_at)}</span>
+                {post.is_private && (
+                  <span className="text-[10px] font-semibold px-1.5 py-[1px] rounded-full bg-[#f3f4f6] text-[#6b7280] inline-flex items-center gap-0.5">
+                    <Lock size={9} /> Privat
+                  </span>
+                )}
+              </div>
+            </div>
+            {post.is_mine && (
+              <button
+                onClick={() => setConfirmDelete(true)}
+                className="bg-transparent border-none cursor-pointer text-[#ef4444] text-[12px] font-body inline-flex items-center gap-1 shrink-0 px-2 py-1 rounded-lg hover:bg-[#fee2e2]"
+              ><Trash2 size={13} /> Hapus</button>
+            )}
+          </div>
+
+          {post.caption && (
+            <p className="text-[13px] text-muted leading-relaxed m-0">{post.caption}</p>
+          )}
+
+          {post.habit_title && (
+            <div className="flex items-center justify-between bg-[#f0fdf4] rounded-lg px-3 py-2">
+              <span className="text-[13px] text-[#16a34a] font-semibold flex items-center gap-1.5">
+                <BarChart2 size={13} className="shrink-0" /> {post.habit_title}
+              </span>
+              {post.progress_percent != null && (
+                <span className="text-[13px] font-bold text-[#16a34a]">{Number(post.progress_percent).toFixed(0)}%</span>
+              )}
+            </div>
+          )}
+
+          <div className="flex items-center gap-5 pt-2 border-t border-[#f0f0f0]">
+            <button
+              onClick={toggleLike}
+              disabled={liking}
+              className="bg-transparent border-none cursor-pointer flex items-center gap-1.5 text-[13px] font-semibold font-body p-0 transition-colors"
+              style={{ color: liked ? '#ef4444' : '#4b7a54' }}
+            >
+              <Heart size={15} fill={liked ? '#ef4444' : 'none'} color={liked ? '#ef4444' : '#4b7a54'} />
+              {likesCount} Suka
+            </button>
+            <span className="text-[13px] text-muted flex items-center gap-1.5">
+              <MessageCircle size={15} /> {post.comments_count} Komentar
+            </span>
+          </div>
+
+          {confirmDelete && (
+            <div className="bg-[#fef2f2] border border-[#fecaca] rounded-xl p-4 mt-1">
+              <p className="text-[13px] text-[#dc2626] font-semibold m-0 mb-3 text-center">
+                Hapus postingan ini? Tindakan tidak dapat dibatalkan.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setConfirmDelete(false)}
+                  className="flex-1 py-2 rounded-lg border border-[#d1d5db] bg-white cursor-pointer text-[13px] font-body text-muted"
+                >Batal</button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="flex-1 py-2 rounded-lg border-none bg-[#ef4444] cursor-pointer text-[13px] font-bold font-body text-white disabled:opacity-60"
+                >{deleting ? 'Menghapus...' : 'Ya, Hapus'}</button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Wall Grid ─────────────────────────────────────────────────────────────────
+function WallGrid({ posts, onSelect }: { posts: Post[]; onSelect: (p: Post) => void }) {
+  const [hoverId, setHoverId] = useState<number | null>(null)
+
+  if (posts.length === 0) {
+    return (
+      <div className="text-center py-14 px-6 border-2 border-dashed border-[#bbf7d0] rounded-2xl bg-[#f0fdf4]">
+        <div className="mb-3 flex justify-center"><Camera size={40} color="#16a34a" strokeWidth={1.5} /></div>
+        <p className="text-[13px] text-muted m-0 leading-relaxed">
+          Belum ada postingan di dinding kamu.<br />
+          Share progres habitmu dari halaman Laporan!
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="grid grid-cols-3 gap-0.5 rounded-xl overflow-hidden">
+      {posts.map(post => {
+        const isCircular = post.frame_style !== 'rect'
+        const isHovered  = hoverId === post.id
+        return (
+          <div
+            key={post.id}
+            className="relative cursor-pointer overflow-hidden"
+            style={{ aspectRatio: '1/1', background: isCircular ? '#f3f4f6' : undefined }}
+            onMouseEnter={() => setHoverId(post.id)}
+            onMouseLeave={() => setHoverId(null)}
+            onClick={() => onSelect(post)}
+          >
+            {isCircular ? (
+              <div className="w-full h-full flex items-center justify-center p-[10%]">
+                <div
+                  className="w-full overflow-hidden transition-transform duration-300"
+                  style={{ aspectRatio: '1/1', borderRadius: '50%', transform: isHovered ? 'scale(1.07)' : 'scale(1)' }}
+                >
+                  <img src={post.image_url} alt={post.title} className="w-full h-full object-cover block" />
+                </div>
+              </div>
+            ) : (
+              <img
+                src={post.image_url}
+                alt={post.title}
+                className="w-full h-full object-cover block transition-transform duration-300"
+                style={{ transform: isHovered ? 'scale(1.07)' : 'scale(1)' }}
+              />
+            )}
+
+            {/* Hover overlay */}
+            <div
+              className="absolute inset-0 flex items-center justify-center gap-3 transition-opacity duration-200"
+              style={{ background: 'rgba(0,0,0,0.48)', opacity: isHovered ? 1 : 0 }}
+            >
+              <span className="text-white text-[13px] font-bold flex items-center gap-1 drop-shadow">
+                <Heart size={14} fill="white" color="white" /> {post.likes_count}
+              </span>
+              <span className="text-white text-[13px] font-bold flex items-center gap-1 drop-shadow">
+                <MessageCircle size={14} fill="white" color="white" /> {post.comments_count}
+              </span>
+            </div>
+
+            {/* Lock badge */}
+            {post.is_private && (
+              <div
+                className="absolute top-1.5 left-1.5 w-5 h-5 rounded-full flex items-center justify-center"
+                style={{ background: 'rgba(0,0,0,0.55)' }}
+              >
+                <Lock size={10} color="white" />
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─── ProfilePage ───────────────────────────────────────────────────────────────
 export default function ProfilePage() {
   const { user, logout } = useAuth()
   const { profile, loading, error, updateProfile, requestChangePasswordOtp, verifyChangePasswordOtp, changePassword } = useProfile()
   const { isMobile, sidebarOpen, setSidebarOpen } = useSidebar()
 
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [showLogoutConfirm,  setShowLogoutConfirm]  = useState(false)
   const [showChangePassword, setShowChangePassword] = useState(false)
-  const [fullName, setFullName] = useState('')
-  const [username, setUsername] = useState('')
-  const [email, setEmail]       = useState('')
-  const [profileErrors, setProfileErrors] = useState<Record<string, string>>({})
-  const [saving, setSaving]     = useState(false)
-  const [toast, setToast]       = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const [fullName,           setFullName]           = useState('')
+  const [username,           setUsername]           = useState('')
+  const [email,              setEmail]              = useState('')
+  const [profileErrors,      setProfileErrors]      = useState<Record<string, string>>({})
+  const [saving,             setSaving]             = useState(false)
+  const [toast,              setToast]              = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+
+  // Wall state
+  const [myPosts,    setMyPosts]    = useState<Post[]>([])
+  const [wallLoading, setWallLoading] = useState(true)
+  const [activePost,  setActivePost]  = useState<Post | null>(null)
 
   useEffect(() => {
     if (profile) { setFullName(profile.full_name || ''); setUsername(profile.username || ''); setEmail(profile.email || '') }
   }, [profile])
+
+  useEffect(() => {
+    postService.getMyPosts()
+      .then(data => setMyPosts(data))
+      .catch(() => {})
+      .finally(() => setWallLoading(false))
+  }, [])
+
+  const totalLikes    = myPosts.reduce((a, p) => a + p.likes_count, 0)
+  const totalComments = myPosts.reduce((a, p) => a + p.comments_count, 0)
 
   const displayUser = { full_name: user?.full_name ?? 'Pengguna', email: user?.email ?? '', username: user?.username ?? 'Pengguna' }
   const isGoogleUser = !!profile?.google_id
@@ -167,6 +421,11 @@ export default function ProfilePage() {
     setSaving(false)
     if (result.success) showToast('success', 'Profil berhasil diperbarui!')
     else showToast('error', result.message)
+  }
+
+  const handleDeletePost = (id: number) => {
+    setMyPosts(prev => prev.filter(p => p.id !== id))
+    showToast('success', 'Postingan berhasil dihapus.')
   }
 
   return (
@@ -195,66 +454,120 @@ export default function ProfilePage() {
         )}
 
         {!loading && profile && (
-          <div className="flex flex-col gap-6 max-w-[560px]">
-            {/* Avatar */}
-            <Card>
-              <div className="flex items-center gap-5 flex-wrap">
-                <div className="w-[72px] h-[72px] rounded-full bg-gradient-to-br from-primary to-[#6b8fff] flex items-center justify-center text-[28px] text-white font-bold font-heading shrink-0">
-                  {(profile.full_name || profile.username || 'U')[0].toUpperCase()}
-                </div>
-                <div>
-                  <div className="font-heading text-xl font-bold text-ink">{profile.full_name || profile.username}</div>
-                  <div className="text-[13px] text-muted mt-0.5">@{profile.username}</div>
-                  <div className="flex gap-2 mt-2 flex-wrap">
-                    {profile.is_verified && (
-                      <span className="text-[11px] font-semibold px-2.5 py-[2px] rounded-full bg-[#ecfdf5] text-[#065f46] inline-flex items-center gap-1">
-                        <Check size={10} strokeWidth={3} /> Terverifikasi
-                      </span>
-                    )}
-                    {isGoogleUser && (
-                      <span className="text-[11px] font-semibold px-2.5 py-[2px] rounded-full bg-[#eff6ff] text-[#1d4ed8] inline-flex items-center gap-1">
-                        <Link2 size={10} /> Google
-                      </span>
-                    )}
+          <>
+            {/* ── Info Profil (lebar tetap) ── */}
+            <div className="flex flex-col gap-6" style={{ maxWidth: 560 }}>
+
+              {/* Avatar + Stats */}
+              <Card>
+                {/* Avatar Row */}
+                <div className="flex items-center gap-5 flex-wrap mb-5">
+                  <div className="w-[72px] h-[72px] rounded-full bg-gradient-to-br from-primary to-[#6b8fff] flex items-center justify-center text-[28px] text-white font-bold font-heading shrink-0">
+                    {(profile.full_name || profile.username || 'U')[0].toUpperCase()}
+                  </div>
+                  <div>
+                    <div className="font-heading text-xl font-bold text-ink">{profile.full_name || profile.username}</div>
+                    <div className="text-[13px] text-muted mt-0.5">@{profile.username}</div>
+                    <div className="flex gap-2 mt-2 flex-wrap">
+                      {profile.is_verified && (
+                        <span className="text-[11px] font-semibold px-2.5 py-[2px] rounded-full bg-[#ecfdf5] text-[#065f46] inline-flex items-center gap-1">
+                          <Check size={10} strokeWidth={3} /> Terverifikasi
+                        </span>
+                      )}
+                      {isGoogleUser && (
+                        <span className="text-[11px] font-semibold px-2.5 py-[2px] rounded-full bg-[#eff6ff] text-[#1d4ed8] inline-flex items-center gap-1">
+                          <Link2 size={10} /> Google
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Card>
 
-            {/* Edit Profil */}
-            <Card>
-              <h3 className="font-heading text-[17px] font-bold text-ink mb-5">Informasi Akun</h3>
-              <div className="flex flex-col gap-4">
-                <Input label="Nama Lengkap" placeholder="Masukkan nama lengkap" value={fullName} onChange={e => { setFullName(e.target.value); setProfileErrors(p => ({ ...p, full_name: '' })) }} error={profileErrors.full_name} />
-                <Input label="Username" placeholder="Masukkan username" value={username} onChange={e => { setUsername(e.target.value); setProfileErrors(p => ({ ...p, username: '' })) }} error={profileErrors.username} />
-                <Input label="Email" type="email" placeholder="Masukkan email" value={email} onChange={e => { setEmail(e.target.value); setProfileErrors(p => ({ ...p, email: '' })) }} error={profileErrors.email} />
-                <Button variant="primary" onClick={handleSaveProfile} loading={saving}>Simpan Perubahan</Button>
-              </div>
-            </Card>
+                {/* Stats Row */}
+                <div className="grid grid-cols-3 gap-3 pt-4 border-t border-border">
+                  {[
+                    { icon: <Camera size={18} color="#16a34a" />,       label: 'Postingan',  value: wallLoading ? '–' : myPosts.length },
+                    { icon: <Heart size={18} color="#ef4444" />,         label: 'Total Suka', value: wallLoading ? '–' : totalLikes },
+                    { icon: <MessageCircle size={18} color="#16a34a" />, label: 'Komentar',   value: wallLoading ? '–' : totalComments },
+                  ].map(s => (
+                    <div key={s.label} className="flex flex-col items-center gap-1 py-2">
+                      {s.icon}
+                      <span className="font-heading text-[20px] font-bold text-ink leading-none">{s.value}</span>
+                      <span className="text-[11px] text-muted">{s.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </Card>
 
-            {/* Keamanan */}
-            <Card>
-              <h3 className="font-heading text-[17px] font-bold text-ink mb-2">Keamanan Akun</h3>
-              <p className="text-[13px] text-muted mb-5 leading-relaxed">
-                {isGoogleUser ? 'Akun ini menggunakan Google login. Ganti password tidak tersedia.' : 'Ganti password secara berkala untuk menjaga keamanan akunmu. Kode OTP akan dikirim ke emailmu.'}
-              </p>
-              <Button
-                variant="secondary"
-                onClick={() => setShowChangePassword(true)}
-                disabled={isGoogleUser}
-                style={{ width: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6 }}
-              ><KeyRound size={14} /> Ganti Password</Button>
-            </Card>
-          </div>
+              {/* Edit Profil */}
+              <Card>
+                <h3 className="font-heading text-[17px] font-bold text-ink mb-5">Informasi Akun</h3>
+                <div className="flex flex-col gap-4">
+                  <Input label="Nama Lengkap" placeholder="Masukkan nama lengkap" value={fullName} onChange={e => { setFullName(e.target.value); setProfileErrors(p => ({ ...p, full_name: '' })) }} error={profileErrors.full_name} />
+                  <Input label="Username" placeholder="Masukkan username" value={username} onChange={e => { setUsername(e.target.value); setProfileErrors(p => ({ ...p, username: '' })) }} error={profileErrors.username} />
+                  <Input label="Email" type="email" placeholder="Masukkan email" value={email} onChange={e => { setEmail(e.target.value); setProfileErrors(p => ({ ...p, email: '' })) }} error={profileErrors.email} />
+                  <Button variant="primary" onClick={handleSaveProfile} loading={saving}>Simpan Perubahan</Button>
+                </div>
+              </Card>
+
+              {/* Keamanan */}
+              <Card>
+                <h3 className="font-heading text-[17px] font-bold text-ink mb-2">Keamanan Akun</h3>
+                <p className="text-[13px] text-muted mb-5 leading-relaxed">
+                  {isGoogleUser ? 'Akun ini menggunakan Google login. Ganti password tidak tersedia.' : 'Ganti password secara berkala untuk menjaga keamanan akunmu. Kode OTP akan dikirim ke emailmu.'}
+                </p>
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowChangePassword(true)}
+                  disabled={isGoogleUser}
+                  style={{ width: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                ><KeyRound size={14} /> Ganti Password</Button>
+              </Card>
+            </div>
+
+            {/* ── Dinding Foto ── */}
+            <div className="mt-8" style={{ maxWidth: 560 }}>
+              <div className="flex items-center gap-3 mb-4">
+                <Camera size={18} color="#16a34a" />
+                <h3 className="font-heading text-[17px] font-bold text-ink m-0">Dinding Foto</h3>
+                {!wallLoading && myPosts.length > 0 && (
+                  <span className="ml-auto text-[12px] text-muted">{myPosts.length} postingan</span>
+                )}
+              </div>
+
+              {wallLoading ? (
+                <div className="grid grid-cols-3 gap-0.5 rounded-xl overflow-hidden">
+                  {[1, 2, 3, 4, 5, 6].map(i => (
+                    <div key={i} className="bg-border animate-pulse" style={{ aspectRatio: '1/1' }} />
+                  ))}
+                </div>
+              ) : (
+                <WallGrid posts={myPosts} onSelect={setActivePost} />
+              )}
+            </div>
+          </>
         )}
       </main>
+
+      {/* Lightbox */}
+      {activePost && (
+        <PostLightbox
+          post={activePost}
+          onClose={() => setActivePost(null)}
+          onDelete={handleDeletePost}
+        />
+      )}
 
       {showChangePassword && profile && (
         <ModalOverlay onClose={() => setShowChangePassword(false)}>
           <ChangePasswordModal
             email={profile.email}
             onClose={() => setShowChangePassword(false)}
-            onSuccess={() => { setShowChangePassword(false); showToast('success', 'Password berhasil diganti!') }}
+            onSuccess={() => {
+              setShowChangePassword(false)
+              showToast('success', 'Password berhasil diganti! Silakan login kembali.')
+              setTimeout(() => logout(), 1500)
+            }}
             requestOtp={requestChangePasswordOtp}
             verifyOtp={verifyChangePasswordOtp}
             changePassword={changePassword}

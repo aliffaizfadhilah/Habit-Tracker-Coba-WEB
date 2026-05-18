@@ -13,6 +13,8 @@ class PostRequest extends ApiFormRequest
             'habit_id'         => 'nullable|integer',
             'habit_title'      => 'nullable|string|max:100',
             'progress_percent' => 'nullable|numeric|min:0|max:100',
+            'is_private'       => 'nullable|boolean',
+            'frame_style'      => 'nullable|string|in:rect,circle,ring',
         ];
     }
 

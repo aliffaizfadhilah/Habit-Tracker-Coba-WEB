@@ -2,15 +2,16 @@ import React, { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStreak, type HabitStreak } from '../../BusinessLogic/hooks/useStreak'
 import { useDashboard } from '../../BusinessLogic/hooks/useDashboard'
-import { useAuth } from '../../BusinessLogic/hooks/useAuth'
+import { useAuth } from '../../BusinessLogic/context/AuthContext'
 import { http } from '../../BusinessLogic/services/HttpService'
 import { Sidebar, LogoutModal, useSidebar } from './shared/sideBar'
 import HabitReportModal from '../components/HabitReportModal'
+import RiwayatDrawer from '../components/RiwayatDrawer'
 import { habitCompletionService } from '../../BusinessLogic/services/HabitCompletionService'
 import {
   CheckSquare, Flame, Trophy, TrendingUp,
   BarChart2, Lock, Loader2, Check, Sprout,
-  Search, AlertTriangle, Menu, Sparkles, Star, Zap,
+  Search, AlertTriangle, Menu, Sparkles, Star, Zap, History,
 } from 'lucide-react'
 
 const INSIGHT_ICONS: Record<string, React.ReactNode> = {
@@ -197,6 +198,7 @@ export default function Dashboard() {
   const [showLogout, setShowLogout]       = useState(false)
   const [filter, setFilter]               = useState<FilterType>('semua')
   const [detailTarget, setDetailTarget]   = useState<HabitStreak | null>(null)
+  const [showRiwayat, setShowRiwayat]     = useState(false)
   const { habits, summary, loading, error, refetch } = useStreak()
   const { user, logout } = useAuth()
   const { weeklyData, insights, atRisk } = useDashboard(habits)
@@ -246,9 +248,9 @@ export default function Dashboard() {
             </div>
           </div>
           <button
-            onClick={() => navigate('/habits')}
-            className="px-5 py-[9px] bg-primary text-white border-none rounded-[10px] font-body text-[13px] font-bold cursor-pointer flex items-center gap-1.5 shadow-green"
-          >＋ Tambah Habit</button>
+            onClick={() => setShowRiwayat(true)}
+            className="px-5 py-[9px] bg-white text-ink border border-border rounded-[10px] font-body text-[13px] font-bold cursor-pointer flex items-center gap-1.5 shadow-card hover:border-primary hover:text-primary transition-colors"
+          ><History size={15} /> Riwayat</button>
         </div>
 
         {/* GREETING BANNER */}
@@ -445,6 +447,7 @@ export default function Dashboard() {
 
       {detailTarget && <HabitReportModal habit={detailTarget} onClose={() => setDetailTarget(null)} />}
       {showLogout && <LogoutModal onCancel={() => setShowLogout(false)} onConfirm={async () => { setShowLogout(false); await logout() }} />}
+      <RiwayatDrawer habits={habits} open={showRiwayat} onClose={() => setShowRiwayat(false)} />
     </div>
   )
 }

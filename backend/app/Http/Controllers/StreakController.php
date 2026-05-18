@@ -9,7 +9,6 @@ use Illuminate\Http\Request;
 
 class StreakController extends Controller
 {
-    public function __construct(private readonly StreakBuilder $streakBuilder) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -51,6 +50,8 @@ class StreakController extends Controller
                 'total_period_days'    => $stats['total_period_days'],
                 'total_completed_days' => $stats['total_completed_days'],
                 'checked_today'        => $checkedToday,
+                'reminder_time'        => $habit->reminder_time ? substr($habit->reminder_time, 0, 5) : null,
+                'reminder_enabled'     => (bool) $habit->reminder_enabled,
             ];
         });
 

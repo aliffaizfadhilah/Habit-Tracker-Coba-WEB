@@ -21,7 +21,6 @@ class ProfileService
             'email'       => $user->email,
             'full_name'   => $user->full_name,
             'is_verified' => $user->is_verified,
-            'google_id'   => $user->google_id ?? null,
         ];
     }
 

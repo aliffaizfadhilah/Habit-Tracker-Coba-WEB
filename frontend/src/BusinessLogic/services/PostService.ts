@@ -19,6 +19,8 @@ export interface Post {
   comments_count:   number
   liked_by_me:      boolean
   is_mine:          boolean
+  is_private:       boolean
+  frame_style:      'rect' | 'circle' | 'ring'
   created_at:       string
   user:             PostUser
 }
@@ -44,6 +46,16 @@ class PostService {
     return res.success ? res.data : []
   }
 
+  async getMyPosts(): Promise<Post[]> {
+    const res = await http.get<{ success: boolean; data: Post[] }>('/api/posts?mine=1')
+    return res.success ? res.data : []
+  }
+
+  async getPostsSince(sinceId: number): Promise<Post[]> {
+    const res = await http.get<{ success: boolean; data: Post[] }>(`/api/posts?since=${sinceId}`)
+    return res.success ? res.data : []
+  }
+
   async createPost(payload: PostPayload): Promise<{ success: boolean; data?: Post; message?: string }> {
     const form = new FormData()
     form.append('title',   payload.title)
@@ -52,6 +64,8 @@ class PostService {
     if (payload.habitId        != null) form.append('habit_id',          String(payload.habitId))
     if (payload.habitTitle     != null) form.append('habit_title',        payload.habitTitle)
     if (payload.progressPercent != null) form.append('progress_percent', String(payload.progressPercent))
+    form.append('is_private',   payload.isPrivate ? '1' : '0')
+    form.append('frame_style',  payload.frameStyle)
 
     try {
       const res = await http.postMultipart<{ success: boolean; data?: Post; message?: string }>(

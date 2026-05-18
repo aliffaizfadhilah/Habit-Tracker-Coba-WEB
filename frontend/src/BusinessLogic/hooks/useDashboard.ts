@@ -81,8 +81,9 @@ export function useDashboard(habits: HabitStreak[]) {
     const bestCount = bestHabitEntry ? Number(bestHabitEntry[1]) : 0
     const bestDayEntry = Object.entries(byDay).sort((a, b) => b[1] - a[1])[0]
 
+    const today = new Date().toISOString().slice(0, 10)
     const needsAttention = [...habits]
-      .filter(h => Number(h.progress_percent) < 100)
+      .filter(h => Number(h.progress_percent) < 100 && h.periode_end >= today)
       .sort((a, b) => Number(a.progress_percent) - Number(b.progress_percent))[0]
 
     const completedFull = habits.filter(h => Number(h.progress_percent) === 100).length
@@ -127,17 +128,19 @@ export function useDashboard(habits: HabitStreak[]) {
   }, [habits, logs])
 
   // At-risk list derived from habit streak + check data
-  const atRisk = useMemo((): AtRiskItem[] =>
-    habits
+  const atRisk = useMemo((): AtRiskItem[] => {
+    const today = new Date().toISOString().slice(0, 10)
+    return habits
+      .filter(h => Number(h.progress_percent) < 100 && h.periode_end >= today)
       .map(h => {
         if (h.current_streak === 0 && h.total_completed_days > 0)
-          return { name: h.title, label: 'Streak terputus',          level: 'high' as const }
+          return { name: h.title, label: 'Streak terputus',               level: 'high' as const }
         if (!h.checked_today && h.current_streak <= 2)
           return { name: h.title, label: `Streak ${h.current_streak} hari`, level: 'mid' as const }
-        return   { name: h.title, label: 'On track ✓',               level: 'ok'   as const }
+        return   { name: h.title, label: 'On track ✓',                    level: 'ok'   as const }
       })
-      .slice(0, 5),
-  [habits])
+      .slice(0, 5)
+  }, [habits])
 
   return { weeklyData, insights, atRisk, logsLoading }
 }

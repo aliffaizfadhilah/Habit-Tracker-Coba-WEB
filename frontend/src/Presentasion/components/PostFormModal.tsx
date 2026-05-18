@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PostBuilder } from '../../BusinessLogic/builders/PostBuilder'
 import { postService } from '../../BusinessLogic/services/PostService'
-import { X, BarChart2, Send } from 'lucide-react'
+import { X, BarChart2, Send, Lock, Globe } from 'lucide-react'
 
 interface Props {
   imageBlob:        Blob
@@ -18,20 +18,21 @@ export default function PostFormModal({
   imageBlob, previewUrl, habitId, habitTitle, progressPercent, onClose, onPosted,
 }: Props) {
   const navigate = useNavigate()
-  const [title,   setTitle]   = useState('')
-  const [caption, setCaption] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error,   setError]   = useState('')
+  const [title,     setTitle]     = useState('')
+  const [caption,   setCaption]   = useState('')
+  const [isPrivate, setIsPrivate] = useState(false)
+  const [loading,   setLoading]   = useState(false)
+  const [error,     setError]     = useState('')
 
   const handlePost = async () => {
     if (!title.trim()) { setError('Judul postingan wajib diisi.'); return }
-    setLoading(true)
-    setError('')
+    setLoading(true); setError('')
     try {
       const builder = new PostBuilder()
         .withTitle(title)
         .withCaption(caption)
         .withImage(imageBlob)
+        .withPrivacy(isPrivate)
       if (habitId != null && habitTitle != null && progressPercent != null) {
         builder.withHabit(habitId, habitTitle, progressPercent)
       }
@@ -112,6 +113,36 @@ export default function PostFormModal({
             className="w-full px-3.5 py-2.5 rounded-[10px] border-[1.5px] border-border text-sm font-body outline-none text-ink bg-surface resize-y min-h-[80px]"
           />
           <p className="mt-0.5 text-[11px] text-muted text-right">{caption.length}/1000</p>
+        </div>
+
+        {/* Privacy toggle */}
+        <div className="flex items-center gap-3 bg-[#fafafa] rounded-[10px] px-4 py-3 border border-border">
+          <div className="flex-1">
+            <div className="text-[13px] font-semibold text-ink flex items-center gap-1.5">
+              {isPrivate ? <Lock size={14} color="#6b7280" /> : <Globe size={14} color="#16a34a" />}
+              {isPrivate ? 'Privat' : 'Publik'}
+            </div>
+            <div className="text-[11px] text-muted mt-0.5">
+              {isPrivate
+                ? 'Hanya muncul di dinding profilmu sendiri'
+                : 'Muncul di feed publik semua pengguna'}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsPrivate(p => !p)}
+            className="relative shrink-0 border-none cursor-pointer p-0 bg-transparent"
+            style={{ width: 40, height: 22 }}
+          >
+            <div
+              className="w-full h-full rounded-full transition-colors duration-200"
+              style={{ background: isPrivate ? '#6b7280' : '#16a34a' }}
+            />
+            <div
+              className="absolute top-[3px] w-[16px] h-[16px] rounded-full bg-white shadow transition-all duration-200"
+              style={{ left: isPrivate ? 21 : 3 }}
+            />
+          </button>
         </div>
 
         {/* Actions */}

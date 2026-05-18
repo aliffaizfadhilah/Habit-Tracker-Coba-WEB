@@ -5,22 +5,31 @@
 //  - Hapus requires_otp check (OTP tidak ada di alur login)
 //  - Login sukses → langsung /dashboard
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authService } from '../services/AuthService'
+import { useAuth } from '../context/AuthContext'
 import type { LoginForm } from '../types/Auth.types'
 
 export function useLogin() {
   const navigate = useNavigate()
+  const { refetch, isLoggedIn, loading: authLoading } = useAuth()
   const [form, setForm]       = useState<LoginForm>({ email: '', password: '' })
   const [error, setError]     = useState('')
   const [loading, setLoading] = useState(false)
   const [showPass, setShowPass] = useState(false)
 
+  // Navigasi ke dashboard setelah context benar-benar meng-commit isLoggedIn: true
+  useEffect(() => {
+    if (!authLoading && isLoggedIn) {
+      navigate('/dashboard', { replace: true })
+    }
+  }, [isLoggedIn, authLoading, navigate])
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
     setLoading(true)
@@ -30,7 +39,8 @@ export function useLogin() {
         setError(data.message || 'Email atau password salah.')
         return
       }
-      navigate('/dashboard')
+      await refetch()
+      // navigate dipanggil oleh useEffect di atas saat isLoggedIn berubah true
     } catch {
       setError('Terjadi kesalahan. Coba lagi.')
     } finally {

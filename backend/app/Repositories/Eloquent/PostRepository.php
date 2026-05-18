@@ -7,12 +7,44 @@ use App\Models\PostComment;
 use App\Models\PostLike;
 use App\Repositories\Contracts\PostRepositoryInterface;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class PostRepository implements PostRepositoryInterface
 {
     public function allWithUsers(): Collection
     {
         return Post::with(['user', 'likes'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
+    public function allByUser(int $userId): Collection
+    {
+        return Post::with(['user', 'likes'])
+            ->where('user_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
+    public function allVisibleToUser(int $userId): Collection
+    {
+        return Post::with(['user', 'likes'])
+            ->where(function ($q) use ($userId) {
+                $q->where('is_private', false)
+                  ->orWhere('user_id', $userId);
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
+    public function allVisibleToUserSince(int $userId, int $sinceId): Collection
+    {
+        return Post::with(['user', 'likes'])
+            ->where('id', '>', $sinceId)
+            ->where(function ($q) use ($userId) {
+                $q->where('is_private', false)
+                  ->orWhere('user_id', $userId);
+            })
             ->orderBy('created_at', 'desc')
             ->get();
     }
@@ -39,23 +71,25 @@ class PostRepository implements PostRepositoryInterface
 
     public function toggleLike(int $postId, int $userId): array
     {
-        $post = Post::find($postId);
-        $like = PostLike::where('post_id', $postId)->where('user_id', $userId)->first();
+        return DB::transaction(function () use ($postId, $userId) {
+            $post = Post::lockForUpdate()->find($postId);
+            $like = PostLike::where('post_id', $postId)->where('user_id', $userId)->first();
 
-        if ($like) {
-            $like->delete();
-            $post->decrement('likes_count');
-            $liked = false;
-        } else {
-            PostLike::create(['post_id' => $postId, 'user_id' => $userId]);
-            $post->increment('likes_count');
-            $liked = true;
-        }
+            if ($like) {
+                $like->delete();
+                $post->decrement('likes_count');
+                $liked = false;
+            } else {
+                PostLike::create(['post_id' => $postId, 'user_id' => $userId]);
+                $post->increment('likes_count');
+                $liked = true;
+            }
 
-        return [
-            'liked'       => $liked,
-            'likes_count' => $post->fresh()->likes_count,
-        ];
+            return [
+                'liked'       => $liked,
+                'likes_count' => $post->fresh()->likes_count,
+            ];
+        });
     }
 
     public function getComments(int $postId): Collection

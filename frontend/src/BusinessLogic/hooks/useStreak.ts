@@ -14,6 +14,8 @@ export interface HabitStreak {
   total_period_days:    number
   total_completed_days: number
   checked_today:        boolean
+  reminder_time:        string | null
+  reminder_enabled:     boolean
 }
 
 export interface StreakSummary {

@@ -6,7 +6,6 @@ use App\Models\Role;
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class AuthService
@@ -50,36 +49,11 @@ class AuthService
 
     public function logout(): void
     {
-        auth('api')->logout();
-    }
-
-    public function verifyOtp(string $email, string $otp): ?array
-    {
-        $user = $this->userRepo->findByEmail($email);
-
-        if (!$user || !$this->otpService->verify($user, $otp)) {
-            return null;
+        try {
+            auth('api')->logout();
+        } catch (\Exception) {
+            // Token tidak ada atau sudah expire — tidak perlu dilempar, cookie tetap dihapus
         }
-
-        $user->update(['is_verified' => true]);
-        $this->otpService->clear($user);
-
-        $token = JWTAuth::fromUser($user);
-
-        return ['token' => $token, 'user' => $user];
-    }
-
-    public function resendOtp(string $email): ?User
-    {
-        $user = $this->userRepo->findByEmail($email);
-
-        if (!$user || $user->is_verified) {
-            return null;
-        }
-
-        $this->otpService->send($user);
-
-        return $user;
     }
 
     public function sendForgotOtp(string $email): ?User
@@ -120,36 +94,4 @@ class AuthService
         return true;
     }
 
-    public function loginViaGoogle(object $googleUser): array
-    {
-        $user = User::where('google_id', $googleUser->getId())
-            ->orWhere('email', $googleUser->getEmail())
-            ->first();
-
-        if (!$user) {
-            $user = $this->userRepo->create([
-                'username'    => Str::slug($googleUser->getName()) . '_' . Str::random(5),
-                'email'       => $googleUser->getEmail(),
-                'full_name'   => $googleUser->getName(),
-                'google_id'   => $googleUser->getId(),
-                'password'    => Hash::make(Str::random(32)),
-                'salt'        => bin2hex(random_bytes(32)),
-                'is_verified' => true,
-            ]);
-
-            $role = Role::where('role_name', 'USER')->first();
-            if ($role) {
-                $user->roles()->attach($role->id);
-            }
-        } else {
-            $this->userRepo->update($user, [
-                'google_id'   => $googleUser->getId(),
-                'is_verified' => true,
-            ]);
-        }
-
-        $token = JWTAuth::fromUser($user);
-
-        return ['token' => $token, 'user' => $user];
-    }
 }

@@ -46,6 +46,9 @@ class ShareBuilder
 
     public function build(): array
     {
-        return $this->payload;
+        $result        = $this->payload;
+        $this->payload = [];
+
+        return $result;
     }
 }

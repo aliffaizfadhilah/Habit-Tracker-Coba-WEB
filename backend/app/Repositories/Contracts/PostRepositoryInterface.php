@@ -9,6 +9,9 @@ use Illuminate\Support\Collection;
 interface PostRepositoryInterface
 {
     public function allWithUsers(): Collection;
+    public function allVisibleToUser(int $userId): Collection;
+    public function allByUser(int $userId): Collection;
+    public function allVisibleToUserSince(int $userId, int $sinceId): Collection;
     public function findById(int $id): ?Post;
     public function findByIdAndUser(int $id, int $userId): ?Post;
     public function create(array $data): Post;

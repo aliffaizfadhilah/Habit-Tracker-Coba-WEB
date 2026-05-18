@@ -14,7 +14,16 @@ class PostController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $posts = $this->postService->getAll($request->user()->id);
+        $userId = $request->user()->id;
+
+        if ($request->boolean('mine')) {
+            $posts = $this->postService->getByUser($userId);
+        } else {
+            $since = (int) $request->query('since', 0);
+            $posts = $since > 0
+                ? $this->postService->getAllSince($userId, $since)
+                : $this->postService->getAll($userId);
+        }
 
         return response()->json(['success' => true, 'data' => $posts]);
     }

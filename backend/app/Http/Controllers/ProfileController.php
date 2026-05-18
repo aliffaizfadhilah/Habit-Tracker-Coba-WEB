@@ -33,16 +33,7 @@ class ProfileController extends Controller
 
     public function requestChangePasswordOtp(Request $request): JsonResponse
     {
-        $user = $request->user();
-
-        if ($user->google_id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Akun Google tidak dapat mengganti password di sini.',
-            ], 403);
-        }
-
-        $this->profileService->requestOtp($user);
+        $this->profileService->requestOtp($request->user());
 
         return response()->json(['success' => true, 'message' => 'Kode OTP telah dikirim ke email kamu.']);
     }
@@ -70,6 +61,14 @@ class ProfileController extends Controller
             return response()->json(['success' => false, 'message' => 'Kode OTP tidak valid atau kadaluarsa.'], 422);
         }
 
-        return response()->json(['success' => true, 'message' => 'Password berhasil diganti!']);
+        try {
+            auth('api')->logout();
+        } catch (\Throwable) {
+            // ignore — token may already be invalidated
+        }
+
+        return response()
+            ->json(['success' => true, 'message' => 'Password berhasil diganti! Silakan login kembali.'])
+            ->withCookie(cookie()->forget('jwt_token'));
     }
 }

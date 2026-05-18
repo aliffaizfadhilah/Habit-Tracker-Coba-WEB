@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Eloquent;
 
+use App\Models\Activity;
 use App\Models\ActivityLog;
 use App\Models\Habit;
 use App\Repositories\Contracts\ActivityLogRepositoryInterface;
@@ -10,6 +11,14 @@ use Illuminate\Support\Collection;
 
 class ActivityLogRepository implements ActivityLogRepositoryInterface
 {
+    public function firstOrCreateActivity(int $habitId, string $name): Activity
+    {
+        return Activity::firstOrCreate(
+            ['id_habit' => $habitId],
+            ['id_habit' => $habitId, 'name' => $name]
+        );
+    }
+
     public function findTodayLog(int $activityId): ?ActivityLog
     {
         return ActivityLog::where('id_activity', $activityId)
@@ -39,7 +48,7 @@ class ActivityLogRepository implements ActivityLogRepositoryInterface
 
     public function getAllByUsername(string $username): Collection
     {
-        return ActivityLog::whereHas('activity.habit', fn($q) => $q->where('username', $username))
+        return ActivityLog::whereHas('activity.habit', fn($q) => $q->where('username', $username)->where('status', 1))
             ->with('activity.habit')
             ->orderBy('date', 'desc')
             ->get()

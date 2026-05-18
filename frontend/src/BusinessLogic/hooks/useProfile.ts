@@ -1,6 +1,5 @@
-
-import { useState, useEffect } from 'react'
 import { http } from '../services/HttpService'
+import { useAuth } from '../context/AuthContext'
 
 export interface ProfileData {
   username:    string
@@ -10,34 +9,12 @@ export interface ProfileData {
   google_id?:  string | null
 }
 
-export interface ProfileState {
-  profile:  ProfileData | null
-  loading:  boolean
-  error:    string
-}
-
 export function useProfile() {
-  const [state, setState] = useState<ProfileState>({
-    profile: null,
-    loading: true,
-    error:   '',
-  })
+  const { user, loading, refetch } = useAuth()
 
-  const fetchProfile = async () => {
-    setState(prev => ({ ...prev, loading: true, error: '' }))
-    try {
-      const data = await http.get<{ success: boolean; user: ProfileData }>('/api/me')
-      if (data.success) {
-        setState({ profile: data.user, loading: false, error: '' })
-      } else {
-        setState(prev => ({ ...prev, loading: false, error: 'Gagal memuat profil.' }))
-      }
-    } catch {
-      setState(prev => ({ ...prev, loading: false, error: 'Terjadi kesalahan.' }))
-    }
-  }
-
-  useEffect(() => { fetchProfile() }, [])
+  const profile: ProfileData | null = user
+    ? { username: user.username, email: user.email, full_name: user.full_name ?? '', is_verified: user.is_verified }
+    : null
 
   const updateProfile = async (payload: {
     full_name: string
@@ -46,7 +23,7 @@ export function useProfile() {
   }): Promise<{ success: boolean; message: string }> => {
     try {
       const data = await http.put<{ success: boolean; message: string }>('/api/profile', payload)
-      if (data.success) await fetchProfile()
+      if (data.success) await refetch()
       return data
     } catch {
       return { success: false, message: 'Terjadi kesalahan saat update profil.' }
@@ -87,8 +64,10 @@ export function useProfile() {
   }
 
   return {
-    ...state,
-    refetch: fetchProfile,
+    profile,
+    loading,
+    error: '',
+    refetch,
     updateProfile,
     requestChangePasswordOtp,
     verifyChangePasswordOtp,

@@ -28,9 +28,10 @@ const faqs = [
 interface CookiePreferences { essential: boolean; analytics: boolean; marketing: boolean; preferences: boolean }
 interface CookieConsent     { accepted: boolean; timestamp: string; preferences: CookiePreferences }
 
-const COOKIE_KEY   = 'habittracker_cookie_consent'
-const SESSION_KEY  = 'habittracker_session_id'
-const TRACKED_KEY  = 'habittracker_tracked'
+const COOKIE_KEY          = 'habittracker_cookie_consent'
+const SESSION_KEY         = 'habittracker_session_id'
+const TRACKED_KEY         = 'habittracker_tracked'
+const SESSION_ANSWERED_KEY = 'habittracker_consent_session'
 const defaultPrefs: CookiePreferences = { essential: true, analytics: false, marketing: false, preferences: false }
 
 function getOrCreateSessionId(): string {
@@ -65,20 +66,22 @@ export default function LandingPage() {
   const [cookiePrefs,      setCookiePrefs]      = useState<CookiePreferences>(defaultPrefs)
 
   useEffect(() => {
-    const stored = localStorage.getItem(COOKIE_KEY)
-    if (!stored) {
-      // Belum ada consent → tampil banner, jangan track dulu
+    const stored        = localStorage.getItem(COOKIE_KEY)
+    const sessionAnswered = sessionStorage.getItem(SESSION_ANSWERED_KEY)
+
+    if (stored) {
+      const consent = JSON.parse(stored) as CookieConsent
+      setCookiePrefs(consent.preferences)
+      if (consent.preferences.analytics) sendTrackingHit()
+    }
+
+    // Tampil banner jika belum dijawab di sesi browser ini
+    if (!sessionAnswered) {
       const timer = setTimeout(() => setShowCookieBanner(true), 800)
       const onScroll = () => setScrollY(window.scrollY)
       window.addEventListener('scroll', onScroll)
       return () => { clearTimeout(timer); window.removeEventListener('scroll', onScroll) }
     }
-
-    const consent = JSON.parse(stored) as CookieConsent
-    setCookiePrefs(consent.preferences)
-
-    // Consent sudah ada dan analytics disetujui → tracking langsung
-    if (consent.preferences.analytics) sendTrackingHit()
 
     const onScroll = () => setScrollY(window.scrollY)
     window.addEventListener('scroll', onScroll)
@@ -96,17 +99,17 @@ export default function LandingPage() {
 
   const scrollTo = (id: string) => { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }); setMobileMenuOpen(false) }
 
-  const saveCookieConsent = (prefs: CookiePreferences) => {
-    const consent: CookieConsent = { accepted: true, timestamp: new Date().toISOString(), preferences: prefs }
+  const saveCookieConsent = (prefs: CookiePreferences, declined = false) => {
+    const consent: CookieConsent = { accepted: !declined, timestamp: new Date().toISOString(), preferences: prefs }
     localStorage.setItem(COOKIE_KEY, JSON.stringify(consent))
+    sessionStorage.setItem(SESSION_ANSWERED_KEY, '1')
     setCookiePrefs(prefs)
     setShowCookieBanner(false)
     setShowCookieModal(false)
-    // Jika analytics disetujui → kirim tracking saat itu juga (real-time, tanpa delay)
     if (prefs.analytics) sendTrackingHit()
   }
   const acceptAllCookies  = () => saveCookieConsent({ essential: true, analytics: true, marketing: true, preferences: true })
-  const rejectAllCookies  = () => saveCookieConsent({ essential: true, analytics: false, marketing: false, preferences: false })
+  const rejectAllCookies  = () => saveCookieConsent({ essential: true, analytics: false, marketing: false, preferences: false }, true)
   const saveCustomCookies = () => saveCookieConsent(cookiePrefs)
 
   // ── Shared class strings ──────────────────────────────────────────────────
@@ -117,7 +120,6 @@ export default function LandingPage() {
 
   return (
     <div className="font-body bg-surface text-ink min-h-screen overflow-x-hidden">
-      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
 
       {/* ── NAVBAR ── */}
       <nav

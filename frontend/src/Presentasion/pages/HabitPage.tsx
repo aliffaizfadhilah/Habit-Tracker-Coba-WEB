@@ -7,7 +7,7 @@ import {
   type HabitFormData, type HabitGridItem, type FilterType,
 } from '../../BusinessLogic/factories/HabitFormFactory'
 import { useHabit } from '../../BusinessLogic/hooks/useHabit'
-import { useAuth } from '../../BusinessLogic/hooks/useAuth'
+import { useAuth } from '../../BusinessLogic/context/AuthContext'
 import { Sidebar, LogoutModal, useSidebar } from './shared/sideBar'
 import HabitReportModal from '../components/HabitReportModal'
 import { habitCompletionService } from '../../BusinessLogic/services/HabitCompletionService'

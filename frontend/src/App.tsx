@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider } from './BusinessLogic/context/AuthContext'
 import Dashboard          from './Presentasion/pages/Dashboard'
 import Login              from './Presentasion/pages/auth/Login'
 import Register           from './Presentasion/pages/auth/Register'
@@ -13,6 +14,7 @@ import InAppNotification  from './Presentasion/components/InAppNotification'
 
 export default function App() {
   return (
+    <AuthProvider>
     <BrowserRouter>
       <InAppNotification />
       <Routes>
@@ -33,5 +35,6 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
+    </AuthProvider>
   )
 }

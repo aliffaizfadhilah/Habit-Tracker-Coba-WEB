@@ -62,7 +62,12 @@ export function useReminder() {
     }
   }
 
-  const habitsWithReminder = habits.filter(h => h.reminder_time !== null)
+  const today = new Date().toISOString().slice(0, 10)
+  const habitsWithReminder = habits.filter(h =>
+    h.reminder_time !== null &&
+    Number(h.progress_percent) < 100 &&
+    h.periode_end >= today
+  )
 
   return { habits, habitsWithReminder, loading, error, toggleReminder, updateReminderTime, refetch: fetchHabits }
 }

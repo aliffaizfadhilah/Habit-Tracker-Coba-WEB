@@ -12,19 +12,13 @@ class HttpService {
   }
 
   private getHeaders(): HeadersInit {
-    const headers: Record<string, string> = {
+    return {
       'Content-Type': 'application/json',
       'Accept':       'application/json',
     }
-    const token = localStorage.getItem('jwt_token')
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`
-    }
-    return headers
   }
 
   private handleUnauthorized(): void {
-    localStorage.removeItem('jwt_token')
     if (!PUBLIC_PATHS.includes(window.location.pathname)) {
       window.location.href = '/login'
     }
@@ -35,10 +29,7 @@ class HttpService {
       this.handleUnauthorized()
       throw new Error('Unauthorized')
     }
-    const data = await res.json() as any
-    if (data?.token) localStorage.setItem('jwt_token', data.token)
-    if (data?.accessToken) localStorage.setItem('jwt_token', data.accessToken)
-    return data as T
+    return res.json() as Promise<T>
   }
 
   async post<T = unknown>(url: string, body: unknown): Promise<T> {
@@ -90,12 +81,9 @@ class HttpService {
   }
 
   async postMultipart<T = unknown>(url: string, formData: FormData): Promise<T> {
-    const token = localStorage.getItem('jwt_token')
-    const headers: Record<string, string> = { 'Accept': 'application/json' }
-    if (token) headers['Authorization'] = `Bearer ${token}`
     const res = await fetch(url, {
       method: 'POST',
-      headers,
+      headers: { 'Accept': 'application/json' },
       credentials: 'include',
       body: formData,
     })

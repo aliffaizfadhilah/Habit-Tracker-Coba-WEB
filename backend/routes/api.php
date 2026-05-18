@@ -7,14 +7,13 @@ use App\Http\Controllers\StreakController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\FeedEventController;
 
 // ─── AUTH (Public) ────────────────────────────────────────────────────────────
 Route::prefix('auth')->group(function () {
     Route::post('/register',       [AuthController::class, 'register']);
     Route::post('/login',          [AuthController::class, 'login']);
     Route::post('/logout',         [AuthController::class, 'logout']);
-    Route::post('/otp/verify',     [AuthController::class, 'verifyOtp']);
-    Route::post('/otp/resend',     [AuthController::class, 'resendOtp']);
 
     // Forgot Password
     Route::post('/forgot-password',        [AuthController::class, 'forgotPassword']);
@@ -23,7 +22,7 @@ Route::prefix('auth')->group(function () {
 });
 
 // ─── PROTECTED (JWT) ─────────────────────────────────────────────────────────
-Route::middleware('jwt.auth')->group(function () {
+Route::middleware('auth.jwt')->group(function () {
 
     // ── Auth / Me ─────────────────────────────────────────────────────────────
     Route::get('/me', [AuthController::class, 'me']);
@@ -60,6 +59,9 @@ Route::middleware('jwt.auth')->group(function () {
 
     // ── Activity Log ──────────────────────────────────────────────────────────
     Route::get('/activity-logs', [ActivityLogController::class, 'index']);
+
+    // ── Feed Real-time ────────────────────────────────────────────────────────
+    Route::get('/feed/stream', [FeedEventController::class, 'stream']);
 
     // ── Posts (Public Feed) ───────────────────────────────────────────────────
     Route::prefix('posts')->group(function () {

@@ -13,7 +13,6 @@ class HabitService
     public function __construct(
         private readonly HabitRepositoryInterface $habitRepo,
         private readonly HabitFactory             $factory,
-        private readonly StreakBuilder             $streakBuilder,
     ) {}
 
     public function getAll(string $username): Collection
@@ -38,7 +37,7 @@ class HabitService
 
         $updated = $habit->fresh();
 
-        $this->streakBuilder
+        (new StreakBuilder())
             ->loadActivityLogs($updated)
             ->calculatePeriodDays($updated)
             ->calculateCurrentStreak()

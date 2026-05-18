@@ -2,7 +2,6 @@
 
 namespace App\Services\Checklist;
 
-use App\Models\Activity;
 use App\Models\Habit;
 use App\Repositories\Contracts\ActivityLogRepositoryInterface;
 use App\Services\Streak\StreakBuilder;
@@ -13,18 +12,13 @@ class ChecklistService
 {
     public function __construct(
         private readonly ActivityLogRepositoryInterface $logRepo,
-        private readonly StreakBuilder                  $streakBuilder,
     ) {}
 
     public function toggleToday(Habit $habit): array
     {
         $today = Carbon::today()->toDateString();
 
-        $activity = Activity::firstOrCreate(
-            ['id_habit' => $habit->id_habit],
-            ['id_habit' => $habit->id_habit, 'name' => $habit->title]
-        );
-
+        $activity    = $this->logRepo->firstOrCreateActivity($habit->id_habit, $habit->title);
         $existingLog = $this->logRepo->findTodayLog($activity->id_activity);
 
         if ($existingLog) {
@@ -39,7 +33,7 @@ class ChecklistService
             $checked = true;
         }
 
-        $this->streakBuilder
+        (new StreakBuilder())
             ->loadActivityLogs($habit)
             ->calculatePeriodDays($habit)
             ->calculateCurrentStreak()

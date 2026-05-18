@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom'
-import { useAuth } from '../../BusinessLogic/hooks/useAuth'
+import { useAuth } from '../../BusinessLogic/context/AuthContext'
 import { tokens } from '../../BusinessLogic/factories/tokens'
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {

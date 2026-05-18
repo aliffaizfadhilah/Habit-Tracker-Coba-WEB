@@ -15,7 +15,7 @@ class User extends Authenticatable implements JWTSubject
         'full_name', 'bio', 'profile_picture',
         'date_of_birth', 'gender', 'reminder_time',
         'reminder_enabled', 'is_verified', 'is_active',
-        'google_id', 'otp_code', 'otp_expires_at',
+        'otp_code', 'otp_expires_at',
     ];
 
     protected $hidden = ['password', 'salt', 'otp_code'];

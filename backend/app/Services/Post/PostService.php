@@ -18,10 +18,22 @@ class PostService
         private readonly ShareBuilder            $shareBuilder,
     ) {}
 
+    public function getByUser(int $userId): Collection
+    {
+        return $this->postRepo->allByUser($userId)
+            ->map(fn($p) => $this->formatPost($p, $userId));
+    }
+
     public function getAll(int $currentUserId): Collection
     {
-        return $this->postRepo->allWithUsers()
+        return $this->postRepo->allVisibleToUser($currentUserId)
             ->map(fn($p) => $this->formatPost($p, $currentUserId));
+    }
+
+    public function getAllSince(int $currentUserId, int $sinceId): Collection
+    {
+        return $this->postRepo->allVisibleToUserSince($currentUserId, $sinceId)
+            ->map(fn ($p) => $this->formatPost($p, $currentUserId));
     }
 
     public function create(array $data, UploadedFile $image, int $userId): array
@@ -36,6 +48,9 @@ class PostService
             ->withImagePath($path)
             ->build();
 
+        $payload['is_private']   = (bool) ($data['is_private'] ?? false);
+        $payload['frame_style']  = $data['frame_style'] ?? 'rect';
+
         if (!empty($data['habit_id'])) {
             $payload['habit_id']         = $data['habit_id'];
             $payload['habit_title']      = $data['habit_title'] ?? null;
@@ -43,7 +58,7 @@ class PostService
         }
 
         $post = $this->postRepo->create($payload);
-        $post->load('user');
+        $post->load(['user', 'likes']);
 
         return $this->formatPost($post, $userId);
     }
@@ -136,6 +151,8 @@ class PostService
             'comments_count'   => $post->comments_count,
             'liked_by_me'      => $post->likes->contains('user_id', $currentUserId),
             'is_mine'          => $post->user_id === $currentUserId,
+            'is_private'       => (bool) $post->is_private,
+            'frame_style'      => $post->frame_style ?? 'rect',
             'created_at'       => $post->created_at?->toISOString(),
             'user'             => [
                 'id'              => $post->user->id,
