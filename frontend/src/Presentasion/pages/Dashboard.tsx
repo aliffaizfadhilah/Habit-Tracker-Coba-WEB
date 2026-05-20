@@ -23,7 +23,6 @@ const INSIGHT_ICONS: Record<string, React.ReactNode> = {
 
 type FilterType = 'semua' | 'selesai_hari_ini' | 'selesai' | 'belum_selesai'
 
-// ─── StatCard ─────────────────────────────────────────────────────────────────
 const StatCard: React.FC<{
   label: string; value: string; icon: React.ReactNode
   iconBg: string; barColor: string; barWidth: number
@@ -40,14 +39,12 @@ const StatCard: React.FC<{
   </div>
 )
 
-// ─── DashCard ─────────────────────────────────────────────────────────────────
 const DashCard: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
   <div className={`bg-white border border-border rounded-[18px] p-[22px_24px] shadow-card ${className}`}>
     {children}
   </div>
 )
 
-// ─── FilterTabBar ─────────────────────────────────────────────────────────────
 const FilterTabBar: React.FC<{
   active: FilterType
   onChange: (f: FilterType) => void
@@ -78,18 +75,64 @@ const FilterTabBar: React.FC<{
   )
 }
 
-// ─── HabitStreakCard ───────────────────────────────────────────────────────────
+const InsightItem: React.FC<{ icon: string; bg: string; title: string; sub: string }> = ({ icon, bg, title, sub }) => (
+  <div className="flex items-start gap-2.5 px-3.5 py-3 rounded-[12px] bg-surface border border-border">
+    <div className="w-[30px] h-[30px] rounded-[9px] flex items-center justify-center shrink-0" style={{ background: bg }}>
+      {INSIGHT_ICONS[icon] ?? null}
+    </div>
+    <div>
+      <div className="text-[12.5px] font-semibold text-ink leading-snug">{title}</div>
+      <div className="text-[11px] text-muted mt-0.5">{sub}</div>
+    </div>
+  </div>
+)
+
+const WeeklyBar: React.FC<{ day: string; val: number; maxBar: number; isToday: boolean }> = ({ day, val, maxBar, isToday }) => {
+  const h = Math.max(8, (val / maxBar) * 100)
+  return (
+    <div className="flex-1 flex flex-col items-center gap-1">
+      <span className="text-[11px] font-bold text-muted">{val}</span>
+      <div
+        className="w-full rounded-t-[6px] transition-all duration-[600ms] cubic-bezier(.34,1.56,.64,1)"
+        style={{ background: isToday ? '#16a34a' : '#a7f3d0', height: h }}
+      />
+      <span className={`text-[11px] ${isToday ? 'text-primary font-bold' : 'text-muted font-medium'}`}>{day}</span>
+    </div>
+  )
+}
+
+const AtRiskItem: React.FC<{ name: string; label: string; level: 'high' | 'mid' | 'ok' }> = ({ name, label, level }) => {
+  const s = {
+    high: { bg: '#fef2f2', color: '#dc2626', itemBg: '#fff8f8' },
+    mid:  { bg: '#fff7ed', color: '#ea580c', itemBg: '#fffbf5' },
+    ok:   { bg: '#dcfce7', color: '#16a34a', itemBg: '#f0fdf4' },
+  }[level]
+  return (
+    <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-[12px] border border-border" style={{ background: s.itemBg }}>
+      <div
+        className="w-[10px] h-[10px] rounded-full shrink-0"
+        style={{ background: level === 'high' ? '#ef4444' : level === 'mid' ? '#f59e0b' : '#22c55e' }}
+      />
+      <span className="text-[13px] font-semibold text-ink flex-1">{name}</span>
+      <span className="text-[11px] font-bold px-[9px] py-[3px] rounded-[20px]" style={{ background: s.bg, color: s.color }}>{label}</span>
+    </div>
+  )
+}
+
 const HabitStreakCard: React.FC<{
   habit:     HabitStreak
   onRefetch: () => Promise<void>
   onReport:  (habit: HabitStreak) => void
 }> = ({ habit, onRefetch, onReport }) => {
+  const today      = new Date().toISOString().slice(0, 10)
   const progress   = Number(habit.progress_percent)
   const isComplete = habitCompletionService.isComplete(habit)
+  const isExpired  = !isComplete && habit.periode_end < today
+  const isLocked   = isComplete || isExpired
   const [checking, setChecking] = useState(false)
 
   const handleToggleCheck = async () => {
-    if (isComplete) return
+    if (isLocked) return
     setChecking(true)
     try { await http.post(`/api/habits/${habit.id_habit}/check-today`, {}); await onRefetch() }
     catch { /* silent */ }
@@ -105,9 +148,12 @@ const HabitStreakCard: React.FC<{
   const barColor = catColor[habit.category] ?? '#16a34a'
 
   return (
-    <div className={`bg-white border-[1.5px] ${isComplete ? 'border-border-mid' : 'border-border'} rounded-[16px] px-6 py-5 shadow-card transition-all relative overflow-hidden hover:border-border-mid hover:shadow-green`}>
+    <div className={`bg-white border-[1.5px] ${isComplete ? 'border-border-mid' : isExpired ? 'border-[#fde68a]' : 'border-border'} rounded-[16px] px-6 py-5 shadow-card transition-all relative overflow-hidden hover:border-border-mid hover:shadow-green`}>
       {isComplete && (
         <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-primary to-accent" />
+      )}
+      {isExpired && (
+        <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#f59e0b] to-[#fbbf24]" />
       )}
       <div className="flex justify-between items-start mb-3">
         <div className="flex-1">
@@ -119,7 +165,10 @@ const HabitStreakCard: React.FC<{
             {isComplete && (
               <span className="inline-flex items-center px-2.5 py-[3px] rounded-full text-[11px] font-semibold bg-success-bg text-[#065f46]">Selesai</span>
             )}
-            {!isComplete && habit.checked_today && (
+            {isExpired && (
+              <span className="inline-flex items-center px-2.5 py-[3px] rounded-full text-[11px] font-semibold bg-[#fff7ed] text-[#c2410c]">Periode Berakhir</span>
+            )}
+            {!isLocked && habit.checked_today && (
               <span className="inline-flex items-center px-2.5 py-[3px] rounded-full text-[11px] font-semibold bg-success-bg text-[#065f46]">Hari Ini ✓</span>
             )}
           </div>
@@ -133,8 +182,12 @@ const HabitStreakCard: React.FC<{
             className="w-9 h-9 rounded-[9px] border border-border bg-primary-light cursor-pointer flex items-center justify-center transition-all"
           ><BarChart2 size={16} color="#16a34a" /></button>
 
-          {isComplete ? (
-            <div className="w-10 h-10 rounded-full border-2 border-border-mid bg-primary-light flex items-center justify-center opacity-50 cursor-not-allowed shrink-0" title="Habit selesai">
+          {isLocked ? (
+            <div
+              className="w-10 h-10 rounded-full border-2 flex items-center justify-center opacity-50 cursor-not-allowed shrink-0"
+              style={{ borderColor: isExpired ? '#fde68a' : undefined }}
+              title={isExpired ? 'Periode berakhir' : 'Habit selesai'}
+            >
               <Lock size={16} />
             </div>
           ) : (
@@ -169,6 +222,11 @@ const HabitStreakCard: React.FC<{
           <Lock size={13} /> Habit ini sudah selesai dan tidak dapat diubah lagi.
         </div>
       )}
+      {isExpired && (
+        <div className="bg-[#fef3c7] border border-[#fde68a] rounded-[8px] px-3 py-[7px] mb-2.5 text-xs text-[#92400e] flex items-center gap-1.5">
+          <Lock size={13} /> Periode habit ini sudah berakhir dan tidak dapat diubah lagi.
+        </div>
+      )}
 
       <div className="mb-2.5">
         <div className="flex justify-between mb-1.5">
@@ -191,7 +249,6 @@ const HabitStreakCard: React.FC<{
   )
 }
 
-// ─── Dashboard ────────────────────────────────────────────────────────────────
 export default function Dashboard() {
   const navigate = useNavigate()
   const { isMobile, sidebarOpen, setSidebarOpen } = useSidebar()
@@ -301,20 +358,9 @@ export default function Dashboard() {
               <span className="text-[11px] font-semibold px-2.5 py-1 rounded-[20px] bg-primary-light text-primary">7 hari</span>
             </div>
             <div className="flex items-end gap-2 h-[120px]">
-              {weeklyData.map(d => {
-                const h = Math.max(8, (d.val / maxBar) * 100)
-                const isToday = d.isToday ?? false
-                return (
-                  <div key={d.day} className="flex-1 flex flex-col items-center gap-1">
-                    <span className="text-[11px] font-bold text-muted">{d.val}</span>
-                    <div
-                      className="w-full rounded-t-[6px] transition-all duration-[600ms] cubic-bezier(.34,1.56,.64,1)"
-                      style={{ background: isToday ? '#16a34a' : '#a7f3d0', height: h }}
-                    />
-                    <span className={`text-[11px] ${isToday ? 'text-primary font-bold' : 'text-muted font-medium'}`}>{d.day}</span>
-                  </div>
-                )
-              })}
+              {weeklyData.map(d => (
+                <WeeklyBar key={d.day} day={d.day} val={d.val} maxBar={maxBar} isToday={d.isToday ?? false} />
+              ))}
             </div>
             <div className="flex justify-center gap-4 mt-3.5">
               {[['#a7f3d0', 'Hari lalu'], ['#16a34a', 'Hari ini']].map(([color, label]) => (
@@ -335,15 +381,7 @@ export default function Dashboard() {
             </div>
             <div className="flex flex-col gap-2.5">
               {insights.map((ins, i) => (
-                <div key={i} className="flex items-start gap-2.5 px-3.5 py-3 rounded-[12px] bg-surface border border-border">
-                  <div className="w-[30px] h-[30px] rounded-[9px] flex items-center justify-center shrink-0" style={{ background: ins.bg }}>
-                    {INSIGHT_ICONS[ins.icon] ?? null}
-                  </div>
-                  <div>
-                    <div className="text-[12.5px] font-semibold text-ink leading-snug">{ins.title}</div>
-                    <div className="text-[11px] text-muted mt-0.5">{ins.sub}</div>
-                  </div>
-                </div>
+                <InsightItem key={i} icon={ins.icon} bg={ins.bg} title={ins.title} sub={ins.sub} />
               ))}
             </div>
           </DashCard>
@@ -423,23 +461,9 @@ export default function Dashboard() {
             <AlertTriangle size={15} color="#f97316" /> Perlu Perhatian
           </div>
           <div className="flex flex-col gap-2">
-            {atRisk.map(r => {
-              const s = {
-                high: { bg: '#fef2f2',  color: '#dc2626', itemBg: '#fff8f8' },
-                mid:  { bg: '#fff7ed',  color: '#ea580c', itemBg: '#fffbf5' },
-                ok:   { bg: '#dcfce7',  color: '#16a34a', itemBg: '#f0fdf4' },
-              }[r.level]
-              return (
-                <div key={r.name} className="flex items-center gap-2.5 px-3 py-2.5 rounded-[12px] border border-border" style={{ background: s.itemBg }}>
-                  <div
-                    className="w-[10px] h-[10px] rounded-full shrink-0"
-                    style={{ background: r.level === 'high' ? '#ef4444' : r.level === 'mid' ? '#f59e0b' : '#22c55e' }}
-                  />
-                  <span className="text-[13px] font-semibold text-ink flex-1">{r.name}</span>
-                  <span className="text-[11px] font-bold px-[9px] py-[3px] rounded-[20px]" style={{ background: s.bg, color: s.color }}>{r.label}</span>
-                </div>
-              )
-            })}
+            {atRisk.map(r => (
+              <AtRiskItem key={r.name} name={r.name} label={r.label} level={r.level} />
+            ))}
           </div>
         </DashCard>
 

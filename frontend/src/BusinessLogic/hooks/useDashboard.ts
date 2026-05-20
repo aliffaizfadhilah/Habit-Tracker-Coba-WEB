@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { http } from '../services/HttpService'
 import type { HabitStreak } from './useStreak'
+import { useHabitRealtime } from './useHabitRealtime'
 
 interface ActivityLog {
   id:          number
@@ -44,8 +45,8 @@ export function useDashboard(habits: HabitStreak[]) {
   }, [])
 
   useEffect(() => { fetchLogs() }, [fetchLogs])
+  useHabitRealtime(fetchLogs)
 
-  // Completion count per day for the last 7 days
   const weeklyData = useMemo((): WeeklyBar[] =>
     Array.from({ length: 7 }, (_, i) => {
       const d = new Date()
@@ -59,7 +60,6 @@ export function useDashboard(habits: HabitStreak[]) {
     }),
   [logs])
 
-  // Insight cards derived from real habit + log data
   const insights = useMemo((): DashboardInsight[] => {
     if (habits.length === 0) return []
 
@@ -127,7 +127,6 @@ export function useDashboard(habits: HabitStreak[]) {
     return result
   }, [habits, logs])
 
-  // At-risk list derived from habit streak + check data
   const atRisk = useMemo((): AtRiskItem[] => {
     const today = new Date().toISOString().slice(0, 10)
     return habits

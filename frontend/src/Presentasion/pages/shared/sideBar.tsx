@@ -1,4 +1,3 @@
-// ─── Sidebar Component ─────────────────────────────────────────────────────────
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -25,7 +24,6 @@ const NAV_ITEMS = [
   { id: 'profile',    Icon: User,        label: 'Profil',       path: '/profile'    },
 ]
 
-// ─── LogoutModal ──────────────────────────────────────────────────────────────
 export const LogoutModal: React.FC<{
   onCancel: () => void
   onConfirm: () => Promise<void>
@@ -57,7 +55,22 @@ export const LogoutModal: React.FC<{
   </div>
 )
 
-// ─── Sidebar ──────────────────────────────────────────────────────────────────
+function UserInfoSection({ user }: { user: { full_name?: string; username?: string } }) {
+  return (
+    <div className="mx-2.5 mt-3 mb-1 px-3 py-3 bg-primary-lighter rounded-md">
+      <div className="flex items-center gap-2.5">
+        <div className="w-[34px] h-[34px] rounded-full shrink-0 bg-gradient-to-br from-primary to-accent flex items-center justify-center text-sm text-white font-bold">
+          {(user.full_name || user.username || 'U')[0].toUpperCase()}
+        </div>
+        <div className="min-w-0">
+          <div className="text-[13px] font-semibold text-ink truncate">{user.full_name || user.username}</div>
+          <div className="text-[11px] text-muted truncate">@{user.username}</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export const Sidebar: React.FC<SidebarProps> = ({
   open = true,
   isMobile = false,
@@ -111,21 +124,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* User info */}
-        {displayUser && (
-          <div className="mx-2.5 mt-3 mb-1 px-3 py-3 bg-primary-lighter rounded-md">
-            <div className="flex items-center gap-2.5">
-              <div className="w-[34px] h-[34px] rounded-full shrink-0 bg-gradient-to-br from-primary to-accent flex items-center justify-center text-sm text-white font-bold">
-                {(displayUser.full_name || displayUser.username || 'U')[0].toUpperCase()}
-              </div>
-              <div className="min-w-0">
-                <div className="text-[13px] font-semibold text-ink truncate">
-                  {displayUser.full_name || displayUser.username}
-                </div>
-                <div className="text-[11px] text-muted truncate">@{displayUser.username}</div>
-              </div>
-            </div>
-          </div>
-        )}
+        {displayUser && <UserInfoSection user={displayUser} />}
 
         {/* Nav items */}
         <nav className="flex-1 px-2 py-2.5 flex flex-col gap-0.5">

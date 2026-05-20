@@ -1,5 +1,3 @@
-// ─── useSidebar.ts ────────────────────────────────────────────────────────────
-// Lokasi: src/BusinessLogic/hooks/useSidebar.ts
 
 import { useState, useEffect } from 'react'
 

@@ -64,7 +64,6 @@ class ProfileController extends Controller
         try {
             auth('api')->logout();
         } catch (\Throwable) {
-            // ignore — token may already be invalidated
         }
 
         return response()

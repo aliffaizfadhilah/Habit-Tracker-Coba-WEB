@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, type ReactNode } from 'react'
 import { X, CheckCircle2, Trophy, BellOff, Clock } from 'lucide-react'
 import type { HabitStreak } from '../../BusinessLogic/hooks/useStreak'
 
@@ -21,6 +21,21 @@ function SectionHeader({ icon, title, count }: { icon: React.ReactNode; title: s
 function EmptySection({ message }: { message: string }) {
   return (
     <p className="text-[12px] text-muted font-body text-center py-3">{message}</p>
+  )
+}
+
+function HabitHistoryRow({ icon, title, sub, badge, bg, border }: {
+  icon: ReactNode; title: string; sub: string; badge: ReactNode; bg: string; border: string
+}) {
+  return (
+    <div className={`flex items-center gap-3 px-4 py-3 rounded-[12px] ${bg} border ${border}`}>
+      {icon}
+      <div className="flex-1 min-w-0">
+        <p className="m-0 text-[13px] font-semibold text-ink truncate">{title}</p>
+        <p className="m-0 text-[11px] text-muted">{sub}</p>
+      </div>
+      {badge}
+    </div>
   )
 }
 
@@ -48,7 +63,6 @@ export default function RiwayatDrawer({ habits, open, onClose }: Props) {
       Number(h.progress_percent) < 100 &&
       h.periode_end >= today
     ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [habits, today]
   )
 
@@ -98,17 +112,15 @@ export default function RiwayatDrawer({ habits, open, onClose }: Props) {
               : (
                 <div className="flex flex-col gap-2">
                   {dikerjakanHariIni.map(h => (
-                    <div
+                    <HabitHistoryRow
                       key={h.id_habit}
-                      className="flex items-center gap-3 px-4 py-3 rounded-[12px] bg-[#f0fdf4] border border-[#bbf7d0]"
-                    >
-                      <CheckCircle2 size={16} color="#16a34a" className="shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="m-0 text-[13px] font-semibold text-ink truncate">{h.title}</p>
-                        <p className="m-0 text-[11px] text-muted">{h.category}</p>
-                      </div>
-                      <span className="text-[11px] font-bold text-primary shrink-0">{Number(h.progress_percent).toFixed(0)}%</span>
-                    </div>
+                      icon={<CheckCircle2 size={16} color="#16a34a" className="shrink-0" />}
+                      title={h.title}
+                      sub={h.category}
+                      badge={<span className="text-[11px] font-bold text-primary shrink-0">{Number(h.progress_percent).toFixed(0)}%</span>}
+                      bg="bg-[#f0fdf4]"
+                      border="border-[#bbf7d0]"
+                    />
                   ))}
                 </div>
               )
@@ -127,17 +139,15 @@ export default function RiwayatDrawer({ habits, open, onClose }: Props) {
               : (
                 <div className="flex flex-col gap-2">
                   {reminderTerlewat.map(h => (
-                    <div
+                    <HabitHistoryRow
                       key={h.id_habit}
-                      className="flex items-center gap-3 px-4 py-3 rounded-[12px] bg-[#fff7ed] border border-[#fed7aa]"
-                    >
-                      <Clock size={15} color="#f97316" className="shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="m-0 text-[13px] font-semibold text-ink truncate">{h.title}</p>
-                        <p className="m-0 text-[11px] text-muted">Pengingat pukul {h.reminder_time}</p>
-                      </div>
-                      <span className="text-[11px] font-bold text-[#f97316] shrink-0">Belum dikerjakan</span>
-                    </div>
+                      icon={<Clock size={15} color="#f97316" className="shrink-0" />}
+                      title={h.title}
+                      sub={`Pengingat pukul ${h.reminder_time}`}
+                      badge={<span className="text-[11px] font-bold text-[#f97316] shrink-0">Belum dikerjakan</span>}
+                      bg="bg-[#fff7ed]"
+                      border="border-[#fed7aa]"
+                    />
                   ))}
                 </div>
               )
@@ -156,17 +166,15 @@ export default function RiwayatDrawer({ habits, open, onClose }: Props) {
               : (
                 <div className="flex flex-col gap-2">
                   {habitSelesai.map(h => (
-                    <div
+                    <HabitHistoryRow
                       key={h.id_habit}
-                      className="flex items-center gap-3 px-4 py-3 rounded-[12px] bg-[#f0fdf4] border border-[#bbf7d0]"
-                    >
-                      <Trophy size={15} color="#10b981" className="shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="m-0 text-[13px] font-semibold text-ink truncate">{h.title}</p>
-                        <p className="m-0 text-[11px] text-muted">{h.periode_start} s/d {h.periode_end}</p>
-                      </div>
-                      <span className="text-[11px] font-bold text-[#10b981] shrink-0">100%</span>
-                    </div>
+                      icon={<Trophy size={15} color="#10b981" className="shrink-0" />}
+                      title={h.title}
+                      sub={`${h.periode_start} s/d ${h.periode_end}`}
+                      badge={<span className="text-[11px] font-bold text-[#10b981] shrink-0">100%</span>}
+                      bg="bg-[#f0fdf4]"
+                      border="border-[#bbf7d0]"
+                    />
                   ))}
                 </div>
               )

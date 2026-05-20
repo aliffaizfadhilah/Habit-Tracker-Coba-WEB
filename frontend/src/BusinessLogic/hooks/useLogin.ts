@@ -1,9 +1,3 @@
-// ─── useLogin — Custom Hook ────────────────────────────────────────────────────
-// Lokasi  : frontend/src/hooks/auth/useLogin.ts
-// Perubahan:
-//  - Hapus handleGoogle() (Google OAuth dihapus)
-//  - Hapus requires_otp check (OTP tidak ada di alur login)
-//  - Login sukses → langsung /dashboard
 
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -19,7 +13,6 @@ export function useLogin() {
   const [loading, setLoading] = useState(false)
   const [showPass, setShowPass] = useState(false)
 
-  // Navigasi ke dashboard setelah context benar-benar meng-commit isLoggedIn: true
   useEffect(() => {
     if (!authLoading && isLoggedIn) {
       navigate('/dashboard', { replace: true })
@@ -40,7 +33,6 @@ export function useLogin() {
         return
       }
       await refetch()
-      // navigate dipanggil oleh useEffect di atas saat isLoggedIn berubah true
     } catch {
       setError('Terjadi kesalahan. Coba lagi.')
     } finally {

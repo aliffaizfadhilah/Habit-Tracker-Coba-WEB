@@ -1,6 +1,3 @@
-// ─── Auth Types ───────────────────────────────────────────────────────────────
-// Lokasi: frontend/src/types/auth.types.ts
-// Perubahan: Hapus GoogleAuthResponse & SetCookieResponse (Google OAuth dihapus)
 
 export interface LoginForm {
   email: string
@@ -29,7 +26,6 @@ export interface ApiResponse<T = unknown> {
   errors?: Record<string, string[]>
 }
 
-// Login langsung → dashboard, tidak ada requires_otp di alur login
 export interface LoginResponse extends ApiResponse {
   token?: string
 }

@@ -83,7 +83,8 @@ export default function HabitPage() {
   }
 
   const handleEdit = (habit: HabitGridItem) => {
-    if (habitCompletionService.isComplete(habit)) return
+    const today = new Date().toISOString().slice(0, 10)
+    if (habitCompletionService.isComplete(habit) || habit.periode_end < today) return
     setEditTarget(habit)
     const isCustom = !['kesehatan','ilmu_pengetahuan','spiritual','finansial','personal'].includes(habit.category)
     setForm({

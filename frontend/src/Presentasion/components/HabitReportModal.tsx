@@ -73,6 +73,42 @@ const LEGEND_LABELS: Record<DayStatus, string> = {
   'today-done': '✓ Selesai', 'today-pending': '! Hari ini',
 }
 
+function CalendarGrid({ weeks, checkedDates, today }: {
+  weeks: (string | null)[][]
+  checkedDates: Set<string>
+  today: string
+}) {
+  return (
+    <div className="overflow-x-auto">
+      <div className="grid grid-cols-7 gap-1 mb-1 min-w-[280px]">
+        {DAY_LABELS.map(d => (
+          <div key={d} className="text-center text-[10px] font-bold text-muted py-[2px]">{d}</div>
+        ))}
+      </div>
+      {weeks.map((week, wi) => (
+        <div key={wi} className="grid grid-cols-7 gap-1 mb-1 min-w-[280px]">
+          {week.map((dateStr, di) => {
+            if (!dateStr) return <div key={di} />
+            const st     = STATUS_STYLE[dayStatus(dateStr, checkedDates, today)]
+            const dayNum = new Date(dateStr + 'T00:00:00').getDate()
+            return (
+              <div
+                key={di}
+                title={dateStr}
+                className="rounded-[6px] py-[5px] px-[2px] flex flex-col items-center text-[10px] font-semibold border-2"
+                style={{ background: st.bg, color: st.color, borderColor: dateStr === today ? '#16a34a' : 'transparent' }}
+              >
+                <span className="text-[9px] opacity-70">{dayNum}</span>
+                <span className="text-[11px]">{st.label}</span>
+              </div>
+            )
+          })}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function HabitReportModal({ habit, onClose }: Props) {
   const [checkedDates, setCheckedDates] = useState<Set<string>>(new Set())
   const [calLoading, setCalLoading]     = useState(true)
@@ -247,36 +283,7 @@ export default function HabitReportModal({ habit, onClose }: Props) {
             {calLoading ? (
               <div className="text-center py-6 text-muted text-[13px]">Memuat kalender...</div>
             ) : (
-              <div className="overflow-x-auto">
-                <div className="grid grid-cols-7 gap-1 mb-1 min-w-[280px]">
-                  {DAY_LABELS.map(d => (
-                    <div key={d} className="text-center text-[10px] font-bold text-muted py-[2px]">{d}</div>
-                  ))}
-                </div>
-                {weeks.map((week, wi) => (
-                  <div key={wi} className="grid grid-cols-7 gap-1 mb-1 min-w-[280px]">
-                    {week.map((dateStr, di) => {
-                      if (!dateStr) return <div key={di} />
-                      const st     = STATUS_STYLE[dayStatus(dateStr, checkedDates, today)]
-                      const dayNum = new Date(dateStr + 'T00:00:00').getDate()
-                      return (
-                        <div
-                          key={di}
-                          title={dateStr}
-                          className="rounded-[6px] py-[5px] px-[2px] flex flex-col items-center text-[10px] font-semibold border-2"
-                          style={{
-                            background: st.bg, color: st.color,
-                            borderColor: dateStr === today ? '#16a34a' : 'transparent',
-                          }}
-                        >
-                          <span className="text-[9px] opacity-70">{dayNum}</span>
-                          <span className="text-[11px]">{st.label}</span>
-                        </div>
-                      )
-                    })}
-                  </div>
-                ))}
-              </div>
+              <CalendarGrid weeks={weeks} checkedDates={checkedDates} today={today} />
             )}
           </div>
         )

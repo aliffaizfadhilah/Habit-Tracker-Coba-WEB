@@ -19,7 +19,6 @@ import {
 const PREVIEW_W = 260
 const PREVIEW_H = 462   // 9:16 scaled down (fits in modal)
 
-// ─── SVG: Donut ───────────────────────────────────────────────────────────────
 const DonutChart: React.FC<{ progress: number; size: number }> = ({ progress, size }) => {
   const r = size * 0.34, cx = size / 2, cy = size / 2
   const C = 2 * Math.PI * r
@@ -42,7 +41,6 @@ const DonutChart: React.FC<{ progress: number; size: number }> = ({ progress, si
   )
 }
 
-// ─── SVG: Arc ─────────────────────────────────────────────────────────────────
 const ArcChart: React.FC<{ progress: number; size: number }> = ({ progress, size }) => {
   const cx = size / 2, cy = size * 0.72
   const r = size * 0.37, sw = r * 0.24
@@ -70,18 +68,88 @@ const ArcChart: React.FC<{ progress: number; size: number }> = ({ progress, size
   )
 }
 
-// ─── NewPostModal ─────────────────────────────────────────────────────────────
+function HabitPickerItem({ h, selected, onSelect }: {
+  h: HabitGridItem
+  selected: boolean
+  onSelect: () => void
+}) {
+  const arc = 2 * Math.PI * 14 * h.progress_percent / 100
+  const C   = 2 * Math.PI * 14
+  return (
+    <button
+      onClick={onSelect}
+      className="flex items-center gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer text-left transition-all font-body"
+      style={{ borderColor: selected ? '#16a34a' : '#e5e7eb', background: selected ? '#f0fdf4' : 'white' }}
+    >
+      <svg width={38} height={38} className="shrink-0">
+        <circle cx={19} cy={19} r={14} fill="none" stroke="#e5e7eb" strokeWidth={4} />
+        <circle cx={19} cy={19} r={14} fill="none" stroke="#16a34a" strokeWidth={4}
+          strokeLinecap="round" strokeDasharray={`${arc} ${C - arc}`}
+          transform="rotate(-90 19 19)" />
+        <text x={19} y={19} textAnchor="middle" dominantBaseline="central"
+          fill="#15803d" fontSize={8} fontWeight="800" fontFamily="system-ui">
+          {Math.round(h.progress_percent)}
+        </text>
+      </svg>
+      <div className="flex-1 min-w-0">
+        <div className="text-[14px] font-bold text-ink truncate">{h.title}</div>
+        <div className="text-[11px] text-muted mt-0.5">
+          {h.category} • 🔥 {h.current_streak} streak • ✅ {h.total_completed_days} hari
+        </div>
+      </div>
+      {selected && (
+        <div className="w-5 h-5 rounded-full bg-[#16a34a] flex items-center justify-center shrink-0">
+          <div className="w-2 h-2 border-r-2 border-b-2 border-white rotate-45 mb-0.5" />
+        </div>
+      )}
+    </button>
+  )
+}
+
+function BgZoomControls({ bgZoom, onZoomChange, onReset, onRemove }: {
+  bgZoom: number
+  onZoomChange: (v: number) => void
+  onReset: () => void
+  onRemove: () => void
+}) {
+  return (
+    <div className="mt-2.5 flex flex-col gap-1.5">
+      <div className="flex items-center gap-2">
+        <button onClick={() => onZoomChange(bgZoom - 0.1)}
+          className="w-6 h-6 rounded-full border border-[#e5e7eb] bg-white flex items-center justify-center cursor-pointer shrink-0">
+          <ZoomOut size={12} color="#555" />
+        </button>
+        <input type="range" min={100} max={300} step={5}
+          value={Math.round(bgZoom * 100)}
+          onChange={e => onZoomChange(Number(e.target.value) / 100)}
+          className="flex-1 accent-[#16a34a]" />
+        <button onClick={() => onZoomChange(bgZoom + 0.1)}
+          className="w-6 h-6 rounded-full border border-[#e5e7eb] bg-white flex items-center justify-center cursor-pointer shrink-0">
+          <ZoomIn size={12} color="#555" />
+        </button>
+      </div>
+      <div className="flex justify-between">
+        <span className="text-[10px] text-muted">Zoom: {Math.round(bgZoom * 100)}% • Drag preview untuk geser</span>
+        <button onClick={onReset}
+          className="text-[10px] text-[#16a34a] cursor-pointer bg-transparent border-none font-body">Reset</button>
+      </div>
+      <button onClick={onRemove}
+        className="w-full py-1.5 rounded-lg border border-[#e5e7eb] bg-transparent cursor-pointer text-[11px] text-muted font-body flex items-center justify-center gap-1">
+        <X size={11} /> Hapus foto
+      </button>
+    </div>
+  )
+}
+
 interface Props { onClose: () => void; onPosted: () => void }
 type Step = 1 | 2 | 3
 
 export default function NewPostModal({ onClose, onPosted }: Props) {
-  // ── Habit picker state ───────────────────────────────────────────────────
   const [habits,        setHabits]        = useState<HabitGridItem[]>([])
   const [loadingHabits, setLoadingHabits] = useState(true)
   const [selectedHabit, setSelectedHabit] = useState<HabitGridItem | null>(null)
   const [habitSearch,   setHabitSearch]   = useState('')
 
-  // ── Snapshot editor state ────────────────────────────────────────────────
   const [elements,     setElements]     = useState<SnapshotElement[]>(
     () => new SnapshotBuilder().build().elements
   )
@@ -93,7 +161,6 @@ export default function NewPostModal({ onClose, onPosted }: Props) {
   const [selectedId,   setSelectedId]   = useState<ElementId | null>(null)
   const [showCamera,   setShowCamera]   = useState(false)
 
-  // ── Post details state ───────────────────────────────────────────────────
   const [title,        setTitle]        = useState('')
   const [caption,      setCaption]      = useState('')
   const [isPrivate,    setIsPrivate]    = useState(false)
@@ -102,7 +169,6 @@ export default function NewPostModal({ onClose, onPosted }: Props) {
   const [snapshotBlob, setSnapshotBlob] = useState<Blob | null>(null)
   const [error,        setError]        = useState('')
 
-  // ── Step ──────────────────────────────────────────────────────────────────
   const [step, setStep] = useState<Step>(1)
 
   const previewRef   = useRef<HTMLDivElement>(null)
@@ -115,7 +181,6 @@ export default function NewPostModal({ onClose, onPosted }: Props) {
   const selectedEl = elements.find(e => e.id === selectedId) ?? null
   const progress   = selectedHabit ? Number(selectedHabit.progress_percent) : 0
 
-  // ── Load habits ──────────────────────────────────────────────────────────
   useEffect(() => {
     http.get<{ success: boolean; data: HabitGridItem[] }>('/api/habits')
       .then(res => { if (res.success) setHabits(res.data) })
@@ -123,12 +188,10 @@ export default function NewPostModal({ onClose, onPosted }: Props) {
       .finally(() => setLoadingHabits(false))
   }, [])
 
-  // Pre-fill title when habit selected
   useEffect(() => {
     if (selectedHabit && !title) setTitle(selectedHabit.title)
   }, [selectedHabit])
 
-  // ── Zoom helpers ─────────────────────────────────────────────────────────
   const applyZoom = (newZoom: number) => {
     const z = Math.max(1, Math.min(3, newZoom))
     const maxPan = (z - 1) * Math.max(PREVIEW_W, PREVIEW_H) * 0.5
@@ -137,7 +200,6 @@ export default function NewPostModal({ onClose, onPosted }: Props) {
     setBgPanY(py => Math.max(-maxPan, Math.min(maxPan, py)))
   }
 
-  // ── Element drag + background drag ────────────────────────────────────────
   const startDrag = useCallback((id: ElementId, clientX: number, clientY: number) => {
     const el   = elements.find(e => e.id === id)
     const rect = previewRef.current?.getBoundingClientRect()
@@ -217,7 +279,6 @@ export default function NewPostModal({ onClose, onPosted }: Props) {
     setShowCamera(false)
   }
 
-  // ── Element content renderer (same as SnapshotEditor) ────────────────────
   const renderElementContent = (el: SnapshotElement) => {
     if (!selectedHabit) return null
     const fs = el.fontSize
@@ -266,7 +327,6 @@ export default function NewPostModal({ onClose, onPosted }: Props) {
     }
   }
 
-  // ── Capture snapshot then go to step 3 ───────────────────────────────────
   const captureAndNext = async () => {
     if (!previewRef.current) return
     setCapturing(true)
@@ -286,7 +346,6 @@ export default function NewPostModal({ onClose, onPosted }: Props) {
     setCapturing(false)
   }
 
-  // ── Post ─────────────────────────────────────────────────────────────────
   const handlePost = async () => {
     if (!title.trim()) { setError('Judul wajib diisi.'); return }
     if (!selectedHabit) { setError('Pilih habit terlebih dahulu.'); return }
@@ -310,7 +369,6 @@ export default function NewPostModal({ onClose, onPosted }: Props) {
     setPosting(false)
   }
 
-  // ── Filtered habits ───────────────────────────────────────────────────────
   const q = habitSearch.trim().toLowerCase()
   const filteredHabits = q
     ? habits.filter(h =>
@@ -326,7 +384,6 @@ export default function NewPostModal({ onClose, onPosted }: Props) {
     branding: 'Watermark',
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <>
       <div
@@ -393,41 +450,14 @@ export default function NewPostModal({ onClose, onPosted }: Props) {
                   </div>
                 ) : (
                   <div className="flex flex-col gap-2">
-                    {filteredHabits.map(h => {
-                      const arc = 2 * Math.PI * 14 * h.progress_percent / 100
-                      const C   = 2 * Math.PI * 14
-                      const sel = selectedHabit?.id_habit === h.id_habit
-                      return (
-                        <button key={h.id_habit}
-                          onClick={() => setSelectedHabit(h)}
-                          className="flex items-center gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer text-left transition-all font-body"
-                          style={{ borderColor: sel ? '#16a34a' : '#e5e7eb', background: sel ? '#f0fdf4' : 'white' }}
-                        >
-                          {/* Mini progress ring */}
-                          <svg width={38} height={38} className="shrink-0">
-                            <circle cx={19} cy={19} r={14} fill="none" stroke="#e5e7eb" strokeWidth={4} />
-                            <circle cx={19} cy={19} r={14} fill="none" stroke="#16a34a" strokeWidth={4}
-                              strokeLinecap="round" strokeDasharray={`${arc} ${C - arc}`}
-                              transform="rotate(-90 19 19)" />
-                            <text x={19} y={19} textAnchor="middle" dominantBaseline="central"
-                              fill="#15803d" fontSize={8} fontWeight="800" fontFamily="system-ui">
-                              {Math.round(h.progress_percent)}
-                            </text>
-                          </svg>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-[14px] font-bold text-ink truncate">{h.title}</div>
-                            <div className="text-[11px] text-muted mt-0.5">
-                              {h.category} • 🔥 {h.current_streak} streak • ✅ {h.total_completed_days} hari
-                            </div>
-                          </div>
-                          {sel && (
-                            <div className="w-5 h-5 rounded-full bg-[#16a34a] flex items-center justify-center shrink-0">
-                              <div className="w-2 h-2 border-r-2 border-b-2 border-white rotate-45 mb-0.5" />
-                            </div>
-                          )}
-                        </button>
-                      )
-                    })}
+                    {filteredHabits.map(h => (
+                      <HabitPickerItem
+                        key={h.id_habit}
+                        h={h}
+                        selected={selectedHabit?.id_habit === h.id_habit}
+                        onSelect={() => setSelectedHabit(h)}
+                      />
+                    ))}
                   </div>
                 )}
               </div>
@@ -542,31 +572,12 @@ export default function NewPostModal({ onClose, onPosted }: Props) {
                     </div>
 
                     {bgImage && (
-                      <div className="mt-2.5 flex flex-col gap-1.5">
-                        <div className="flex items-center gap-2">
-                          <button onClick={() => applyZoom(bgZoom - 0.1)}
-                            className="w-6 h-6 rounded-full border border-[#e5e7eb] bg-white flex items-center justify-center cursor-pointer shrink-0">
-                            <ZoomOut size={12} color="#555" />
-                          </button>
-                          <input type="range" min={100} max={300} step={5}
-                            value={Math.round(bgZoom * 100)}
-                            onChange={e => applyZoom(Number(e.target.value) / 100)}
-                            className="flex-1 accent-[#16a34a]" />
-                          <button onClick={() => applyZoom(bgZoom + 0.1)}
-                            className="w-6 h-6 rounded-full border border-[#e5e7eb] bg-white flex items-center justify-center cursor-pointer shrink-0">
-                            <ZoomIn size={12} color="#555" />
-                          </button>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-[10px] text-muted">Zoom: {Math.round(bgZoom * 100)}% • Drag preview untuk geser</span>
-                          <button onClick={() => { setBgZoom(1); setBgPanX(0); setBgPanY(0) }}
-                            className="text-[10px] text-[#16a34a] cursor-pointer bg-transparent border-none font-body">Reset</button>
-                        </div>
-                        <button onClick={() => { setBgImage(null); setBgZoom(1); setBgPanX(0); setBgPanY(0) }}
-                          className="w-full py-1.5 rounded-lg border border-[#e5e7eb] bg-transparent cursor-pointer text-[11px] text-muted font-body flex items-center justify-center gap-1">
-                          <X size={11} /> Hapus foto
-                        </button>
-                      </div>
+                      <BgZoomControls
+                        bgZoom={bgZoom}
+                        onZoomChange={applyZoom}
+                        onReset={() => { setBgZoom(1); setBgPanX(0); setBgPanY(0) }}
+                        onRemove={() => { setBgImage(null); setBgZoom(1); setBgPanX(0); setBgPanY(0) }}
+                      />
                     )}
                   </div>
 

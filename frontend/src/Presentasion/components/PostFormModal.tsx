@@ -4,6 +4,33 @@ import { PostBuilder } from '../../BusinessLogic/builders/PostBuilder'
 import { postService } from '../../BusinessLogic/services/PostService'
 import { X, BarChart2, Send, Lock, Globe } from 'lucide-react'
 
+function PrivacyToggle({ isPrivate, onToggle }: { isPrivate: boolean; onToggle: () => void }) {
+  return (
+    <div className="flex items-center gap-3 bg-[#fafafa] rounded-[10px] px-4 py-3 border border-border">
+      <div className="flex-1">
+        <div className="text-[13px] font-semibold text-ink flex items-center gap-1.5">
+          {isPrivate ? <Lock size={14} color="#6b7280" /> : <Globe size={14} color="#16a34a" />}
+          {isPrivate ? 'Privat' : 'Publik'}
+        </div>
+        <div className="text-[11px] text-muted mt-0.5">
+          {isPrivate
+            ? 'Hanya muncul di dinding profilmu sendiri'
+            : 'Muncul di feed publik semua pengguna'}
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={onToggle}
+        className="relative shrink-0 border-none cursor-pointer p-0 bg-transparent"
+        style={{ width: 40, height: 22 }}
+      >
+        <div className="w-full h-full rounded-full transition-colors duration-200" style={{ background: isPrivate ? '#6b7280' : '#16a34a' }} />
+        <div className="absolute top-[3px] w-[16px] h-[16px] rounded-full bg-white shadow transition-all duration-200" style={{ left: isPrivate ? 21 : 3 }} />
+      </button>
+    </div>
+  )
+}
+
 interface Props {
   imageBlob:        Blob
   previewUrl:       string
@@ -116,34 +143,7 @@ export default function PostFormModal({
         </div>
 
         {/* Privacy toggle */}
-        <div className="flex items-center gap-3 bg-[#fafafa] rounded-[10px] px-4 py-3 border border-border">
-          <div className="flex-1">
-            <div className="text-[13px] font-semibold text-ink flex items-center gap-1.5">
-              {isPrivate ? <Lock size={14} color="#6b7280" /> : <Globe size={14} color="#16a34a" />}
-              {isPrivate ? 'Privat' : 'Publik'}
-            </div>
-            <div className="text-[11px] text-muted mt-0.5">
-              {isPrivate
-                ? 'Hanya muncul di dinding profilmu sendiri'
-                : 'Muncul di feed publik semua pengguna'}
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setIsPrivate(p => !p)}
-            className="relative shrink-0 border-none cursor-pointer p-0 bg-transparent"
-            style={{ width: 40, height: 22 }}
-          >
-            <div
-              className="w-full h-full rounded-full transition-colors duration-200"
-              style={{ background: isPrivate ? '#6b7280' : '#16a34a' }}
-            />
-            <div
-              className="absolute top-[3px] w-[16px] h-[16px] rounded-full bg-white shadow transition-all duration-200"
-              style={{ left: isPrivate ? 21 : 3 }}
-            />
-          </button>
-        </div>
+        <PrivacyToggle isPrivate={isPrivate} onToggle={() => setIsPrivate(p => !p)} />
 
         {/* Actions */}
         <div className="flex gap-3">

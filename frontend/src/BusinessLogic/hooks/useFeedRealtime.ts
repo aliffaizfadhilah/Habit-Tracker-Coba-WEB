@@ -47,7 +47,6 @@ export function useFeedRealtime(cursor: number, enabled: boolean): FeedRealtimeR
     })
   }, [])
 
-  // ── Polling (final fallback) ────────────────────────────────────────────────
   const startPolling = useCallback(() => {
     if (pollRef.current) clearInterval(pollRef.current)
     setTransport('polling')
@@ -62,7 +61,6 @@ export function useFeedRealtime(cursor: number, enabled: boolean): FeedRealtimeR
     }, 30_000)
   }, [appendPending])
 
-  // ── SSE ────────────────────────────────────────────────────────────────────
   const connectSSE = useCallback(() => {
     esRef.current?.close()
 
@@ -86,7 +84,6 @@ export function useFeedRealtime(cursor: number, enabled: boolean): FeedRealtimeR
     }
   }, [appendPending, startPolling])
 
-  // ── WebSocket (optional, requires VITE_WS_URL) ─────────────────────────────
   const connectWS = useCallback((): boolean => {
     const wsUrl = (import.meta.env.VITE_WS_URL ?? '') as string
     if (!wsUrl) return false
@@ -115,7 +112,6 @@ export function useFeedRealtime(cursor: number, enabled: boolean): FeedRealtimeR
     }
   }, [appendPending, connectSSE])
 
-  // ── Lifecycle ──────────────────────────────────────────────────────────────
   const start = useCallback(() => {
     if (!connectWS()) connectSSE()
   }, [connectWS, connectSSE])

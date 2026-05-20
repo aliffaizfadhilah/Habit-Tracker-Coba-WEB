@@ -168,6 +168,32 @@ export interface HabitFormCardProps {
   onCancel: () => void
 }
 
+function ReminderSection({ value, error, onChange }: {
+  value: string
+  error?: string
+  onChange: (v: string) => void
+}) {
+  return (
+    <div className="border-t border-border pt-4">
+      <div className="flex items-center gap-2 mb-2.5">
+        <Clock size={16} color="#1e3a22" />
+        <span className="text-[13px] font-semibold text-ink-body font-body">Pengingat Harian</span>
+        <span className="text-[11px] text-error font-semibold">*wajib</span>
+      </div>
+      <Input
+        label="Jam pengingat"
+        type="time"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        error={error}
+      />
+      <p className="text-xs text-muted font-body mt-1.5">
+        Notifikasi akan muncul setiap hari pada jam ini saat browser terbuka.
+      </p>
+    </div>
+  )
+}
+
 export const HabitFormCard: React.FC<HabitFormCardProps> = ({
   mode, form, errors, loading, onChange, onSubmit, onCancel,
 }) => {
@@ -230,24 +256,11 @@ export const HabitFormCard: React.FC<HabitFormCardProps> = ({
           />
         </div>
 
-        {/* Reminder */}
-        <div className="border-t border-border pt-4">
-          <div className="flex items-center gap-2 mb-2.5">
-            <Clock size={16} color="#1e3a22" />
-            <span className="text-[13px] font-semibold text-ink-body font-body">Pengingat Harian</span>
-            <span className="text-[11px] text-error font-semibold">*wajib</span>
-          </div>
-          <Input
-            label="Jam pengingat"
-            type="time"
-            value={form.reminder_time}
-            onChange={e => onChange('reminder_time', e.target.value)}
-            error={errors.reminder_time}
-          />
-          <p className="text-xs text-muted font-body mt-1.5">
-            Notifikasi akan muncul setiap hari pada jam ini saat browser terbuka.
-          </p>
-        </div>
+        <ReminderSection
+          value={form.reminder_time}
+          error={errors.reminder_time}
+          onChange={v => onChange('reminder_time', v)}
+        />
       </div>
 
       {/* Actions */}
@@ -271,16 +284,21 @@ export interface HabitGridCardProps {
 }
 
 export const HabitGridCard: React.FC<HabitGridCardProps> = ({ habit, onEdit, onDelete, onReport }) => {
+  const today      = new Date().toISOString().slice(0, 10)
   const progress   = Number(habit.progress_percent)
   const isComplete = habitCompletionService.isComplete(habit)
+  const isExpired  = !isComplete && habit.periode_end < today
+  const isLocked   = isComplete || isExpired
 
   const lockedBtnCls = 'w-8 h-8 rounded-sm border border-border bg-[#f9fafb] flex items-center justify-center opacity-35 cursor-not-allowed pointer-events-none'
 
   return (
-    <div className={`bg-white border-[1.5px] ${isComplete ? 'border-border-mid' : 'border-border'} rounded-lg px-[22px] py-5 shadow-card transition-all duration-200 relative overflow-hidden flex flex-col gap-3`}>
-      {/* Top accent jika selesai */}
+    <div className={`bg-white border-[1.5px] ${isComplete ? 'border-border-mid' : isExpired ? 'border-[#fde68a]' : 'border-border'} rounded-lg px-[22px] py-5 shadow-card transition-all duration-200 relative overflow-hidden flex flex-col gap-3`}>
       {isComplete && (
         <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-primary to-accent" />
+      )}
+      {isExpired && (
+        <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#f59e0b] to-[#fbbf24]" />
       )}
 
       {/* Header: title + badge + actions */}
@@ -291,6 +309,7 @@ export const HabitGridCard: React.FC<HabitGridCardProps> = ({ habit, onEdit, onD
               {habit.title}
             </span>
             {isComplete && <Badge color="emerald">Selesai</Badge>}
+            {isExpired  && <Badge color="orange">Periode Berakhir</Badge>}
           </div>
           <div className="flex items-center gap-1.5">
             <Badge color="green">{getCategoryLabel(habit.category)}</Badge>
@@ -309,8 +328,8 @@ export const HabitGridCard: React.FC<HabitGridCardProps> = ({ habit, onEdit, onD
             </button>
           )}
 
-          {isComplete ? (
-            <div className={lockedBtnCls} title="Habit selesai — tidak bisa diedit"><Pencil size={14} /></div>
+          {isLocked ? (
+            <div className={lockedBtnCls} title={isExpired ? 'Periode berakhir — tidak bisa diedit' : 'Habit selesai — tidak bisa diedit'}><Pencil size={14} /></div>
           ) : (
             <button
               onClick={() => onEdit(habit)}
@@ -321,8 +340,8 @@ export const HabitGridCard: React.FC<HabitGridCardProps> = ({ habit, onEdit, onD
             </button>
           )}
 
-          {isComplete ? (
-            <div className={lockedBtnCls} title="Habit selesai — tidak bisa dihapus"><Trash2 size={14} /></div>
+          {isLocked ? (
+            <div className={lockedBtnCls} title={isExpired ? 'Periode berakhir — tidak bisa dihapus' : 'Habit selesai — tidak bisa dihapus'}><Trash2 size={14} /></div>
           ) : (
             <button
               onClick={() => onDelete(habit)}
@@ -340,10 +359,14 @@ export const HabitGridCard: React.FC<HabitGridCardProps> = ({ habit, onEdit, onD
         <Calendar size={12} /> {habit.periode_start} s/d {habit.periode_end}
       </span>
 
-      {/* Locked banner */}
       {isComplete && (
         <div className="bg-primary-light border border-border-mid rounded-sm px-3 py-2 text-xs text-primary-mid font-body flex items-center gap-1.5">
           <Lock size={12} /> Habit ini sudah selesai dan tidak dapat diubah lagi.
+        </div>
+      )}
+      {isExpired && (
+        <div className="bg-[#fef3c7] border border-[#fde68a] rounded-sm px-3 py-2 text-xs text-[#92400e] font-body flex items-center gap-1.5">
+          <Lock size={12} /> Periode habit ini sudah berakhir dan tidak dapat diubah lagi.
         </div>
       )}
 

@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { http } from '../services/HttpService'
 import { reminderService } from '../services/ReminderService'
 import type { HabitGridItem, HabitFormData } from '../factories/HabitFormFactory'
+import { useHabitRealtime } from './useHabitRealtime'
 
 export interface HabitState {
   habits:  HabitGridItem[]
@@ -34,6 +35,17 @@ export function useHabit() {
   }, [])
 
   useEffect(() => { fetchHabits() }, [fetchHabits])
+
+  const _silentFetchHabits = useCallback(async () => {
+    try {
+      const data = await http.get<{ success: boolean; data: HabitGridItem[] }>('/api/habits')
+      if (!data.success) return
+      setState(prev => ({ ...prev, habits: data.data }))
+      reminderService.update(data.data)
+      reminderService.start()
+    } catch { /* ignore */ }
+  }, [])
+  useHabitRealtime(_silentFetchHabits)
 
   const createHabit = async (form: HabitFormData): Promise<{ success: boolean; message: string }> => {
     try {

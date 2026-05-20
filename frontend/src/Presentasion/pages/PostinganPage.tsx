@@ -9,7 +9,6 @@ import {
   ChevronLeft, Send, ImageOff, Check, X, Plus, Search, ArrowUp,
 } from 'lucide-react'
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
   const m = Math.floor(diff / 60000)
@@ -32,7 +31,30 @@ function Avatar({ name, size = 36 }: { name: string | null; size?: number }) {
   )
 }
 
-// ─── Pinterest Detail Modal ───────────────────────────────────────────────────
+function CommentRow({ c, currentUsername, onRemove }: {
+  c: PostComment
+  currentUsername: string
+  onRemove: (id: number) => void
+}) {
+  return (
+    <div className="flex gap-2.5 items-start">
+      <Avatar name={c.user.full_name} size={28} />
+      <div className="flex-1">
+        <div className="bg-[#f8f8f8] rounded-[12px] px-3 py-2">
+          <div className="text-[12px] font-bold text-ink mb-0.5">{c.user.full_name ?? c.user.username}</div>
+          <div className="text-[13px] text-ink leading-relaxed">{c.content}</div>
+        </div>
+        <div className="flex items-center gap-2.5 mt-1">
+          <span className="text-[11px] text-muted">{timeAgo(c.created_at)}</span>
+          {c.user.username === currentUsername && (
+            <button onClick={() => onRemove(c.id)} className="bg-transparent border-none cursor-pointer text-[11px] text-[#ef4444] p-0 font-body">Hapus</button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function PinDetailModal({ post: initial, currentUsername, onClose, onDelete, onLikeChange }: {
   post: Post
   currentUsername: string
@@ -214,21 +236,7 @@ function PinDetailModal({ post: initial, currentUsername, onClose, onDelete, onL
               )}
               <div className="flex flex-col gap-3 mb-4">
                 {comments.map(c => (
-                  <div key={c.id} className="flex gap-2.5 items-start">
-                    <Avatar name={c.user.full_name} size={28} />
-                    <div className="flex-1">
-                      <div className="bg-[#f8f8f8] rounded-[12px] px-3 py-2">
-                        <div className="text-[12px] font-bold text-ink mb-0.5">{c.user.full_name ?? c.user.username}</div>
-                        <div className="text-[13px] text-ink leading-relaxed">{c.content}</div>
-                      </div>
-                      <div className="flex items-center gap-2.5 mt-1">
-                        <span className="text-[11px] text-muted">{timeAgo(c.created_at)}</span>
-                        {c.user.username === currentUsername && (
-                          <button onClick={() => removeComment(c.id)} className="bg-transparent border-none cursor-pointer text-[11px] text-[#ef4444] p-0 font-body">Hapus</button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                  <CommentRow key={c.id} c={c} currentUsername={currentUsername} onRemove={removeComment} />
                 ))}
               </div>
 
@@ -274,7 +282,6 @@ function PinDetailModal({ post: initial, currentUsername, onClose, onDelete, onL
   )
 }
 
-// ─── Pinterest Pin Card ───────────────────────────────────────────────────────
 function PinCard({ post, onLikeChange, onClick }: {
   post: Post
   onLikeChange: (id: number, liked: boolean, count: number) => void
@@ -376,7 +383,6 @@ function PinCard({ post, onLikeChange, onClick }: {
     )
   }
 
-  // Rect card — full-width image masonry style
   return (
     <div
       className="relative rounded-[16px] overflow-hidden cursor-pointer bg-[#efefef]"
@@ -435,7 +441,6 @@ function PinCard({ post, onLikeChange, onClick }: {
   )
 }
 
-// ─── PostinganPage ────────────────────────────────────────────────────────────
 export default function PostinganPage() {
   const { user, logout }                          = useAuth()
   const { isMobile, sidebarOpen, setSidebarOpen } = useSidebar()
@@ -504,7 +509,6 @@ export default function PostinganPage() {
       )
     : posts
 
-  // Split posts into columns for proper masonry
   const columns: Post[][] = Array.from({ length: cols }, () => [])
   filteredPosts.forEach((post, i) => columns[i % cols].push(post))
 

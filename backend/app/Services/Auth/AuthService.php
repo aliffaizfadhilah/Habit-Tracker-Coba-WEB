@@ -52,7 +52,6 @@ class AuthService
         try {
             auth('api')->logout();
         } catch (\Exception) {
-            // Token tidak ada atau sudah expire — tidak perlu dilempar, cookie tetap dihapus
         }
     }
 

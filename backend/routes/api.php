@@ -8,6 +8,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\FeedEventController;
+use App\Http\Controllers\HabitEventController;
 
 // ─── AUTH (Public) ────────────────────────────────────────────────────────────
 Route::prefix('auth')->group(function () {
@@ -40,6 +41,10 @@ Route::middleware('auth.jwt')->group(function () {
     Route::prefix('habits')->group(function () {
         Route::get('/',        [HabitController::class, 'index']);
         Route::post('/',       [HabitController::class, 'store']);
+
+        // Static routes MUST come before /{id} wildcard to avoid shadowing
+        Route::get('/stream', [HabitEventController::class, 'stream']);
+
         Route::get('/{id}',              [HabitController::class, 'show']);
         Route::put('/{id}',              [HabitController::class, 'update']);
         Route::delete('/{id}',           [HabitController::class, 'destroy']);

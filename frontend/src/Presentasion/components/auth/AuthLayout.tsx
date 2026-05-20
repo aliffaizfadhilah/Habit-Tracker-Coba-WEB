@@ -9,6 +9,15 @@ interface AuthLayoutProps {
   subtitle: ReactNode
 }
 
+function FeatureItem({ icon, text }: { icon: ReactNode; text: string }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <div className="w-[34px] h-[34px] bg-white/10 rounded-[9px] border border-white/10 flex items-center justify-center">{icon}</div>
+      <span className="text-sm text-white/75 font-body">{text}</span>
+    </div>
+  )
+}
+
 export default function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
   const navigate = useNavigate()
 
@@ -39,16 +48,9 @@ export default function AuthLayout({ children, title, subtitle }: AuthLayoutProp
             "Bangun kebiasaan baik,<br />satu hari dalam satu waktu."
           </p>
           <div className="flex flex-col gap-3">
-            {[
-              { icon: <Target size={16} color="rgba(255,255,255,0.85)" />,    text: 'Pantau progres harian' },
-              { icon: <Flame size={16} color="rgba(255,255,255,0.85)" />,     text: 'Jaga streak tetap berjalan' },
-              { icon: <BarChart2 size={16} color="rgba(255,255,255,0.85)" />, text: 'Lihat laporan mingguan' },
-            ].map(item => (
-              <div key={item.text} className="flex items-center gap-2.5">
-                <div className="w-[34px] h-[34px] bg-white/10 rounded-[9px] border border-white/10 flex items-center justify-center">{item.icon}</div>
-                <span className="text-sm text-white/75 font-body">{item.text}</span>
-              </div>
-            ))}
+            <FeatureItem icon={<Target size={16} color="rgba(255,255,255,0.85)" />}    text="Pantau progres harian" />
+            <FeatureItem icon={<Flame size={16} color="rgba(255,255,255,0.85)" />}     text="Jaga streak tetap berjalan" />
+            <FeatureItem icon={<BarChart2 size={16} color="rgba(255,255,255,0.85)" />} text="Lihat laporan mingguan" />
           </div>
           <div className="mt-8 flex gap-5 border-t border-white/10 pt-6">
             {[{ v: '100%', l: 'Gratis' }, { v: '∞', l: 'Habit' }, { v: '4.9★', l: 'Rating' }].map(s => (

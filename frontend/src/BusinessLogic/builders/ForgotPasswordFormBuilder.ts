@@ -1,6 +1,3 @@
-// ─── ForgotPasswordFormBuilder — Builder Pattern ──────────────────────────────
-// Membangun konfigurasi form multi-step secara bertahap menggunakan method chaining.
-// Setiap step terdefinisi jelas dan terpisah, menghindari kondisional yang rumit.
 
 import type { ForgotPasswordStep } from '../types/Auth.types'
 

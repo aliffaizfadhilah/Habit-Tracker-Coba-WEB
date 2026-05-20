@@ -1,9 +1,7 @@
-// ─── SectionFactory — Factory Pattern ─────────────────────────────────────────
 import React from 'react'
 import { Badge } from './ComponentFactory'
 import { Check, Lock, Flame, Pencil, Trash2 } from 'lucide-react'
 
-// ─── PageHeader ───────────────────────────────────────────────────────────────
 export interface PageHeaderProps {
   title: string
   subtitle?: string
@@ -20,7 +18,6 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ title, subtitle, action 
   </div>
 )
 
-// ─── StatCard ─────────────────────────────────────────────────────────────────
 export interface StatCardProps {
   label: string
   value: string | number
@@ -52,7 +49,6 @@ export const StatCard: React.FC<StatCardProps> = ({ label, value, icon, color = 
   )
 }
 
-// ─── HabitCard ────────────────────────────────────────────────────────────────
 export interface HabitCardProps {
   name: string
   category: string
@@ -88,23 +84,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({
           {isLocked && <Badge color="gray">Terkunci</Badge>}
         </div>
 
-        <div className="mb-2">
-          <div className="flex justify-between mb-1">
-            <span className="text-[11px] text-muted font-body">Progress</span>
-            <span className="text-[11px] font-semibold text-primary font-body">{progress}%</span>
-          </div>
-          <div className="h-1.5 bg-border rounded-full overflow-hidden">
-            <div
-              className="h-full rounded-full transition-[width_0.5s_ease]"
-              style={{
-                width: `${progress}%`,
-                background: progress === 100
-                  ? 'linear-gradient(90deg,#16a34a,#10b981)'
-                  : 'linear-gradient(90deg,#16a34a,#6ee7b7)',
-              }}
-            />
-          </div>
-        </div>
+        <HabitProgressBar progress={progress} />
 
         <div className="flex items-center gap-1">
           <Flame size={13} color="#f97316" />
@@ -120,6 +100,26 @@ export const HabitCard: React.FC<HabitCardProps> = ({
   </div>
 )
 
+const HabitProgressBar: React.FC<{ progress: number }> = ({ progress }) => (
+  <div className="mb-2">
+    <div className="flex justify-between mb-1">
+      <span className="text-[11px] text-muted font-body">Progress</span>
+      <span className="text-[11px] font-semibold text-primary font-body">{progress}%</span>
+    </div>
+    <div className="h-1.5 bg-border rounded-full overflow-hidden">
+      <div
+        className="h-full rounded-full transition-[width_0.5s_ease]"
+        style={{
+          width: `${progress}%`,
+          background: progress === 100
+            ? 'linear-gradient(90deg,#16a34a,#10b981)'
+            : 'linear-gradient(90deg,#16a34a,#6ee7b7)',
+        }}
+      />
+    </div>
+  </div>
+)
+
 const ActionButton: React.FC<{
   icon: React.ReactNode; onClick: () => void; title: string; danger?: boolean
 }> = ({ icon, onClick, title, danger }) => (
@@ -130,7 +130,6 @@ const ActionButton: React.FC<{
   >{icon}</button>
 )
 
-// ─── EmptyState ───────────────────────────────────────────────────────────────
 export interface EmptyStateProps {
   icon: React.ReactNode
   title: string
@@ -147,7 +146,6 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ icon, title, description
   </div>
 )
 
-// ─── ModalOverlay ─────────────────────────────────────────────────────────────
 export const ModalOverlay: React.FC<{
   children: React.ReactNode
   onClose: () => void

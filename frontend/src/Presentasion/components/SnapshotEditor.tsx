@@ -28,7 +28,6 @@ const ELEMENT_LABELS: Record<ElementId, string> = {
   branding: 'Watermark',
 }
 
-// ─── SVG: Donut ───────────────────────────────────────────────────────────────
 const DonutChart: React.FC<{ progress: number; size: number }> = ({ progress, size }) => {
   const r  = size * 0.34
   const cx = size / 2, cy = size / 2
@@ -56,7 +55,6 @@ const DonutChart: React.FC<{ progress: number; size: number }> = ({ progress, si
   )
 }
 
-// ─── SVG: Arc ─────────────────────────────────────────────────────────────────
 const ArcChart: React.FC<{ progress: number; size: number }> = ({ progress, size }) => {
   const cx = size / 2
   const cy = size * 0.72
@@ -89,7 +87,43 @@ const ArcChart: React.FC<{ progress: number; size: number }> = ({ progress, size
   )
 }
 
-// ─── SnapshotEditor ───────────────────────────────────────────────────────────
+function BgZoomControls({ bgZoom, onZoomChange, onReset, onRemove }: {
+  bgZoom: number
+  onZoomChange: (v: number) => void
+  onReset: () => void
+  onRemove: () => void
+}) {
+  return (
+    <div className="mt-3 flex flex-col gap-2">
+      <div className="flex items-center gap-2">
+        <button onClick={() => onZoomChange(bgZoom - 0.1)}
+          className="w-7 h-7 rounded-full border border-border bg-white flex items-center justify-center cursor-pointer shrink-0">
+          <ZoomOut size={13} color="#555" />
+        </button>
+        <input
+          type="range" min={100} max={300} step={5}
+          value={Math.round(bgZoom * 100)}
+          onChange={e => onZoomChange(Number(e.target.value) / 100)}
+          className="flex-1 accent-[#16a34a]"
+        />
+        <button onClick={() => onZoomChange(bgZoom + 0.1)}
+          className="w-7 h-7 rounded-full border border-border bg-white flex items-center justify-center cursor-pointer shrink-0">
+          <ZoomIn size={13} color="#555" />
+        </button>
+      </div>
+      <div className="flex justify-between items-center">
+        <span className="text-[11px] text-muted">Zoom: {Math.round(bgZoom * 100)}%</span>
+        <button onClick={onReset} className="text-[11px] text-primary cursor-pointer bg-transparent border-none font-body">Reset posisi</button>
+      </div>
+      <p className="text-[11px] text-muted">Drag preview untuk menggeser posisi foto</p>
+      <button onClick={onRemove}
+        className="w-full py-[7px] rounded-sm border border-border bg-transparent cursor-pointer text-xs text-muted font-body flex items-center justify-center gap-1">
+        <X size={12} /> Hapus foto
+      </button>
+    </div>
+  )
+}
+
 export default function SnapshotEditor({ habit, onClose, onPosted }: Props) {
   const progress = Number(habit.progress_percent)
 
@@ -117,7 +151,6 @@ export default function SnapshotEditor({ habit, onClose, onPosted }: Props) {
 
   const selectedEl = elements.find(e => e.id === selectedId) ?? null
 
-  // ─── Zoom: clamp pan when zoom or image changes ───────────────────────────
   const clampPan = useCallback((zoom: number, px: number, py: number) => {
     return {
       x: Math.max(-(zoom - 1) * PREVIEW_W * 0.5, Math.min((zoom - 1) * PREVIEW_W * 0.5, px)),
@@ -131,7 +164,6 @@ export default function SnapshotEditor({ habit, onClose, onPosted }: Props) {
     setBgZoom(z); setBgPanX(x); setBgPanY(y)
   }
 
-  // ─── Element drag handlers ────────────────────────────────────────────────
   const startDrag = useCallback((id: ElementId, clientX: number, clientY: number) => {
     const el   = elements.find(e => e.id === id)
     const rect = previewRef.current?.getBoundingClientRect()
@@ -151,7 +183,6 @@ export default function SnapshotEditor({ habit, onClose, onPosted }: Props) {
       if (!rect) return
 
       if (draggingId.current) {
-        // Element drag
         const x = ((clientX + dragOffset.current.dx - rect.left)  / rect.width)  * 100
         const y = ((clientY + dragOffset.current.dy - rect.top)   / rect.height) * 100
         setElements(prev => prev.map(el =>
@@ -160,7 +191,6 @@ export default function SnapshotEditor({ habit, onClose, onPosted }: Props) {
             : el
         ))
       } else if (bgDragging.current && bgImage) {
-        // Background drag
         const dx = clientX - bgLastPos.current.x
         const dy = clientY - bgLastPos.current.y
         bgLastPos.current = { x: clientX, y: clientY }
@@ -269,7 +299,6 @@ export default function SnapshotEditor({ habit, onClose, onPosted }: Props) {
     }
   }
 
-  // ─── Element content ──────────────────────────────────────────────────────
   const renderElementContent = (el: SnapshotElement) => {
     const fs = el.fontSize
     switch (el.id) {
@@ -317,7 +346,6 @@ export default function SnapshotEditor({ habit, onClose, onPosted }: Props) {
     }
   }
 
-  // ─── Render ───────────────────────────────────────────────────────────────
   return (
     <>
       <div
@@ -459,38 +487,12 @@ export default function SnapshotEditor({ habit, onClose, onPosted }: Props) {
 
                 {/* Zoom & Pan controls (visible only when bgImage exists) */}
                 {bgImage && (
-                  <div className="mt-3 flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => applyZoom(bgZoom - 0.1)}
-                        className="w-7 h-7 rounded-full border border-border bg-white flex items-center justify-center cursor-pointer shrink-0">
-                        <ZoomOut size={13} color="#555" />
-                      </button>
-                      <input
-                        type="range" min={100} max={300} step={5}
-                        value={Math.round(bgZoom * 100)}
-                        onChange={e => applyZoom(Number(e.target.value) / 100)}
-                        className="flex-1 accent-[#16a34a]"
-                      />
-                      <button onClick={() => applyZoom(bgZoom + 0.1)}
-                        className="w-7 h-7 rounded-full border border-border bg-white flex items-center justify-center cursor-pointer shrink-0">
-                        <ZoomIn size={13} color="#555" />
-                      </button>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-[11px] text-muted">Zoom: {Math.round(bgZoom * 100)}%</span>
-                      <button
-                        onClick={() => { setBgZoom(1); setBgPanX(0); setBgPanY(0) }}
-                        className="text-[11px] text-primary cursor-pointer bg-transparent border-none font-body"
-                      >Reset posisi</button>
-                    </div>
-                    <p className="text-[11px] text-muted">Drag preview untuk menggeser posisi foto</p>
-                    <button
-                      onClick={() => { setBgImage(null); setBgZoom(1); setBgPanX(0); setBgPanY(0) }}
-                      className="w-full py-[7px] rounded-sm border border-border bg-transparent cursor-pointer text-xs text-muted font-body flex items-center justify-center gap-1"
-                    >
-                      <X size={12} /> Hapus foto
-                    </button>
-                  </div>
+                  <BgZoomControls
+                    bgZoom={bgZoom}
+                    onZoomChange={applyZoom}
+                    onReset={() => { setBgZoom(1); setBgPanX(0); setBgPanY(0) }}
+                    onRemove={() => { setBgImage(null); setBgZoom(1); setBgPanX(0); setBgPanY(0) }}
+                  />
                 )}
               </div>
 

@@ -146,7 +146,7 @@ class PostService
             'caption'          => $post->caption,
             'image_url'        => '/storage/' . $post->image_path,
             'habit_title'      => $post->habit_title,
-            'progress_percent' => $post->progress_percent,
+            'progress_percent' => $post->progress_percent !== null ? (float) $post->progress_percent : null,
             'likes_count'      => $post->likes_count,
             'comments_count'   => $post->comments_count,
             'liked_by_me'      => $post->likes->contains('user_id', $currentUserId),

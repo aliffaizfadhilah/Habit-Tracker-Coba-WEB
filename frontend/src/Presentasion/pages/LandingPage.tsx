@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Flame, BarChart2, Bell, Camera, Building2, Cookie, Lock, MapPin, Megaphone, Settings, X, Plus, Check } from 'lucide-react'
 
@@ -53,6 +54,64 @@ function sendTrackingHit(): void {
   }).catch(() => {})
 }
 
+const btnPrimary   = 'bg-primary text-white border-0 rounded-sm font-semibold cursor-pointer transition-all duration-200 font-body tracking-wide hover:bg-primary-hover hover:-translate-y-px hover:shadow-[0_6px_20px_rgba(22,163,74,0.28)]'
+const btnGhost     = 'bg-transparent text-muted border border-border rounded-sm font-medium cursor-pointer transition-all duration-200 font-body hover:border-primary hover:text-primary hover:bg-primary-lighter'
+const navLink      = 'text-muted text-[15px] font-medium pb-1.5 px-1 border-b-2 border-transparent transition-all duration-200 hover:text-primary hover:border-primary bg-transparent border-0 cursor-pointer font-body'
+const sectionLabel = 'inline-block bg-primary-light text-primary rounded px-3.5 py-1.5 text-[13px] font-semibold tracking-[0.5px] mb-4 uppercase'
+
+function HeroHabitRow({ name, done, streak, prog }: { name: string; done: boolean; streak: number; prog: number }) {
+  return (
+    <div className="rounded-[14px] p-[18px] mb-2.5 flex items-center gap-3 bg-white/[0.08] border border-white/[0.15]">
+      <div className={`w-[22px] h-[22px] rounded-[6px] flex items-center justify-center text-xs font-bold flex-shrink-0 ${done ? 'bg-primary text-white border-0' : 'bg-white/10 text-transparent border border-white/20'}`}>
+        {done ? '✓' : ''}
+      </div>
+      <div className="flex-1">
+        <div className="flex justify-between items-center mb-1.5">
+          <span className={`text-[13px] font-medium ${done ? 'text-white/45 line-through' : 'text-white'}`}>{name}</span>
+          <span className="rounded-[10px] py-0.5 px-2.5 text-[12px] font-semibold inline-flex items-center gap-1" style={{ background: 'linear-gradient(135deg, #ff6b35, #f7c59f)', color: '#1a0a00' }}>
+            <Flame size={12} /> {streak}
+          </span>
+        </div>
+        <div className="h-[5px] rounded-full overflow-hidden bg-white/15">
+          <div className="h-full rounded-full bg-gradient-to-r from-primary to-accent-light" style={{ width: `${prog}%` }} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function CookieCategoryItem({ icon, title, sub, desc, disabled, checked, onChange }: {
+  icon: ReactNode
+  title: string
+  sub: string
+  desc: string
+  disabled?: boolean
+  checked: boolean
+  onChange: (v: boolean) => void
+}) {
+  return (
+    <div className="border border-border rounded-md px-5 py-4 transition-colors duration-200 hover:border-border-mid">
+      <div className="flex items-center gap-2.5 mb-2">
+        {icon}
+        <span className="flex-1 flex flex-col">
+          <span className="font-semibold text-sm text-ink">{title}</span>
+          <span className="text-xs text-subtle mt-px">{sub}</span>
+        </span>
+        <label className="cookie-toggle ml-auto flex-shrink-0">
+          <input
+            type="checkbox"
+            checked={disabled ? true : checked}
+            disabled={disabled}
+            onChange={disabled ? () => {} : e => onChange(e.target.checked)}
+          />
+          <span className="cookie-toggle-slider" />
+        </label>
+      </div>
+      <p className="text-xs text-subtle m-0 leading-[1.6]">{desc}</p>
+    </div>
+  )
+}
+
 export default function LandingPage() {
   const navigate = useNavigate()
   const heroRef  = useRef<HTMLDivElement>(null)
@@ -75,7 +134,6 @@ export default function LandingPage() {
       if (consent.preferences.analytics) sendTrackingHit()
     }
 
-    // Tampil banner jika belum dijawab di sesi browser ini
     if (!sessionAnswered) {
       const timer = setTimeout(() => setShowCookieBanner(true), 800)
       const onScroll = () => setScrollY(window.scrollY)
@@ -111,12 +169,6 @@ export default function LandingPage() {
   const acceptAllCookies  = () => saveCookieConsent({ essential: true, analytics: true, marketing: true, preferences: true })
   const rejectAllCookies  = () => saveCookieConsent({ essential: true, analytics: false, marketing: false, preferences: false }, true)
   const saveCustomCookies = () => saveCookieConsent(cookiePrefs)
-
-  // ── Shared class strings ──────────────────────────────────────────────────
-  const btnPrimary  = 'bg-primary text-white border-0 rounded-sm font-semibold cursor-pointer transition-all duration-200 font-body tracking-wide hover:bg-primary-hover hover:-translate-y-px hover:shadow-[0_6px_20px_rgba(22,163,74,0.28)]'
-  const btnGhost    = 'bg-transparent text-muted border border-border rounded-sm font-medium cursor-pointer transition-all duration-200 font-body hover:border-primary hover:text-primary hover:bg-primary-lighter'
-  const navLink     = 'text-muted text-[15px] font-medium pb-1.5 px-1 border-b-2 border-transparent transition-all duration-200 hover:text-primary hover:border-primary bg-transparent border-0 cursor-pointer font-body'
-  const sectionLabel = 'inline-block bg-primary-light text-primary rounded px-3.5 py-1.5 text-[13px] font-semibold tracking-[0.5px] mb-4 uppercase'
 
   return (
     <div className="font-body bg-surface text-ink min-h-screen overflow-x-hidden">
@@ -232,24 +284,7 @@ export default function LandingPage() {
                 { name: 'Olahraga pagi',      done: false, streak: 5,  prog: 65  },
                 { name: 'Minum 8 gelas air',  done: false, streak: 3,  prog: 38  },
               ].map((h, i) => (
-                <div key={i} className="rounded-[14px] p-[18px] mb-2.5 flex items-center gap-3 bg-white/[0.08] border border-white/[0.15]">
-                  <div
-                    className={`w-[22px] h-[22px] rounded-[6px] flex items-center justify-center text-xs font-bold flex-shrink-0 ${
-                      h.done ? 'bg-primary text-white border-0' : 'bg-white/10 text-transparent border border-white/20'
-                    }`}
-                  >{h.done ? '✓' : ''}</div>
-                  <div className="flex-1">
-                    <div className="flex justify-between items-center mb-1.5">
-                      <span className={`text-[13px] font-medium ${h.done ? 'text-white/45 line-through' : 'text-white'}`}>{h.name}</span>
-                      <span className="rounded-[10px] py-0.5 px-2.5 text-[12px] font-semibold inline-flex items-center gap-1" style={{ background: 'linear-gradient(135deg, #ff6b35, #f7c59f)', color: '#1a0a00' }}>
-                        <Flame size={12} /> {h.streak}
-                      </span>
-                    </div>
-                    <div className="h-[5px] rounded-full overflow-hidden bg-white/15">
-                      <div className="h-full rounded-full bg-gradient-to-r from-primary to-accent-light" style={{ width: `${h.prog}%` }} />
-                    </div>
-                  </div>
-                </div>
+                <HeroHabitRow key={i} {...h} />
               ))}
               <div className="mt-5 flex gap-3">
                 <div className="flex-1 rounded-[10px] py-[14px] px-3 text-center bg-white/5">
@@ -555,25 +590,16 @@ export default function LandingPage() {
                 { key: 'marketing' as const,   icon: <Megaphone size={18} color="#4b7a54" />, title: 'Cookie Pemasaran',  sub: 'Untuk konten dan iklan yang relevan',            desc: 'Digunakan untuk menampilkan konten dan iklan yang dipersonalisasi berdasarkan minat Anda, baik di platform kami maupun di situs lain.' },
                 { key: 'preferences' as const, icon: <Settings size={18} color="#4b7a54" />,  title: 'Cookie Preferensi', sub: 'Menyimpan pilihan tampilan Anda',                desc: 'Menyimpan pengaturan seperti bahasa, tema, dan preferensi UI lainnya agar pengalaman Anda konsisten di setiap kunjungan.' },
               ].map(cat => (
-                <div key={cat.key} className="border border-border rounded-md px-5 py-4 transition-colors duration-200 hover:border-border-mid">
-                  <div className="flex items-center gap-2.5 mb-2">
-                    {cat.icon}
-                    <span className="flex-1 flex flex-col">
-                      <span className="font-semibold text-sm text-ink">{cat.title}</span>
-                      <span className="text-xs text-subtle mt-px">{cat.sub}</span>
-                    </span>
-                    <label className="cookie-toggle ml-auto flex-shrink-0">
-                      <input
-                        type="checkbox"
-                        checked={cat.disabled ? true : cookiePrefs[cat.key]}
-                        disabled={cat.disabled}
-                        onChange={cat.disabled ? () => {} : e => setCookiePrefs(p => ({ ...p, [cat.key]: e.target.checked }))}
-                      />
-                      <span className="cookie-toggle-slider" />
-                    </label>
-                  </div>
-                  <p className="text-xs text-subtle m-0 leading-[1.6]">{cat.desc}</p>
-                </div>
+                <CookieCategoryItem
+                  key={cat.key}
+                  icon={cat.icon}
+                  title={cat.title}
+                  sub={cat.sub}
+                  desc={cat.desc}
+                  disabled={cat.disabled}
+                  checked={cookiePrefs[cat.key]}
+                  onChange={v => setCookiePrefs(p => ({ ...p, [cat.key]: v }))}
+                />
               ))}
             </div>
 

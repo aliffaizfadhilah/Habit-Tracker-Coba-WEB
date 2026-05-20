@@ -1,9 +1,3 @@
-// ─── AuthService — Singleton Pattern ──────────────────────────────────────────
-// Lokasi : frontend/src/services/AuthService.ts
-// Pattern: Singleton — satu instance untuk seluruh app
-// Perubahan:
-//  - Hapus getGoogleUrl() & setGoogleCookie() (Google OAuth dihapus)
-//  - verifyOtp() & resendOtp() dipertahankan (dipakai backend, jaga-jaga)
 
 import { http } from './HttpService'
 import type {
@@ -25,7 +19,6 @@ class AuthService {
     return AuthService.instance
   }
 
-  // ── Auth ────────────────────────────────────────────────────────────────────
   login(form: LoginForm) {
     return http.post<LoginResponse>('/api/auth/login', form)
   }
@@ -34,7 +27,6 @@ class AuthService {
     return http.post<ApiResponse>('/api/auth/register', form)
   }
 
-  // ── Forgot Password (3-step: email → OTP → reset) ─────────────────────────
   forgotPassword(email: string) {
     return http.post<ApiResponse>('/api/auth/forgot-password', { email })
   }

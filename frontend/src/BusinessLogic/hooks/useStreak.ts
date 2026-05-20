@@ -1,6 +1,7 @@
 
-import { useState, useEffect,useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { http } from '../services/HttpService'
+import { useHabitRealtime } from './useHabitRealtime'
 
 export interface HabitStreak {
   id_habit:             number
@@ -70,9 +71,15 @@ const fetchStreak = useCallback(async () => {
     }
   }, []) // ✅
 
-useEffect(() => {
-    fetchStreak()
-  }, [fetchStreak])
+  useEffect(() => { fetchStreak() }, [fetchStreak])
+
+  const _silentFetchStreak = useCallback(async () => {
+    try {
+      const data = await http.get<{ success: boolean; data: HabitStreak[]; summary: StreakSummary }>('/api/streak')
+      if (data.success) setState({ habits: data.data, summary: data.summary, loading: false, error: '' })
+    } catch { /* ignore */ }
+  }, [])
+  useHabitRealtime(_silentFetchStreak)
 
   return { ...state, refetch: fetchStreak }
 }

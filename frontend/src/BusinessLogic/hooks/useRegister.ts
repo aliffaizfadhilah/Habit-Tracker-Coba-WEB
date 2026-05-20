@@ -1,8 +1,3 @@
-// ─── useRegister — Custom Hook ─────────────────────────────────────────────────
-// Lokasi  : frontend/src/hooks/auth/useRegister.ts
-// Perubahan:
-//  - Hapus handleGoogle() (Google OAuth dihapus)
-//  - Register sukses → langsung /dashboard (tidak ada OTP registrasi)
 
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'

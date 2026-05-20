@@ -4,13 +4,12 @@ import { PageHeader, ModalOverlay } from '../../BusinessLogic/factories/SectionF
 import { useProfile } from '../../BusinessLogic/hooks/useProfile'
 import { useAuth } from '../../BusinessLogic/context/AuthContext'
 import { Sidebar, LogoutModal, useSidebar } from './shared/sideBar'
-import { postService, type Post } from '../../BusinessLogic/services/PostService'
+import { postService, type Post, type PostComment } from '../../BusinessLogic/services/PostService'
 import {
   Menu, KeyRound, MailOpen, Key, Check, Link2, Lock,
   Camera, Heart, MessageCircle, BarChart2, Trash2, X, ImageOff,
 } from 'lucide-react'
 
-// ─── ChangePasswordModal ───────────────────────────────────────────────────────
 interface ChangePasswordModalProps {
   email: string; onClose: () => void; onSuccess: () => void
   requestOtp:     () => Promise<{ success: boolean; message: string }>
@@ -130,7 +129,6 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
   )
 }
 
-// ─── Helpers ───────────────────────────────────────────────────────────────────
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
   const m = Math.floor(diff / 60000)
@@ -143,16 +141,65 @@ function timeAgo(iso: string): string {
   return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-// ─── Post Lightbox ─────────────────────────────────────────────────────────────
-function PostLightbox({ post, onClose, onDelete }: {
-  post: Post; onClose: () => void; onDelete: (id: number) => void
+function userInitials(u: { full_name: string | null; username: string }): string {
+  const name = u.full_name || u.username || 'U'
+  const words = name.trim().split(' ').filter(Boolean)
+  if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase()
+  return name[0]?.toUpperCase() ?? 'U'
+}
+
+function CommentItem({ c, currentUsername, onDelete }: {
+  c: PostComment
+  currentUsername: string | null
+  onDelete: (id: number) => void
 }) {
-  const [imgError,       setImgError]       = useState(false)
-  const [liked,          setLiked]          = useState(post.liked_by_me)
-  const [likesCount,     setLikesCount]     = useState(post.likes_count)
-  const [liking,         setLiking]         = useState(false)
-  const [confirmDelete,  setConfirmDelete]  = useState(false)
-  const [deleting,       setDeleting]       = useState(false)
+  return (
+    <div className="flex gap-2.5 py-2.5">
+      <div
+        className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold font-heading text-[11px] shrink-0 mt-0.5"
+        style={{ background: 'linear-gradient(135deg,#16a34a,#6b8fff)' }}
+      >
+        {userInitials(c.user)}
+      </div>
+      <div className="flex-1 bg-[#f9fafb] rounded-xl px-3 py-2 border border-[#f0f0f0]">
+        <div className="text-[12px] font-bold text-ink">{c.user.full_name || c.user.username}</div>
+        <div className="text-[13px] text-ink mt-0.5">{c.content}</div>
+        <div className="flex items-center gap-3 mt-1">
+          <span className="text-[11px] text-muted">{timeAgo(c.created_at)}</span>
+          {currentUsername && currentUsername === c.user.username && (
+            <button
+              onClick={() => onDelete(c.id)}
+              className="text-[11px] font-semibold text-[#ef4444] bg-transparent border-none cursor-pointer p-0"
+            >Hapus</button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function PostLightbox({ post, onClose, onDelete, currentUsername }: {
+  post: Post; onClose: () => void; onDelete: (id: number) => void; currentUsername: string | null
+}) {
+  const [imgError,        setImgError]        = useState(false)
+  const [liked,           setLiked]           = useState(post.liked_by_me)
+  const [likesCount,      setLikesCount]      = useState(post.likes_count)
+  const [liking,          setLiking]          = useState(false)
+  const [confirmDelete,   setConfirmDelete]   = useState(false)
+  const [deleting,        setDeleting]        = useState(false)
+  const [comments,        setComments]        = useState<PostComment[]>([])
+  const [commentsLoading, setCommentsLoading] = useState(true)
+  const [commentText,     setCommentText]     = useState('')
+  const [sendingComment,  setSendingComment]  = useState(false)
+  const [commentsCount,   setCommentsCount]   = useState(post.comments_count)
+  const commentInputRef = React.useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    postService.getComments(post.id)
+      .then(setComments)
+      .catch(() => {})
+      .finally(() => setCommentsLoading(false))
+  }, [post.id])
 
   const toggleLike = async () => {
     if (liking) return
@@ -169,6 +216,25 @@ function PostLightbox({ post, onClose, onDelete }: {
     setDeleting(false)
   }
 
+  const sendComment = async () => {
+    const text = commentText.trim()
+    if (!text || sendingComment) return
+    setSendingComment(true)
+    const res = await postService.addComment(post.id, text)
+    if (res.success && res.data) {
+      setComments(prev => [...prev, res.data!])
+      setCommentsCount(c => c + 1)
+      setCommentText('')
+    }
+    setSendingComment(false)
+  }
+
+  const deleteComment = async (commentId: number) => {
+    await postService.deleteComment(post.id, commentId)
+    setComments(prev => prev.filter(c => c.id !== commentId))
+    setCommentsCount(c => Math.max(0, c - 1))
+  }
+
   return (
     <div
       className="fixed inset-0 z-[600] flex items-center justify-center p-4"
@@ -177,27 +243,32 @@ function PostLightbox({ post, onClose, onDelete }: {
     >
       <div
         className="bg-white rounded-2xl overflow-hidden w-full shadow-2xl flex flex-col"
-        style={{ maxWidth: 420, maxHeight: '90vh' }}
+        style={{ maxWidth: 480, maxHeight: '92vh' }}
         onClick={e => e.stopPropagation()}
       >
         {/* Gambar */}
-        <div className="relative shrink-0" style={{ overflow: 'hidden' }}>
+        <div className="relative shrink-0" style={{ overflow: 'hidden', background: '#111' }}>
           {post.frame_style !== 'rect' ? (
             <div className="w-full flex items-center justify-center py-6" style={{ background: '#f5f5f5' }}>
               <div style={{ width: '72%', aspectRatio: '1/1', borderRadius: '50%', overflow: 'hidden', background: 'linear-gradient(135deg,#dcfce7,#bbf7d0)' }}>
-                {!imgError && (
+                {!imgError ? (
                   <img src={post.image_url} alt={post.title} onError={() => setImgError(true)} className="w-full h-full object-cover block" />
-                )}
-                {imgError && (
+                ) : (
                   <div className="w-full h-full flex items-center justify-center"><ImageOff size={44} color="#16a34a" /></div>
                 )}
               </div>
             </div>
           ) : (
             !imgError ? (
-              <img src={post.image_url} alt={post.title} onError={() => setImgError(true)} className="w-full object-cover block" style={{ maxHeight: 380 }} />
+              <img
+                src={post.image_url}
+                alt={post.title}
+                onError={() => setImgError(true)}
+                className="w-full block"
+                style={{ maxHeight: '55vh', objectFit: 'contain' }}
+              />
             ) : (
-              <div className="w-full flex flex-col items-center justify-center gap-3" style={{ height: 260, background: 'linear-gradient(135deg,#dcfce7,#bbf7d0)' }}>
+              <div className="w-full flex flex-col items-center justify-center gap-3" style={{ height: 220, background: 'linear-gradient(135deg,#dcfce7,#bbf7d0)' }}>
                 <ImageOff size={44} color="#16a34a" />
                 <span className="text-sm text-muted">Gambar tidak tersedia</span>
               </div>
@@ -210,60 +281,75 @@ function PostLightbox({ post, onClose, onDelete }: {
           ><X size={16} /></button>
         </div>
 
-        {/* Info */}
-        <div className="p-5 flex flex-col gap-3 overflow-y-auto">
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <div className="font-heading font-bold text-ink text-[16px] leading-tight">{post.title}</div>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-[11px] text-muted">{timeAgo(post.created_at)}</span>
+        {/* Konten scrollable */}
+        <div className="flex flex-col gap-0 overflow-y-auto">
+
+          {/* ── Info Postingan ── */}
+          <div className="px-5 pt-4 pb-3 flex flex-col gap-2.5">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <div className="font-heading font-bold text-ink text-[17px] leading-tight">{post.title}</div>
                 {post.is_private && (
-                  <span className="text-[10px] font-semibold px-1.5 py-[1px] rounded-full bg-[#f3f4f6] text-[#6b7280] inline-flex items-center gap-0.5">
+                  <span className="mt-1 text-[10px] font-semibold px-1.5 py-[1px] rounded-full bg-[#f3f4f6] text-[#6b7280] inline-flex items-center gap-0.5">
                     <Lock size={9} /> Privat
                   </span>
                 )}
               </div>
+              {post.is_mine && (
+                <button
+                  onClick={() => setConfirmDelete(true)}
+                  className="bg-transparent border-none cursor-pointer text-[#ef4444] text-[12px] font-body inline-flex items-center gap-1 shrink-0 px-2 py-1 rounded-lg hover:bg-[#fee2e2]"
+                ><Trash2 size={13} /> Hapus</button>
+              )}
             </div>
-            {post.is_mine && (
-              <button
-                onClick={() => setConfirmDelete(true)}
-                className="bg-transparent border-none cursor-pointer text-[#ef4444] text-[12px] font-body inline-flex items-center gap-1 shrink-0 px-2 py-1 rounded-lg hover:bg-[#fee2e2]"
-              ><Trash2 size={13} /> Hapus</button>
+
+            {post.caption && (
+              <p className="text-[13px] text-muted leading-relaxed m-0">{post.caption}</p>
+            )}
+
+            {post.habit_title && (
+              <div className="flex items-center justify-between bg-[#f0fdf4] rounded-lg px-3 py-2">
+                <span className="text-[13px] text-[#16a34a] font-semibold flex items-center gap-1.5">
+                  <BarChart2 size={13} className="shrink-0" /> {post.habit_title}
+                </span>
+                {post.progress_percent != null && (
+                  <span className="text-[13px] font-bold text-[#16a34a]">{Number(post.progress_percent).toFixed(0)}%</span>
+                )}
+              </div>
             )}
           </div>
 
-          {post.caption && (
-            <p className="text-[13px] text-muted leading-relaxed m-0">{post.caption}</p>
-          )}
-
-          {post.habit_title && (
-            <div className="flex items-center justify-between bg-[#f0fdf4] rounded-lg px-3 py-2">
-              <span className="text-[13px] text-[#16a34a] font-semibold flex items-center gap-1.5">
-                <BarChart2 size={13} className="shrink-0" /> {post.habit_title}
-              </span>
-              {post.progress_percent != null && (
-                <span className="text-[13px] font-bold text-[#16a34a]">{Number(post.progress_percent).toFixed(0)}%</span>
-              )}
-            </div>
-          )}
-
-          <div className="flex items-center gap-5 pt-2 border-t border-[#f0f0f0]">
-            <button
-              onClick={toggleLike}
-              disabled={liking}
-              className="bg-transparent border-none cursor-pointer flex items-center gap-1.5 text-[13px] font-semibold font-body p-0 transition-colors"
-              style={{ color: liked ? '#ef4444' : '#4b7a54' }}
+          {/* ── Info Pengguna ── */}
+          <div className="px-5 py-3 flex items-center gap-3 border-t border-[#f0f0f0]">
+            <div
+              className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold font-heading text-[13px] shrink-0"
+              style={{ background: 'linear-gradient(135deg,#16a34a,#6b8fff)' }}
             >
-              <Heart size={15} fill={liked ? '#ef4444' : 'none'} color={liked ? '#ef4444' : '#4b7a54'} />
-              {likesCount} Suka
-            </button>
-            <span className="text-[13px] text-muted flex items-center gap-1.5">
-              <MessageCircle size={15} /> {post.comments_count} Komentar
-            </span>
+              {userInitials(post.user)}
+            </div>
+            <div>
+              <div className="text-[14px] font-bold text-ink leading-tight">{post.user.full_name || post.user.username}</div>
+              <div className="text-[12px] text-muted">@{post.user.username} · {timeAgo(post.created_at)}</div>
+            </div>
+            <div className="ml-auto flex items-center gap-4">
+              <button
+                onClick={toggleLike}
+                disabled={liking}
+                className="bg-transparent border-none cursor-pointer flex items-center gap-1 text-[13px] font-semibold font-body p-0 transition-colors"
+                style={{ color: liked ? '#ef4444' : '#4b7a54' }}
+              >
+                <Heart size={15} fill={liked ? '#ef4444' : 'none'} color={liked ? '#ef4444' : '#4b7a54'} />
+                {likesCount}
+              </button>
+              <span className="text-[13px] text-muted flex items-center gap-1">
+                <MessageCircle size={15} /> {commentsCount}
+              </span>
+            </div>
           </div>
 
+          {/* ── Konfirmasi Hapus ── */}
           {confirmDelete && (
-            <div className="bg-[#fef2f2] border border-[#fecaca] rounded-xl p-4 mt-1">
+            <div className="mx-5 mb-3 bg-[#fef2f2] border border-[#fecaca] rounded-xl p-4">
               <p className="text-[13px] text-[#dc2626] font-semibold m-0 mb-3 text-center">
                 Hapus postingan ini? Tindakan tidak dapat dibatalkan.
               </p>
@@ -280,13 +366,63 @@ function PostLightbox({ post, onClose, onDelete }: {
               </div>
             </div>
           )}
+
+          {/* ── Section Komentar ── */}
+          <div className="border-t border-[#f0f0f0]">
+            <div className="px-5 pt-4 pb-2">
+              <span className="font-heading font-bold text-ink text-[15px]">
+                {commentsLoading ? 'Komentar' : `${comments.length} Komentar`}
+              </span>
+            </div>
+
+            {commentsLoading ? (
+              <div className="flex justify-center py-6">
+                <div className="w-6 h-6 border-2 border-border border-t-primary rounded-full animate-spin-fast" />
+              </div>
+            ) : comments.length === 0 ? (
+              <p className="text-center text-[13px] text-muted py-6 m-0">
+                Belum ada komentar. Jadilah yang pertama!
+              </p>
+            ) : (
+              <div className="flex flex-col gap-0 px-5 pb-3">
+                {comments.map(c => (
+                  <CommentItem key={c.id} c={c} currentUsername={currentUsername} onDelete={deleteComment} />
+                ))}
+              </div>
+            )}
+
+            {/* Input komentar */}
+            <div className="px-4 pb-4 pt-2 border-t border-[#f0f0f0] flex gap-2 items-center">
+              <input
+                ref={commentInputRef}
+                type="text"
+                value={commentText}
+                onChange={e => setCommentText(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') sendComment() }}
+                placeholder="Tulis komentar..."
+                className="flex-1 rounded-full px-4 py-2 text-[13px] border border-border bg-surface outline-none focus:border-primary"
+                style={{ fontFamily: 'inherit' }}
+              />
+              <button
+                onClick={sendComment}
+                disabled={sendingComment || !commentText.trim()}
+                className="w-9 h-9 rounded-full border-none cursor-pointer flex items-center justify-center disabled:opacity-40"
+                style={{ background: '#16a34a' }}
+              >
+                {sendingComment
+                  ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin-fast" />
+                  : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                }
+              </button>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
   )
 }
 
-// ─── Wall Grid ─────────────────────────────────────────────────────────────────
 function WallGrid({ posts, onSelect }: { posts: Post[]; onSelect: (p: Post) => void }) {
   const [hoverId, setHoverId] = useState<number | null>(null)
 
@@ -363,7 +499,6 @@ function WallGrid({ posts, onSelect }: { posts: Post[]; onSelect: (p: Post) => v
   )
 }
 
-// ─── ProfilePage ───────────────────────────────────────────────────────────────
 export default function ProfilePage() {
   const { user, logout } = useAuth()
   const { profile, loading, error, updateProfile, requestChangePasswordOtp, verifyChangePasswordOtp, changePassword } = useProfile()
@@ -378,7 +513,6 @@ export default function ProfilePage() {
   const [saving,             setSaving]             = useState(false)
   const [toast,              setToast]              = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
-  // Wall state
   const [myPosts,    setMyPosts]    = useState<Post[]>([])
   const [wallLoading, setWallLoading] = useState(true)
   const [activePost,  setActivePost]  = useState<Post | null>(null)
@@ -455,8 +589,8 @@ export default function ProfilePage() {
 
         {!loading && profile && (
           <>
-            {/* ── Info Profil (lebar tetap) ── */}
-            <div className="flex flex-col gap-6" style={{ maxWidth: 560 }}>
+            {/* ── Info Profil ── */}
+            <div className="flex flex-col gap-6">
 
               {/* Avatar + Stats */}
               <Card>
@@ -526,7 +660,7 @@ export default function ProfilePage() {
             </div>
 
             {/* ── Dinding Foto ── */}
-            <div className="mt-8" style={{ maxWidth: 560 }}>
+            <div className="mt-8">
               <div className="flex items-center gap-3 mb-4">
                 <Camera size={18} color="#16a34a" />
                 <h3 className="font-heading text-[17px] font-bold text-ink m-0">Dinding Foto</h3>
@@ -555,6 +689,7 @@ export default function ProfilePage() {
           post={activePost}
           onClose={() => setActivePost(null)}
           onDelete={handleDeletePost}
+          currentUsername={user?.username ?? null}
         />
       )}
 

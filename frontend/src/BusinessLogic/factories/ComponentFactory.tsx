@@ -1,9 +1,7 @@
-// ─── ComponentFactory — Factory Pattern ───────────────────────────────────────
 import React from 'react'
 import { tokens } from './tokens'
 export { tokens }
 
-// ─── Button ───────────────────────────────────────────────────────────────────
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger'
   size?: 'sm' | 'md' | 'lg'
@@ -48,7 +46,6 @@ export const Button: React.FC<ButtonProps> = ({
   )
 }
 
-// ─── Input ────────────────────────────────────────────────────────────────────
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string
   error?: string
@@ -76,7 +73,6 @@ export const Input: React.FC<InputProps> = ({ label, error, rightElement, classN
   </div>
 )
 
-// ─── Alert ────────────────────────────────────────────────────────────────────
 export interface AlertProps {
   type: 'error' | 'success' | 'info'
   message: string
@@ -98,7 +94,6 @@ export const Alert: React.FC<AlertProps> = ({ type, message }) => {
   )
 }
 
-// ─── Card ─────────────────────────────────────────────────────────────────────
 export interface CardProps {
   children: React.ReactNode
   className?: string
@@ -115,7 +110,6 @@ export const Card: React.FC<CardProps> = ({ children, className = '', style, pad
   </div>
 )
 
-// ─── Badge ────────────────────────────────────────────────────────────────────
 export interface BadgeProps {
   children: React.ReactNode
   color?: 'green' | 'emerald' | 'orange' | 'red' | 'gray'
@@ -136,7 +130,6 @@ export const Badge: React.FC<BadgeProps> = ({ children, color = 'green' }) => {
   )
 }
 
-// ─── Divider ──────────────────────────────────────────────────────────────────
 export const Divider: React.FC<{ label?: string }> = ({ label }) => (
   <div className="flex items-center gap-3 my-1">
     <div className="flex-1 h-px bg-border" />
@@ -145,7 +138,6 @@ export const Divider: React.FC<{ label?: string }> = ({ label }) => (
   </div>
 )
 
-// ─── GlobalStyles ─────────────────────────────────────────────────────────────
 export const GlobalStyles: React.FC = () => (
   <style>{`
     @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Syne:wght@600;700;800&display=swap');

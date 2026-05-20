@@ -1,7 +1,3 @@
-// ─── useForgotPassword — Custom Hook ──────────────────────────────────────────
-// Lokasi  : frontend/src/hooks/auth/useForgotPassword.ts
-// Pattern : Builder (via ForgotPasswordFormBuilder)
-// Flow    : email → OTP via email → reset password
 
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -27,7 +23,6 @@ export function useForgotPassword() {
     return () => clearTimeout(t)
   }, [countdown])
 
-  // Step 1: Kirim OTP ke email
   const handleSendOtp = async (emailVal: string) => {
     setError(''); setLoading(true)
     try {
@@ -41,7 +36,6 @@ export function useForgotPassword() {
     finally { setLoading(false) }
   }
 
-  // Step 2: Verifikasi OTP dari email
   const handleVerifyOtp = async (otp: string) => {
     setError(''); setLoading(true)
     try {
@@ -52,7 +46,6 @@ export function useForgotPassword() {
     finally { setLoading(false) }
   }
 
-  // Step 2: Kirim ulang OTP ke email
   const handleResend = async () => {
     setError(''); setLoading(true)
     try {
@@ -66,7 +59,6 @@ export function useForgotPassword() {
     finally { setLoading(false) }
   }
 
-  // Step 3: Reset password baru
   const handleResetPassword = async (password: string, confirmation: string) => {
     if (password !== confirmation) { setError('Password tidak cocok.'); return }
     setError(''); setLoading(true)
@@ -81,7 +73,6 @@ export function useForgotPassword() {
     finally { setLoading(false) }
   }
 
-  // Builder membentuk konfigurasi form multi-step
   const formConfig = new ForgotPasswordFormBuilder()
     .addEmailStep(handleSendOtp)
     .addOtpStep(email, handleVerifyOtp, handleResend)
