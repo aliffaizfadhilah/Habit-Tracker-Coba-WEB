@@ -1,0 +1,48 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend.Dockerfile
+    ports:
+      - "5175:80"
+    volumes:
+      - ./backend/storage/app/public:/var/www/storage
+    depends_on:
+      - php
+
+  php:
+    build:
+      context: .
+      dockerfile: backend.Dockerfile
+    volumes:
+      - ./backend:/app
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: habit_tracker
+      DB_USERNAME: laravel
+      DB_PASSWORD: secret
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: habit_tracker
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: secret
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  adminer:
+    image: adminer:latest
+    ports:
+      - "8082:8080"
+    depends_on:
+      - mysql
+
+volumes:
+  mysql_data:
