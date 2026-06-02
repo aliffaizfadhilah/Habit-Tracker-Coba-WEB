@@ -23,28 +23,43 @@ export function useProfile() {
   }): Promise<{ success: boolean; message: string }> => {
     try {
       const data = await http.put<{ success: boolean; message: string }>('/api/profile', payload)
-      if (data.success) await refetch()
+      if (data.success) {
+        console.log('[Profil] Berhasil diupdate:', payload.username)
+        await refetch()
+      } else {
+        console.error('[Profil] Gagal update profil:', data.message)
+      }
       return data
-    } catch {
+    } catch (err) {
+      console.error('[Profil] Error update profil:', err)
       return { success: false, message: 'Terjadi kesalahan saat update profil.' }
     }
   }
 
   const requestChangePasswordOtp = async (): Promise<{ success: boolean; message: string }> => {
     try {
-      return await http.post<{ success: boolean; message: string }>(
+      const data = await http.post<{ success: boolean; message: string }>(
         '/api/profile/change-password/request', {}
       )
-    } catch {
+      if (data.success) console.log('[Profil] OTP ganti password berhasil dikirim.')
+      else console.error('[Profil] Gagal kirim OTP:', data.message)
+      return data
+    } catch (err) {
+      console.error('[Profil] Error kirim OTP:', err)
       return { success: false, message: 'Gagal mengirim OTP.' }
     }
   }
+
   const verifyChangePasswordOtp = async (otp: string): Promise<{ success: boolean; message: string }> => {
     try {
-      return await http.post<{ success: boolean; message: string }>(
+      const data = await http.post<{ success: boolean; message: string }>(
         '/api/profile/change-password/verify', { otp }
       )
-    } catch {
+      if (data.success) console.log('[Profil] OTP ganti password berhasil diverifikasi.')
+      else console.error('[Profil] OTP tidak valid:', data.message)
+      return data
+    } catch (err) {
+      console.error('[Profil] Error verifikasi OTP:', err)
       return { success: false, message: 'Gagal memverifikasi OTP.' }
     }
   }
@@ -55,10 +70,14 @@ export function useProfile() {
     password_confirmation: string
   }): Promise<{ success: boolean; message: string }> => {
     try {
-      return await http.post<{ success: boolean; message: string }>(
+      const data = await http.post<{ success: boolean; message: string }>(
         '/api/profile/change-password', payload
       )
-    } catch {
+      if (data.success) console.log('[Profil] Password berhasil diganti.')
+      else console.error('[Profil] Gagal ganti password:', data.message)
+      return data
+    } catch (err) {
+      console.error('[Profil] Error ganti password:', err)
       return { success: false, message: 'Gagal mengganti password.' }
     }
   }

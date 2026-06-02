@@ -41,6 +41,11 @@ class PostService {
     return PostService.instance
   }
 
+  async getById(id: number): Promise<Post | null> {
+    const res = await http.get<{ success: boolean; data: Post }>(`/api/posts/${id}`)
+    return res.success ? res.data : null
+  }
+
   async getPosts(): Promise<Post[]> {
     const res = await http.get<{ success: boolean; data: Post[] }>('/api/posts')
     return res.success ? res.data : []

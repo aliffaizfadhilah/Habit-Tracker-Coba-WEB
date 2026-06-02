@@ -28,6 +28,17 @@ class PostController extends Controller
         return response()->json(['success' => true, 'data' => $posts]);
     }
 
+    public function show(Request $request, int $id): JsonResponse
+    {
+        $post = $this->postService->getById($id, $request->user()->id);
+
+        if (!$post) {
+            return response()->json(['success' => false, 'message' => 'Postingan tidak ditemukan.'], 404);
+        }
+
+        return response()->json(['success' => true, 'data' => $post]);
+    }
+
     public function store(PostRequest $request): JsonResponse
     {
         $post = $this->postService->create(

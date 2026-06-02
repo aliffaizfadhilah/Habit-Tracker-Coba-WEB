@@ -3,6 +3,16 @@ import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Flame, BarChart2, Bell, Camera, Building2, Cookie, Lock, MapPin, Megaphone, Settings, X, Plus, Check } from 'lucide-react'
 
+function getCookie(name: string): string | null {
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'))
+  return match ? decodeURIComponent(match[2]) : null
+}
+
+function setCookie(name: string, value: string, days = 365): void {
+  const expires = new Date(Date.now() + days * 864e5).toUTCString()
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`
+}
+
 const features = [
   { icon: <Plus size={32} color="#16a34a" />,      title: 'Tambah & Kelola Habit',  desc: 'Buat, edit, dan hapus habit dengan mudah. Atur periode dan target sesuai kebutuhanmu.' },
   { icon: <Check size={32} color="#16a34a" />,     title: 'Checklist Harian',        desc: 'Centang habit setiap hari. Checklist otomatis terkunci setelah periode selesai.' },
@@ -125,7 +135,7 @@ export default function LandingPage() {
   const [cookiePrefs,      setCookiePrefs]      = useState<CookiePreferences>(defaultPrefs)
 
   useEffect(() => {
-    const stored        = localStorage.getItem(COOKIE_KEY)
+    const stored        = getCookie(COOKIE_KEY)
     const sessionAnswered = sessionStorage.getItem(SESSION_ANSWERED_KEY)
 
     if (stored) {
@@ -159,7 +169,7 @@ export default function LandingPage() {
 
   const saveCookieConsent = (prefs: CookiePreferences, declined = false) => {
     const consent: CookieConsent = { accepted: !declined, timestamp: new Date().toISOString(), preferences: prefs }
-    localStorage.setItem(COOKIE_KEY, JSON.stringify(consent))
+    setCookie(COOKIE_KEY, JSON.stringify(consent))
     sessionStorage.setItem(SESSION_ANSWERED_KEY, '1')
     setCookiePrefs(prefs)
     setShowCookieBanner(false)

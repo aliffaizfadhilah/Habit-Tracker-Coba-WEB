@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import HabitReportModal from '../components/HabitReportModal'
 import { Button, Alert } from '../../BusinessLogic/factories/ComponentFactory'
 import { PageHeader, EmptyState, ModalOverlay } from '../../BusinessLogic/factories/SectionFactory'
 import { Menu, AlertTriangle, Sprout, Search } from 'lucide-react'
@@ -9,7 +10,6 @@ import {
 import { useHabit } from '../../BusinessLogic/hooks/useHabit'
 import { useAuth } from '../../BusinessLogic/context/AuthContext'
 import { Sidebar, LogoutModal, useSidebar } from './shared/sideBar'
-import HabitReportModal from '../components/HabitReportModal'
 import { habitCompletionService } from '../../BusinessLogic/services/HabitCompletionService'
 
 const defaultForm = (): HabitFormData => ({
@@ -35,12 +35,12 @@ export default function HabitPage() {
   const { isMobile, sidebarOpen, setSidebarOpen } = useSidebar()
 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [reportTarget, setReportTarget] = useState<HabitGridItem | null>(null)
   const [search, setSearch]             = useState('')
   const [activeFilter, setActiveFilter] = useState<FilterType>('semua')
   const [showForm, setShowForm]         = useState(false)
   const [editTarget, setEditTarget]     = useState<HabitGridItem | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<HabitGridItem | null>(null)
-  const [reportTarget, setReportTarget] = useState<HabitGridItem | null>(null)
   const [form, setForm]                 = useState<HabitFormData>(defaultForm())
   const [formErrors, setFormErrors]     = useState<Partial<Record<keyof HabitFormData, string>>>({})
   const [submitting, setSubmitting]     = useState(false)
@@ -218,9 +218,6 @@ export default function HabitPage() {
         </ModalOverlay>
       )}
 
-      {reportTarget && (
-        <HabitReportModal habit={reportTarget} onClose={() => setReportTarget(null)} />
-      )}
 
       {showLogoutConfirm && (
         <LogoutModal
@@ -228,6 +225,7 @@ export default function HabitPage() {
           onConfirm={async () => { setShowLogoutConfirm(false); await logout() }}
         />
       )}
+      {reportTarget && <HabitReportModal habit={reportTarget} onClose={() => setReportTarget(null)} />}
     </div>
   )
 }

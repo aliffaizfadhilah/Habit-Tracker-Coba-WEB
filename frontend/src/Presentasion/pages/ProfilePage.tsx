@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Button, Input, Alert, Card } from '../../BusinessLogic/factories/ComponentFactory'
 import { PageHeader, ModalOverlay } from '../../BusinessLogic/factories/SectionFactory'
 import { useProfile } from '../../BusinessLogic/hooks/useProfile'
@@ -503,6 +504,7 @@ export default function ProfilePage() {
   const { user, logout } = useAuth()
   const { profile, loading, error, updateProfile, requestChangePasswordOtp, verifyChangePasswordOtp, changePassword } = useProfile()
   const { isMobile, sidebarOpen, setSidebarOpen } = useSidebar()
+  const navigate = useNavigate()
 
   const [showLogoutConfirm,  setShowLogoutConfirm]  = useState(false)
   const [showChangePassword, setShowChangePassword] = useState(false)
@@ -515,7 +517,6 @@ export default function ProfilePage() {
 
   const [myPosts,    setMyPosts]    = useState<Post[]>([])
   const [wallLoading, setWallLoading] = useState(true)
-  const [activePost,  setActivePost]  = useState<Post | null>(null)
 
   useEffect(() => {
     if (profile) { setFullName(profile.full_name || ''); setUsername(profile.username || ''); setEmail(profile.email || '') }
@@ -676,22 +677,13 @@ export default function ProfilePage() {
                   ))}
                 </div>
               ) : (
-                <WallGrid posts={myPosts} onSelect={setActivePost} />
+                <WallGrid posts={myPosts} onSelect={p => navigate(`/postingan/${p.id}`)} />
               )}
             </div>
           </>
         )}
       </main>
 
-      {/* Lightbox */}
-      {activePost && (
-        <PostLightbox
-          post={activePost}
-          onClose={() => setActivePost(null)}
-          onDelete={handleDeletePost}
-          currentUsername={user?.username ?? null}
-        />
-      )}
 
       {showChangePassword && profile && (
         <ModalOverlay onClose={() => setShowChangePassword(false)}>

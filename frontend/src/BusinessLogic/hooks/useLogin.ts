@@ -27,13 +27,16 @@ export function useLogin() {
     setError('')
     setLoading(true)
     try {
-      const data = await authService.login(form) 
+      const data = await authService.login(form)
       if (!data.success) {
+        console.error('[Login] Gagal:', data.message || 'Email atau password salah.')
         setError(data.message || 'Email atau password salah.')
         return
       }
+      console.log('[Login] Berhasil:', form.email)
       await refetch()
-    } catch {
+    } catch (err) {
+      console.error('[Login] Error:', err)
       setError('Terjadi kesalahan. Coba lagi.')
     } finally {
       setLoading(false)

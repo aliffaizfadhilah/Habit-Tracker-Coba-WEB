@@ -4,8 +4,7 @@ import { useReminder } from '../../BusinessLogic/hooks/useReminder'
 import { Sidebar, LogoutModal, useSidebar } from './shared/sideBar'
 import { Alert, Button } from '../../BusinessLogic/factories/ComponentFactory'
 import type { HabitGridItem } from '../../BusinessLogic/factories/HabitFormFactory'
-import { notificationService } from '../../BusinessLogic/services/NotificationService'
-import { Clock, Pencil, Menu, CheckCircle, PauseCircle, BellOff, Lock } from 'lucide-react'
+import { Clock, Pencil, Menu, CheckCircle, PauseCircle, Lock } from 'lucide-react'
 
 function SummaryCard({ label, value, icon, bg }: {
   label: string; value: number; icon: React.ReactNode; bg: string
@@ -165,17 +164,6 @@ export default function Reminder() {
   const [showLogout, setShowLogout]         = useState(false)
   const [editTarget, setEditTarget]         = useState<HabitGridItem | null>(null)
   const [toast, setToast]                   = useState<{ type: 'success' | 'error'; message: string } | null>(null)
-  const [notifPermission, setNotifPermission] = useState<NotificationPermission>(
-    notificationService.isSupported ? Notification.permission : 'denied'
-  )
-
-  const handleRequestNotifPermission = async () => {
-    const granted = await notificationService.requestPermission()
-    setNotifPermission(granted ? 'granted' : 'denied')
-    if (granted) showToast('success', 'Izin notifikasi diterima!')
-    else showToast('error', 'Izin notifikasi ditolak. Aktifkan melalui pengaturan browser.')
-  }
-
   const displayUser = user || { full_name: 'Pengguna', email: '', username: 'Pengguna' }
 
   const showToast = (type: 'success' | 'error', message: string) => {
@@ -225,28 +213,6 @@ export default function Reminder() {
         </div>
 
         {toast && <div className="mb-5"><Alert type={toast.type} message={toast.message} /></div>}
-
-        {/* Notification permission banner */}
-        {notifPermission === 'default' && (
-          <div className="mb-5 flex items-center gap-3.5 bg-[#fffbeb] border border-[#fcd34d] rounded-lg px-5 py-4">
-            <BellOff size={18} className="shrink-0 text-[#d97706]" />
-            <p className="flex-1 text-[13px] text-[#92400e] font-body m-0">
-              Izinkan notifikasi agar pengingat habit bisa muncul tepat waktu.
-            </p>
-            <Button variant="primary" onClick={handleRequestNotifPermission} style={{ flexShrink: 0 }}>
-              Izinkan
-            </Button>
-          </div>
-        )}
-
-        {notifPermission === 'denied' && notificationService.isSupported && (
-          <div className="mb-5 flex items-center gap-3.5 bg-[#fff1f2] border border-[#fca5a5] rounded-lg px-5 py-4">
-            <BellOff size={18} className="shrink-0 text-[#dc2626]" />
-            <p className="flex-1 text-[13px] text-[#991b1b] font-body m-0">
-              Notifikasi diblokir. Aktifkan melalui pengaturan browser untuk menerima pengingat.
-            </p>
-          </div>
-        )}
 
         {error && (
           <div className="mb-5">

@@ -71,6 +71,7 @@ Route::middleware('auth.jwt')->group(function () {
     // ── Posts (Public Feed) ───────────────────────────────────────────────────
     Route::prefix('posts')->group(function () {
         Route::get('/',                                    [PostController::class, 'index']);
+        Route::get('/{id}',                                [PostController::class, 'show']);
         Route::post('/',                                   [PostController::class, 'store']);
         Route::delete('/{id}',                             [PostController::class, 'destroy']);
         Route::post('/{id}/like',                          [PostController::class, 'toggleLike']);

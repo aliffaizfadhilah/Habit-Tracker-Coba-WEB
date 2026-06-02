@@ -6,13 +6,7 @@ import { useRegister } from '../../../BusinessLogic/hooks/useRegister'
 import { Eye, EyeOff } from 'lucide-react'
 
 export default function Register() {
-  const { form, errors, loading, showPass, setShowPass, handleChange, handleSubmit } = useRegister()
-
-  const fields = [
-    { label: 'Nama Lengkap', name: 'full_name', type: 'text',  placeholder: 'John Doe' },
-    { label: 'Username',     name: 'username',  type: 'text',  placeholder: 'johndoe' },
-    { label: 'Email',        name: 'email',     type: 'email', placeholder: 'email@contoh.com' },
-  ] as const
+  const { form, errors, loading, showPass, setShowPass, handleChange, handleSubmit, emailWarning } = useRegister()
 
   return (
     <AuthLayout title="Buat akun baru" subtitle="Mulai perjalanan habitmu hari ini, gratis">
@@ -20,9 +14,17 @@ export default function Register() {
         {errors.general && <Alert type="error" message={errors.general[0]} />}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
-          {fields.map(({ label, name, type, placeholder }) => (
-            <Input key={name} label={label} type={type} name={name} value={form[name]} onChange={handleChange} required placeholder={placeholder} error={errors[name]?.[0]} />
-          ))}
+          <Input label="Nama Lengkap" type="text"  name="full_name" value={form.full_name} onChange={handleChange} required placeholder="John Doe"           error={errors.full_name?.[0]} />
+          <Input label="Username"     type="text"  name="username"  value={form.username}  onChange={handleChange} required placeholder="johndoe"             error={errors.username?.[0]} />
+          <div>
+            <Input label="Email" type="email" name="email" value={form.email} onChange={handleChange} required placeholder="email@contoh.com" error={errors.email?.[0]} />
+            {emailWarning && (
+              <div className="mt-1.5 flex items-start gap-1.5 text-[12px] text-[#b45309] bg-[#fffbeb] border border-[#fde68a] rounded-[8px] px-2.5 py-2">
+                <span className="shrink-0 mt-[1px]">⚠️</span>
+                <span>{emailWarning}</span>
+              </div>
+            )}
+          </div>
 
           <div>
             <Input

@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import AuthLayout from '../../components/auth/AuthLayout'
 import { Alert, Button, Input } from '../../../BusinessLogic/factories/ComponentFactory'
+import { isDummyEmail, DUMMY_EMAIL_WARNING } from '../../../BusinessLogic/utils/emailValidation'
 import { OtpInputGroup } from '../../components/auth/OtpInputGroup'
 import { PasswordStrengthBar } from '../../components/auth/PasswordStrengthBar'
 import { useForgotPassword } from '../../../BusinessLogic/hooks/useForgotPassword'
@@ -20,6 +21,7 @@ export default function ForgotPassword() {
   } = useForgotPassword()
 
   const [localEmail, setLocalEmail] = useState('')
+  const emailWarning = localEmail && isDummyEmail(localEmail) ? DUMMY_EMAIL_WARNING : ''
 
   const emailStep = formConfig.steps.find((s: EmailStepConfig | OtpStepConfig | ResetStepConfig) => s.id === 'email') as EmailStepConfig | undefined
   const otpStep   = formConfig.steps.find((s: EmailStepConfig | OtpStepConfig | ResetStepConfig) => s.id === 'otp')   as OtpStepConfig   | undefined
@@ -65,7 +67,15 @@ export default function ForgotPassword() {
         {/* Step 1: Email */}
         {step === 'email' && (
           <form onSubmit={e => { e.preventDefault(); emailStep?.onSubmit(localEmail) }} className="flex flex-col gap-4">
-            <Input label="Alamat Email" type="email" value={localEmail} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLocalEmail(e.target.value)} required placeholder="email@contoh.com" autoFocus />
+            <div>
+              <Input label="Alamat Email" type="email" value={localEmail} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLocalEmail(e.target.value)} required placeholder="email@contoh.com" autoFocus />
+              {emailWarning && (
+                <div className="mt-1.5 flex items-start gap-1.5 text-[12px] text-[#b45309] bg-[#fffbeb] border border-[#fde68a] rounded-[8px] px-2.5 py-2">
+                  <span className="shrink-0 mt-[1px]">⚠️</span>
+                  <span>{emailWarning}</span>
+                </div>
+              )}
+            </div>
             <Button type="submit" variant="primary" loading={loading}>Kirim Kode OTP →</Button>
             <p className="text-center text-[13px] text-muted font-body">
               Ingat passwordmu?{' '}

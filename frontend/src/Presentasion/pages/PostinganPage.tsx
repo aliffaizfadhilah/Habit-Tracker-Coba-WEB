@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../BusinessLogic/context/AuthContext'
 import { Sidebar, LogoutModal, useSidebar } from './shared/sideBar'
 import { postService, type Post, type PostComment } from '../../BusinessLogic/services/PostService'
@@ -444,10 +445,10 @@ function PinCard({ post, onLikeChange, onClick }: {
 export default function PostinganPage() {
   const { user, logout }                          = useAuth()
   const { isMobile, sidebarOpen, setSidebarOpen } = useSidebar()
+  const navigate = useNavigate()
   const [showLogout,    setShowLogout]    = useState(false)
   const [posts,         setPosts]         = useState<Post[]>([])
   const [loading,       setLoading]       = useState(true)
-  const [activePost,    setActivePost]    = useState<Post | null>(null)
   const [showNewPost,   setShowNewPost]   = useState(false)
   const [toast,         setToast]         = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const [searchQuery,   setSearchQuery]   = useState('')
@@ -634,7 +635,7 @@ export default function PostinganPage() {
                     key={post.id}
                     post={post}
                     onLikeChange={handleLikeChange}
-                    onClick={setActivePost}
+                    onClick={p => navigate(`/postingan/${p.id}`)}
                   />
                 ))}
               </div>
@@ -678,16 +679,6 @@ export default function PostinganPage() {
         />
       )}
 
-      {/* Pinterest detail modal */}
-      {activePost && (
-        <PinDetailModal
-          post={posts.find(p => p.id === activePost.id) ?? activePost}
-          currentUsername={user?.username ?? ''}
-          onClose={() => setActivePost(null)}
-          onDelete={id => { handleDelete(id); setActivePost(null) }}
-          onLikeChange={handleLikeChange}
-        />
-      )}
 
       {showLogout && (
         <LogoutModal

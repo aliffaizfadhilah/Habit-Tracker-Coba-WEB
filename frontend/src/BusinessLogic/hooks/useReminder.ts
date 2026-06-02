@@ -13,10 +13,16 @@ export function useReminder() {
     setLoading(true)
     try {
       const data = await http.get<{ success: boolean; data: HabitGridItem[] }>('/api/habits')
-      if (!data.success) { setError('Gagal memuat data.'); return }
+      if (!data.success) {
+        console.error('[Reminder] Gagal memuat data habit.')
+        setError('Gagal memuat data.')
+        return
+      }
+      console.log('[Reminder] Data habit dimuat:', data.data.length, 'habit')
       setHabits(data.data)
       reminderService.update(data.data)
-    } catch {
+    } catch (err) {
+      console.error('[Reminder] Error memuat habit:', err)
       setError('Terjadi kesalahan. Coba lagi.')
     } finally {
       setLoading(false)
@@ -44,12 +50,16 @@ export function useReminder() {
         reminder_enabled: enabled,
       })
       if (data.success) {
+        console.log('[Reminder] Toggle reminder id:', id, '→', enabled ? 'aktif' : 'nonaktif')
         const updated = habits.map(h => h.id_habit === id ? { ...h, reminder_enabled: enabled } : h)
         setHabits(updated)
         reminderService.update(updated)
+      } else {
+        console.error('[Reminder] Gagal toggle reminder id:', id, data.message)
       }
       return data
-    } catch {
+    } catch (err) {
+      console.error('[Reminder] Error toggle reminder:', err)
       return { success: false, message: 'Terjadi kesalahan.' }
     }
   }
@@ -63,12 +73,16 @@ export function useReminder() {
         reminder_enabled: habit.reminder_enabled,
       })
       if (data.success) {
+        console.log('[Reminder] Waktu reminder id:', id, '→', time)
         const updated = habits.map(h => h.id_habit === id ? { ...h, reminder_time: time } : h)
         setHabits(updated)
         reminderService.update(updated)
+      } else {
+        console.error('[Reminder] Gagal update waktu reminder id:', id, data.message)
       }
       return data
-    } catch {
+    } catch (err) {
+      console.error('[Reminder] Error update waktu reminder:', err)
       return { success: false, message: 'Terjadi kesalahan.' }
     }
   }

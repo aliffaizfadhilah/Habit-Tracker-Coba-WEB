@@ -24,6 +24,14 @@ class PostService
             ->map(fn($p) => $this->formatPost($p, $userId));
     }
 
+    public function getById(int $postId, int $currentUserId): ?array
+    {
+        $post = $this->postRepo->findById($postId);
+        if (!$post) return null;
+        $post->load(['user', 'likes']);
+        return $this->formatPost($post, $currentUserId);
+    }
+
     public function getAll(int $currentUserId): Collection
     {
         return $this->postRepo->allVisibleToUser($currentUserId)

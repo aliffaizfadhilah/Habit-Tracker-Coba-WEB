@@ -27,23 +27,37 @@ export function useForgotPassword() {
     setError(''); setLoading(true)
     try {
       const data = await authService.forgotPassword(emailVal)
-      if (!data.success) { setError(data.message || 'Email tidak ditemukan.'); return }
+      if (!data.success) {
+        console.error('[ForgotPassword] Gagal kirim OTP:', data.message)
+        setError(data.message || 'Email tidak ditemukan.')
+        return
+      }
+      console.log('[ForgotPassword] OTP berhasil dikirim ke:', emailVal)
       setEmail(emailVal)
       setStep('otp')
       setCountdown(60)
       setSuccess('Kode OTP telah dikirim ke emailmu.')
-    } catch { setError('Terjadi kesalahan. Coba lagi.') }
-    finally { setLoading(false) }
+    } catch (err) {
+      console.error('[ForgotPassword] Error kirim OTP:', err)
+      setError('Terjadi kesalahan. Coba lagi.')
+    } finally { setLoading(false) }
   }
 
   const handleVerifyOtp = async (otp: string) => {
     setError(''); setLoading(true)
     try {
       const data = await authService.verifyForgotOtp(email, otp)
-      if (!data.success) { setError(data.message || 'Kode OTP salah atau kadaluarsa.'); return }
+      if (!data.success) {
+        console.error('[ForgotPassword] OTP tidak valid:', data.message)
+        setError(data.message || 'Kode OTP salah atau kadaluarsa.')
+        return
+      }
+      console.log('[ForgotPassword] OTP berhasil diverifikasi.')
       setStep('reset'); setSuccess(''); setError('')
-    } catch { setError('Terjadi kesalahan. Coba lagi.') }
-    finally { setLoading(false) }
+    } catch (err) {
+      console.error('[ForgotPassword] Error verifikasi OTP:', err)
+      setError('Terjadi kesalahan. Coba lagi.')
+    } finally { setLoading(false) }
   }
 
   const handleResend = async () => {
@@ -51,12 +65,18 @@ export function useForgotPassword() {
     try {
       const data = await authService.forgotPassword(email)
       if (data.success) {
+        console.log('[ForgotPassword] OTP baru berhasil dikirim ulang ke:', email)
         setSuccess('OTP baru telah dikirim ke emailmu.')
         setCountdown(60)
         setDigits(Array(6).fill(''))
-      } else { setError(data.message || 'Gagal mengirim ulang.') }
-    } catch { setError('Gagal mengirim ulang.') }
-    finally { setLoading(false) }
+      } else {
+        console.error('[ForgotPassword] Gagal kirim ulang OTP:', data.message)
+        setError(data.message || 'Gagal mengirim ulang.')
+      }
+    } catch (err) {
+      console.error('[ForgotPassword] Error kirim ulang OTP:', err)
+      setError('Gagal mengirim ulang.')
+    } finally { setLoading(false) }
   }
 
   const handleResetPassword = async (password: string, confirmation: string) => {
@@ -66,11 +86,18 @@ export function useForgotPassword() {
       const data = await authService.resetPassword(
         email, digits.join(''), password, confirmation
       )
-      if (!data.success) { setError(data.message || 'Gagal reset password.'); return }
+      if (!data.success) {
+        console.error('[ForgotPassword] Gagal reset password:', data.message)
+        setError(data.message || 'Gagal reset password.')
+        return
+      }
+      console.log('[ForgotPassword] Password berhasil direset untuk:', email)
       setSuccess('Password berhasil diubah!')
       setTimeout(() => navigate('/login'), 1800)
-    } catch { setError('Terjadi kesalahan. Coba lagi.') }
-    finally { setLoading(false) }
+    } catch (err) {
+      console.error('[ForgotPassword] Error reset password:', err)
+      setError('Terjadi kesalahan. Coba lagi.')
+    } finally { setLoading(false) }
   }
 
   const formConfig = new ForgotPasswordFormBuilder()

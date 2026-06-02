@@ -1,11 +1,11 @@
 import React, { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStreak, type HabitStreak } from '../../BusinessLogic/hooks/useStreak'
+import HabitReportModal from '../components/HabitReportModal'
 import { useDashboard } from '../../BusinessLogic/hooks/useDashboard'
 import { useAuth } from '../../BusinessLogic/context/AuthContext'
 import { http } from '../../BusinessLogic/services/HttpService'
 import { Sidebar, LogoutModal, useSidebar } from './shared/sideBar'
-import HabitReportModal from '../components/HabitReportModal'
 import RiwayatDrawer from '../components/RiwayatDrawer'
 import { habitCompletionService } from '../../BusinessLogic/services/HabitCompletionService'
 import {
@@ -254,8 +254,8 @@ export default function Dashboard() {
   const { isMobile, sidebarOpen, setSidebarOpen } = useSidebar()
   const [showLogout, setShowLogout]       = useState(false)
   const [filter, setFilter]               = useState<FilterType>('semua')
-  const [detailTarget, setDetailTarget]   = useState<HabitStreak | null>(null)
   const [showRiwayat, setShowRiwayat]     = useState(false)
+  const [reportTarget, setReportTarget]   = useState<HabitStreak | null>(null)
   const { habits, summary, loading, error, refetch } = useStreak()
   const { user, logout } = useAuth()
   const { weeklyData, insights, atRisk } = useDashboard(habits)
@@ -449,7 +449,7 @@ export default function Dashboard() {
           {!loading && filteredHabits.length > 0 && (
             <div className="flex flex-col gap-3">
               {filteredHabits.map(habit => (
-                <HabitStreakCard key={habit.id_habit} habit={habit} onRefetch={refetch} onReport={(h: HabitStreak) => setDetailTarget(h)} />
+                <HabitStreakCard key={habit.id_habit} habit={habit} onRefetch={refetch} onReport={setReportTarget} />
               ))}
             </div>
           )}
@@ -469,9 +469,9 @@ export default function Dashboard() {
 
       </main>
 
-      {detailTarget && <HabitReportModal habit={detailTarget} onClose={() => setDetailTarget(null)} />}
       {showLogout && <LogoutModal onCancel={() => setShowLogout(false)} onConfirm={async () => { setShowLogout(false); await logout() }} />}
       <RiwayatDrawer habits={habits} open={showRiwayat} onClose={() => setShowRiwayat(false)} />
+      {reportTarget && <HabitReportModal habit={reportTarget} onClose={() => setReportTarget(null)} />}
     </div>
   )
 }

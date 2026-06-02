@@ -1,9 +1,9 @@
 
 import { useState, useEffect, useCallback } from 'react'
-import { http } from '../services/HttpService'
 import { reminderService } from '../services/ReminderService'
 import type { HabitGridItem, HabitFormData } from '../factories/HabitFormFactory'
 import { useHabitRealtime } from './useHabitRealtime'
+import { habitRepository } from '../repositories/HabitRepository'
 
 export interface HabitState {
   habits:  HabitGridItem[]
@@ -21,15 +21,12 @@ export function useHabit() {
   const fetchHabits = useCallback(async () => {
     setState(prev => ({ ...prev, loading: true, error: '' }))
     try {
-      const data = await http.get<{ success: boolean; data: HabitGridItem[] }>('/api/habits')
-      if (!data.success) {
-        setState(prev => ({ ...prev, loading: false, error: 'Gagal memuat data habit.' }))
-        return
-      }
-      setState({ habits: data.data, loading: false, error: '' })
-      reminderService.update(data.data)
+      const habits = await habitRepository.getAll()
+      setState({ habits, loading: false, error: '' })
+      reminderService.update(habits)
       reminderService.start()
-    } catch {
+    } catch (err) {
+      console.error('[Habit] Error memuat habit:', err)
       setState(prev => ({ ...prev, loading: false, error: 'Terjadi kesalahan. Coba lagi.' }))
     }
   }, [])
@@ -38,10 +35,10 @@ export function useHabit() {
 
   const _silentFetchHabits = useCallback(async () => {
     try {
-      const data = await http.get<{ success: boolean; data: HabitGridItem[] }>('/api/habits')
-      if (!data.success) return
-      setState(prev => ({ ...prev, habits: data.data }))
-      reminderService.update(data.data)
+      habitRepository.invalidate()
+      const habits = await habitRepository.getAll()
+      setState(prev => ({ ...prev, habits }))
+      reminderService.update(habits)
       reminderService.start()
     } catch { /* ignore */ }
   }, [])
@@ -56,10 +53,11 @@ export function useHabit() {
         periode_end:   form.periode_end,
         reminder_time: form.reminder_time,
       }
-      const data = await http.post<{ success: boolean; message: string }>('/api/habits', payload)
-      if (data.success) await fetchHabits()
-      return data
-    } catch {
+      const res = await habitRepository.create(payload)
+      if (res.success) await fetchHabits()
+      return res
+    } catch (err) {
+      console.error('[Habit] Error membuat habit:', err)
       return { success: false, message: 'Terjadi kesalahan saat menyimpan habit.' }
     }
   }
@@ -73,20 +71,22 @@ export function useHabit() {
         periode_end:   form.periode_end,
         reminder_time: form.reminder_time,
       }
-      const data = await http.put<{ success: boolean; message: string }>(`/api/habits/${id}`, payload)
-      if (data.success) await fetchHabits()
-      return data
-    } catch {
+      const res = await habitRepository.update(id, payload)
+      if (res.success) await fetchHabits()
+      return res
+    } catch (err) {
+      console.error('[Habit] Error update habit:', err)
       return { success: false, message: 'Terjadi kesalahan saat mengupdate habit.' }
     }
   }
 
   const deleteHabit = async (id: number): Promise<{ success: boolean; message: string }> => {
     try {
-      const data = await http.delete<{ success: boolean; message: string }>(`/api/habits/${id}`)
-      if (data.success) await fetchHabits()
-      return data
-    } catch {
+      const res = await habitRepository.remove(id)
+      if (res.success) await fetchHabits()
+      return res
+    } catch (err) {
+      console.error('[Habit] Error hapus habit:', err)
       return { success: false, message: 'Terjadi kesalahan saat menghapus habit.' }
     }
   }
