@@ -1,13 +1,6 @@
 # Laravel
 backend/vendor/
 backend/.env
-backend/storage/logs/*
-backend/storage/framework/cache/*
-backend/storage/framework/sessions/*
-backend/storage/framework/views/*
-backend/bootstrap/cache/*
-.env.local
-.env.docker
 backend/.env.local
 backend/.env.docker
 
@@ -17,10 +10,15 @@ frontend/dist/
 
 # Docker
 .env
+.env.local
+.env.docker
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Windows metadata
+*Zone.Identifier
 
 # Editor / tooling config (local only)
 .claude/
