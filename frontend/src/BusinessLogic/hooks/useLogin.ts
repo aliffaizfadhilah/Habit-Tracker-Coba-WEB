@@ -27,7 +27,7 @@ export function useLogin() {
     setError('')
     setLoading(true)
     try {
-      const data = await authService.login(form)
+      const data = await authService.login(form) 
       if (!data.success) {
         setError(data.message || 'Email atau password salah.')
         return

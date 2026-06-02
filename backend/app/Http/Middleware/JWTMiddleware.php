@@ -19,12 +19,17 @@ class JwtMiddleware
                 ], 401);
             }
 
-            if (!auth('api')->setToken($token)->check()) {
+            $user = auth('api')->setToken($token)->authenticate();
+
+            if (!$user) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Token tidak valid'
                 ], 401);
             }
+
+            $request->setUserResolver(fn() => $user);
+
         } catch (JWTException $e) {
             return response()->json([
                 'success' => false,
