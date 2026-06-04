@@ -61,7 +61,13 @@ class AuthController extends Controller
 
     public function me(): JsonResponse
     {
-        return response()->json(['success' => true, 'user' => auth('api')->user()]);
+        $user = auth('api')->user();
+        $role = $user->roles()->orderByRaw("FIELD(role_name,'ADMIN','USER')")->value('role_name') ?? 'USER';
+
+        return response()->json([
+            'success' => true,
+            'user'    => array_merge($user->toArray(), ['role' => $role]),
+        ]);
     }
 
     public function forgotPassword(ForgotPasswordRequest $request): JsonResponse

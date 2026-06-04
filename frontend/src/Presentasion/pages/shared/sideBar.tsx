@@ -37,7 +37,7 @@ export const LogoutModal: React.FC<{
       className="bg-white rounded-xl p-8 shadow-float w-full max-w-[380px] text-center"
     >
       <div className="text-[44px] mb-3">👋</div>
-      <h3 className="font-heading text-xl font-bold text-ink mb-2">Keluar dari Akun?</h3>
+      <h3 className="font-body text-xl font-bold text-ink mb-2">Keluar dari Akun?</h3>
       <p className="text-sm text-muted mb-7 leading-relaxed">
         Kamu akan keluar dari sesi ini. Progress habit tetap tersimpan.
       </p>
@@ -113,7 +113,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="w-8 h-8 rounded-[9px] shrink-0 bg-gradient-to-br from-primary to-accent flex items-center justify-center text-[15px] text-white">
               ✦
             </div>
-            <span className="font-heading font-bold text-[15px] text-ink">HabitTracker</span>
+            <span className="font-body font-bold text-[15px] text-ink">HabitTracker</span>
           </div>
           {isMobile && (
             <button

@@ -359,7 +359,7 @@ export default function SnapshotEditor({ habit, onClose, onPosted }: Props) {
           {/* Header */}
           <div className="px-6 py-[18px] border-b border-border flex justify-between items-center sticky top-0 bg-white z-[1] rounded-t-xl">
             <div>
-              <div className="text-base font-bold text-ink font-heading flex items-center gap-1.5">
+              <div className="text-base font-bold text-ink font-body flex items-center gap-1.5">
                 <Camera size={16} /> Buat Snapshot
               </div>
               <div className="text-xs text-muted mt-0.5">

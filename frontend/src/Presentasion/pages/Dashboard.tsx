@@ -32,7 +32,7 @@ const StatCard: React.FC<{
       <span className="text-[11px] font-bold tracking-[.05em] uppercase text-muted">{label}</span>
       <div className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center" style={{ background: iconBg }}>{icon}</div>
     </div>
-    <div className="text-[28px] font-extrabold text-ink tracking-tight font-heading leading-none">{value}</div>
+    <div className="text-[28px] font-bold text-ink font-body leading-tight">{value}</div>
     <div className="h-[3px] bg-primary-light rounded-full mt-3 overflow-hidden">
       <div className="h-full rounded-full transition-[width_0.8s_ease]" style={{ width: `${barWidth}%`, background: barColor }} />
     </div>
@@ -210,7 +210,7 @@ const HabitStreakCard: React.FC<{
           <div className="text-right">
             <div className="flex items-center gap-1 justify-end">
               <Flame size={16} color="#f97316" />
-              <span className="text-lg font-bold text-[#f97316] font-heading">{habit.current_streak}</span>
+              <span className="text-lg font-bold text-[#f97316] font-body">{habit.current_streak}</span>
             </div>
             <span className="text-[11px] text-muted">current streak</span>
           </div>
@@ -300,7 +300,7 @@ export default function Dashboard() {
               className="w-[34px] h-[34px] border border-border rounded-[8px] bg-white cursor-pointer flex items-center justify-center shrink-0"
             ><Menu size={16} /></button>
             <div>
-              <div className={`${isMobile ? 'text-lg' : 'text-[22px]'} font-extrabold text-ink tracking-tight font-heading`}>Dashboard</div>
+              <div className={`${isMobile ? 'text-lg' : 'text-[22px]'} font-bold text-ink font-body`}>Dashboard</div>
               {!isMobile && <div className="text-[13px] text-muted mt-0.5">{dateStr} — Semangat hari ini!</div>}
             </div>
           </div>
@@ -318,7 +318,7 @@ export default function Dashboard() {
           <div className="absolute -right-10 -top-10 w-[220px] h-[220px] rounded-full bg-white/[.07]" />
           <div className="absolute right-[60px] -bottom-[60px] w-[140px] h-[140px] rounded-full bg-white/[.05]" />
           <div className="relative z-[1]">
-            <h1 className={`${isMobile ? 'text-[17px]' : 'text-[21px]'} font-extrabold text-white tracking-tight mb-1 font-heading`}>
+            <h1 className={`${isMobile ? 'text-[17px]' : 'text-[21px]'} font-bold text-white mb-1 font-body`}>
               Halo, {displayUser.full_name || displayUser.username}! 👋
             </h1>
             <p className="text-[13px] text-white/85 m-0">
@@ -352,7 +352,7 @@ export default function Dashboard() {
           <DashCard>
             <div className="flex items-start justify-between mb-[18px]">
               <div>
-                <div className="text-[15px] font-bold text-ink font-heading">Penyelesaian Mingguan</div>
+                <div className="text-[15px] font-bold text-ink font-body">Penyelesaian Mingguan</div>
                 <div className="text-xs text-muted mt-0.5">Jumlah habit selesai per hari</div>
               </div>
               <span className="text-[11px] font-semibold px-2.5 py-1 rounded-[20px] bg-primary-light text-primary">7 hari</span>
@@ -374,7 +374,7 @@ export default function Dashboard() {
           <DashCard>
             <div className="flex items-center justify-between mb-[18px]">
               <div>
-                <div className="text-[15px] font-bold text-ink font-heading">Insight Minggu Ini</div>
+                <div className="text-[15px] font-bold text-ink font-body">Insight Minggu Ini</div>
                 <div className="text-xs text-muted mt-0.5">Analisis otomatis untukmu</div>
               </div>
               <Sparkles size={18} color="#16a34a" />
@@ -391,7 +391,7 @@ export default function Dashboard() {
         <div>
           <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
             <div className="flex items-center gap-2.5">
-              <h2 className="font-heading text-lg font-bold text-ink m-0">Streak & Progress Habitmu</h2>
+              <h2 className="font-body text-lg font-bold text-ink m-0">Streak & Progress Habitmu</h2>
               <span className="inline-flex items-center px-2.5 py-[3px] rounded-full text-[11px] font-semibold bg-primary-light text-primary">
                 {summary.total_habits} habit
               </span>
@@ -424,7 +424,7 @@ export default function Dashboard() {
               <div className="w-[72px] h-[72px] rounded-full bg-primary-light flex items-center justify-center mx-auto mb-4">
                 <Sprout size={32} color="#16a34a" />
               </div>
-              <div className="text-base font-bold text-ink mb-2 font-heading">Belum ada habit</div>
+              <div className="text-base font-bold text-ink mb-2 font-body">Belum ada habit</div>
               <div className="text-sm text-muted mb-5 leading-relaxed">Tambahkan habit pertamamu untuk mulai melacak streak dan progress!</div>
               <button onClick={() => navigate('/habits')} className="px-[18px] py-2 bg-primary text-white border-none rounded-[10px] text-[13px] font-bold cursor-pointer">
                 + Tambah Habit
@@ -437,7 +437,7 @@ export default function Dashboard() {
               <div className="w-[72px] h-[72px] rounded-full bg-primary-light flex items-center justify-center mx-auto mb-4">
                 <Search size={32} color="#16a34a" />
               </div>
-              <div className="text-base font-bold text-ink mb-2 font-heading">Tidak ada habit</div>
+              <div className="text-base font-bold text-ink mb-2 font-body">Tidak ada habit</div>
               <div className="text-sm text-muted leading-relaxed">
                 {filter === 'selesai'          ? 'Belum ada habit yang selesai 100%.' :
                  filter === 'selesai_hari_ini' ? 'Belum ada habit yang diceklis hari ini.' :
@@ -457,7 +457,7 @@ export default function Dashboard() {
 
         {/* AT RISK */}
         <DashCard className="max-w-[600px]">
-          <div className="text-[15px] font-bold text-ink font-heading mb-3 flex items-center gap-1.5">
+          <div className="text-[15px] font-bold text-ink font-body mb-3 flex items-center gap-1.5">
             <AlertTriangle size={15} color="#f97316" /> Perlu Perhatian
           </div>
           <div className="flex flex-col gap-2">

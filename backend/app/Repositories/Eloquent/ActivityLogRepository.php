@@ -48,7 +48,24 @@ class ActivityLogRepository implements ActivityLogRepositoryInterface
 
     public function getAllByUsername(string $username): Collection
     {
-        return ActivityLog::whereHas('activity.habit', fn($q) => $q->where('username', $username)->where('status', 1))
+        /*
+         * Subquery bertingkat:
+         *   activity_logs WHERE id_activity IN (
+         *     SELECT id_activity FROM habit_activities WHERE id_habit IN (
+         *       SELECT id_habit FROM habits WHERE username = ? AND status = 1
+         *     )
+         *   )
+         * Lebih eksplisit dibanding whereHas (yang menghasilkan EXISTS):
+         * memudahkan optimasi index pada kolom id_habit dan id_activity.
+         */
+        $habitSubquery    = Habit::select('id_habit')
+            ->where('username', $username)
+            ->where('status', 1);
+
+        $activitySubquery = Activity::select('id_activity')
+            ->whereIn('id_habit', $habitSubquery);
+
+        return ActivityLog::whereIn('id_activity', $activitySubquery)
             ->with('activity.habit')
             ->orderBy('date', 'desc')
             ->get()

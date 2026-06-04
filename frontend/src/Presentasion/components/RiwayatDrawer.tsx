@@ -12,7 +12,7 @@ function SectionHeader({ icon, title, count }: { icon: React.ReactNode; title: s
   return (
     <div className="flex items-center gap-2 mb-3">
       {icon}
-      <span className="text-[13px] font-bold text-ink font-heading">{title}</span>
+      <span className="text-[13px] font-bold text-ink font-body">{title}</span>
       <span className="ml-auto text-[11px] font-bold px-2 py-[2px] rounded-full bg-primary-light text-primary">{count}</span>
     </div>
   )
@@ -84,7 +84,7 @@ export default function RiwayatDrawer({ habits, open, onClose }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-border shrink-0">
           <div>
-            <h2 className="font-heading text-[17px] font-extrabold text-ink m-0">Riwayat</h2>
+            <h2 className="font-body text-[17px] font-bold text-ink m-0">Riwayat</h2>
             <p className="text-[12px] text-muted font-body m-0 mt-0.5">
               {new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' })}
             </p>

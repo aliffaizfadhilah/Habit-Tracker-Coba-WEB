@@ -155,7 +155,7 @@ export default function HabitReportModal({ habit, onClose }: Props) {
           <div key="badge" className="rounded-[16px] px-6 py-5 flex items-center gap-4 border-2" style={{ background: badge.bg, borderColor: `${badge.color}33` }}>
             <div className="shrink-0">{badge.icon}</div>
             <div>
-              <div className="text-xl font-extrabold font-heading mb-1" style={{ color: badge.color }}>{badge.label}</div>
+              <div className="text-xl font-extrabold font-body mb-1" style={{ color: badge.color }}>{badge.label}</div>
               <div className="text-[13px] leading-relaxed font-body" style={{ color: badge.color, opacity: 0.85 }}>{badge.desc}</div>
             </div>
           </div>
@@ -188,7 +188,7 @@ export default function HabitReportModal({ habit, onClose }: Props) {
             ].map(s => (
               <div key={s.label} className="bg-surface rounded-md border border-border px-2 py-3 text-center">
                 <div className="flex justify-center mb-1">{s.icon}</div>
-                <div className="text-sm font-bold font-heading flex items-center justify-center gap-[3px]" style={{ color: s.color }}>
+                <div className="text-sm font-bold font-body flex items-center justify-center gap-[3px]" style={{ color: s.color }}>
                   {s.label === 'Streak' && <Flame size={13} color="#f97316" />}{s.value}
                 </div>
                 <div className="text-[11px] text-muted mt-0.5">{s.label}</div>
@@ -219,7 +219,7 @@ export default function HabitReportModal({ habit, onClose }: Props) {
       case 'day_analysis':
         return (
           <div key="day_analysis">
-            <div className="text-sm font-bold text-ink font-heading mb-3.5 flex items-center gap-1.5">
+            <div className="text-sm font-bold text-ink font-body mb-3.5 flex items-center gap-1.5">
               <Calendar size={14} /> Konsistensi per Hari
             </div>
             <div className="flex gap-1.5 items-end h-[72px]">
@@ -266,7 +266,7 @@ export default function HabitReportModal({ habit, onClose }: Props) {
       case 'calendar':
         return (
           <div key="calendar">
-            <div className="text-sm font-bold text-ink font-heading mb-3 flex items-center gap-1.5">
+            <div className="text-sm font-bold text-ink font-body mb-3 flex items-center gap-1.5">
               <Calendar size={14} /> Riwayat Hari-hari
             </div>
             <div className="flex gap-3 mb-3.5 flex-wrap">
@@ -319,7 +319,7 @@ export default function HabitReportModal({ habit, onClose }: Props) {
         <div className="px-7 pt-6 pb-5 border-b border-border flex justify-between items-start gap-3 sticky top-0 bg-white z-[1] rounded-t-xl">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap mb-1">
-              <h2 className="font-heading text-lg font-extrabold text-ink m-0">{habit.title}</h2>
+              <h2 className="font-body text-lg font-bold text-ink m-0">{habit.title}</h2>
               <span className={`text-[11px] font-bold px-2.5 py-[3px] rounded-full inline-flex items-center gap-1 ${isFinal ? 'bg-primary-light text-primary' : 'bg-[#eff6ff] text-[#1d4ed8]'}`}>
                 <BarChart2 size={11} /> {isFinal ? 'Laporan Final' : 'Laporan Progress'}
               </span>

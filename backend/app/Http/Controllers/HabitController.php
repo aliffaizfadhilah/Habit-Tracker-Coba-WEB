@@ -79,6 +79,20 @@ class HabitController extends Controller
 
     public function updateReminder(ReminderRequest $request, int $id): JsonResponse
     {
+        // Hanya blokir saat user mencoba MENGAKTIFKAN reminder — menonaktifkan tetap diizinkan
+        if ($request->boolean('reminder_enabled')) {
+            $consentRaw = $request->cookie('habittracker_cookie_consent');
+            if ($consentRaw) {
+                $consent = json_decode(urldecode($consentRaw), true);
+                if (empty($consent['preferences']['preferences'])) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Aktifkan Cookie Preferensi di pengaturan cookie untuk menggunakan fitur pengingat.',
+                    ], 403);
+                }
+            }
+        }
+
         $habit = $this->habitService->find($id, $request->user()->username);
 
         if (!$habit) {

@@ -84,7 +84,7 @@ export default function PostFormModal({
       >
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h2 className="m-0 font-heading text-xl font-extrabold text-ink">Buat Postingan</h2>
+          <h2 className="m-0 font-body text-xl font-bold text-ink">Buat Postingan</h2>
           <button type="button" onClick={onClose} className="bg-transparent border-none cursor-pointer text-muted flex">
             <X size={20} />
           </button>

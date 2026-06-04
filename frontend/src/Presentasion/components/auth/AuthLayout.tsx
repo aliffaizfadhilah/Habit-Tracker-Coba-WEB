@@ -39,12 +39,12 @@ export default function AuthLayout({ children, title, subtitle }: AuthLayoutProp
         {/* Logo */}
         <div onClick={() => navigate('/')} className="flex items-center gap-2.5 cursor-pointer relative z-[1]">
           <div className="w-[38px] h-[38px] bg-white/10 backdrop-blur-[8px] rounded-[10px] flex items-center justify-center text-xl border border-white/20">✦</div>
-          <span className="font-heading font-bold text-xl text-white">HabitTracker</span>
+          <span className="font-body font-bold text-xl text-white">HabitTracker</span>
         </div>
 
         {/* Quote + Features */}
         <div className="relative z-[1]">
-          <p className="font-heading text-[26px] font-bold text-white leading-[1.4] mb-6 tracking-tight">
+          <p className="font-body text-[26px] font-bold text-white leading-[1.4] mb-6 tracking-tight">
             "Bangun kebiasaan baik,<br />satu hari dalam satu waktu."
           </p>
           <div className="flex flex-col gap-3">
@@ -55,7 +55,7 @@ export default function AuthLayout({ children, title, subtitle }: AuthLayoutProp
           <div className="mt-8 flex gap-5 border-t border-white/10 pt-6">
             {[{ v: '100%', l: 'Gratis' }, { v: '∞', l: 'Habit' }, { v: '4.9★', l: 'Rating' }].map(s => (
               <div key={s.l}>
-                <div className="font-heading text-[22px] font-extrabold text-accent-light">{s.v}</div>
+                <div className="font-body text-[22px] font-bold text-accent-light">{s.v}</div>
                 <div className="text-[11px] text-white/45 mt-0.5">{s.l}</div>
               </div>
             ))}
@@ -68,10 +68,10 @@ export default function AuthLayout({ children, title, subtitle }: AuthLayoutProp
         <div className="w-full max-w-[420px] animate-fade-up">
           <div className="flex items-center gap-2 mb-8">
             <div className="w-8 h-8 bg-primary rounded-[8px] flex items-center justify-center text-sm text-white">✦</div>
-            <span className="font-heading font-extrabold text-[17px] text-ink">HabitTracker</span>
+            <span className="font-body font-bold text-[17px] text-ink">HabitTracker</span>
           </div>
           <div className="mb-7">
-            <h1 className="font-heading text-[28px] font-extrabold text-ink m-0 mb-2 tracking-tight">{title}</h1>
+            <h1 className="font-body text-[28px] font-bold text-ink m-0 mb-2">{title}</h1>
             <p className="text-sm text-muted leading-relaxed font-body">{subtitle}</p>
           </div>
           {children}

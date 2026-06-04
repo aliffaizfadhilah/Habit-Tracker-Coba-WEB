@@ -9,6 +9,8 @@ class VisitorLog extends Model
     protected $fillable = [
         'session_id',
         'ip_address',
+        'country',
+        'city',
         'device_type',
         'browser',
         'browser_version',

@@ -203,7 +203,7 @@ export const HabitFormCard: React.FC<HabitFormCardProps> = ({
     <div className="bg-white border border-border rounded-lg p-7 shadow-green w-full max-w-[520px]">
       {/* Header */}
       <div className="mb-6">
-        <h3 className="font-heading text-xl font-bold text-ink mb-1 flex items-center gap-2">
+        <h3 className="font-body text-xl font-bold text-ink mb-1 flex items-center gap-2">
           {mode === 'create'
             ? <><Sparkles size={18} /> Tambah Habit Baru</>
             : <><Pencil size={18} /> Edit Habit</>}
@@ -424,7 +424,7 @@ export const DeleteConfirmCard: React.FC<DeleteConfirmCardProps> = ({
     <div className="mb-3 flex justify-center">
       <Trash2 size={40} color="#dc2626" />
     </div>
-    <h3 className="font-heading text-xl font-bold text-ink mb-2">Hapus Habit?</h3>
+    <h3 className="font-body text-xl font-bold text-ink mb-2">Hapus Habit?</h3>
     <p className="text-sm text-muted mb-1.5 leading-[1.6] font-body">
       Kamu akan menghapus habit:
     </p>

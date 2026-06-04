@@ -17,10 +17,11 @@ class ProfileService
     public function show(User $user): array
     {
         return [
-            'username'    => $user->username,
-            'email'       => $user->email,
-            'full_name'   => $user->full_name,
-            'is_verified' => $user->is_verified,
+            'username'        => $user->username,
+            'email'           => $user->email,
+            'full_name'       => $user->full_name,
+            'is_verified'     => $user->is_verified,
+            'profile_picture' => $user->profile_picture,
         ];
     }
 

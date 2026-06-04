@@ -13,7 +13,7 @@ export default function NotFoundPage() {
         {/* Ilustrasi angka 404 */}
         <div className="relative inline-flex items-center justify-center mb-8">
           <span
-            className="font-heading font-extrabold select-none"
+            className="font-body font-bold select-none"
             style={{ fontSize: 'clamp(96px, 20vw, 160px)', lineHeight: 1, color: '#e8f5e9', letterSpacing: '-4px' }}
           >
             404
@@ -25,7 +25,7 @@ export default function NotFoundPage() {
           </div>
         </div>
 
-        <h1 className="font-heading text-2xl font-extrabold text-ink m-0 mb-3">
+        <h1 className="font-body text-2xl font-bold text-ink m-0 mb-3">
           Halaman tidak ditemukan
         </h1>
         <p className="text-muted text-[15px] font-body leading-relaxed m-0 mb-8">

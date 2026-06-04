@@ -15,7 +15,7 @@ function SummaryCard({ label, value, icon, bg }: {
         {icon}
       </div>
       <div>
-        <div className="text-[22px] font-bold font-heading text-ink">{value}</div>
+        <div className="text-[22px] font-bold font-body text-ink">{value}</div>
         <div className="text-xs text-muted">{label}</div>
       </div>
     </div>
@@ -50,7 +50,7 @@ function ReminderCard({
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-1">
-            <span className="font-heading text-[15px] font-bold text-ink">{habit.title}</span>
+            <span className="font-body text-[15px] font-bold text-ink">{habit.title}</span>
             {locked && lockReason === 'completed' && (
               <span className="inline-flex items-center px-2 py-[2px] rounded-full text-[10px] font-semibold bg-primary-light text-primary">Selesai ✓</span>
             )}
@@ -59,7 +59,7 @@ function ReminderCard({
             )}
           </div>
           <div className="flex items-center gap-2.5 flex-wrap">
-            <span className={`text-[22px] font-bold font-heading ${active ? 'text-primary' : 'text-muted'}`}>
+            <span className={`text-[22px] font-bold font-body ${active ? 'text-primary' : 'text-muted'}`}>
               {habit.reminder_time}
             </span>
             <span className="inline-flex items-center px-2.5 py-[3px] rounded-full text-[11px] font-semibold font-body bg-primary-light text-primary">
@@ -130,7 +130,7 @@ function EditReminderModal({
         onClick={e => e.stopPropagation()}
         className="bg-white rounded-xl p-8 shadow-float w-full max-w-[400px]"
       >
-        <h3 className="font-heading text-lg font-bold text-ink mb-1.5">
+        <h3 className="font-body text-lg font-bold text-ink mb-1.5">
           <span className="flex items-center gap-2"><Pencil size={16} /> Edit Waktu Pengingat</span>
         </h3>
         <p className="text-[13px] text-muted font-body mb-5">{habit.title}</p>
@@ -207,7 +207,7 @@ export default function Reminder() {
             className="w-9 h-9 border border-border rounded-[8px] bg-white cursor-pointer flex items-center justify-center shrink-0"
           ><Menu size={16} /></button>
           <div className="flex-1">
-            <h1 className="font-heading text-2xl font-extrabold text-ink m-0">Pengingat</h1>
+            <h1 className="font-body text-2xl font-bold text-ink m-0">Pengingat</h1>
             <p className="text-[13px] text-muted m-0 mt-0.5">Kelola jadwal pengingat untuk setiap habit-mu</p>
           </div>
         </div>

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Habit;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
@@ -39,5 +40,10 @@ class User extends Authenticatable implements JWTSubject
     public function roles()
     {
         return $this->belongsToMany(Role::class, 'user_roles');
+    }
+
+    public function habits()
+    {
+        return $this->hasMany(Habit::class, 'username', 'username');
     }
 }

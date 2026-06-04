@@ -7,7 +7,7 @@ import type { LoginForm } from '../types/Auth.types'
 
 export function useLogin() {
   const navigate = useNavigate()
-  const { refetch, isLoggedIn, loading: authLoading } = useAuth()
+  const { refetch, isLoggedIn, loading: authLoading, user } = useAuth()
   const [form, setForm]       = useState<LoginForm>({ email: '', password: '' })
   const [error, setError]     = useState('')
   const [loading, setLoading] = useState(false)
@@ -15,9 +15,9 @@ export function useLogin() {
 
   useEffect(() => {
     if (!authLoading && isLoggedIn) {
-      navigate('/dashboard', { replace: true })
+      navigate(user?.role === 'ADMIN' ? '/admin/dashboard' : '/dashboard', { replace: true })
     }
-  }, [isLoggedIn, authLoading, navigate])
+  }, [isLoggedIn, authLoading, navigate, user])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))

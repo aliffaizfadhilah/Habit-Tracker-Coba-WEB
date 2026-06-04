@@ -11,10 +11,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->encryptCookies(except: ['jwt_token', 'habittracker_cookie_consent', 'visitor_tracked']);
-        $middleware->append(\App\Http\Middleware\TrackVisitor::class);
+        $middleware->encryptCookies(except: ['jwt_token', 'habittracker_cookie_consent']);
         $middleware->alias([
-            'auth.jwt' => \App\Http\Middleware\JWTMiddleware::class,
+            'auth.jwt'   => \App\Http\Middleware\JWTMiddleware::class,
+            'role.admin' => \App\Http\Middleware\CheckAdminRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

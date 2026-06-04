@@ -4,6 +4,7 @@ namespace App\Services\Streak;
 
 use App\Models\Habit;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Builder — membangun data streak secara bertahap via method chaining.
@@ -13,6 +14,7 @@ use Carbon\Carbon;
 class StreakBuilder
 {
     private array $logDates      = [];
+    private array $dailyStatus   = [];   // hasil CTE: [{log_date, terpenuhi}, ...]
     private int   $periodDays    = 0;
     private int   $completedDays = 0;
 
@@ -22,14 +24,31 @@ class StreakBuilder
 
     public function loadActivityLogs(Habit $habit): static
     {
-        $this->logDates = $habit->activityLogs()
-            ->where('status', 1)
-            ->pluck('date')
-            ->map(fn($date) => Carbon::parse($date)->toDateString())
-            ->unique()
-            ->sort()
-            ->values()
-            ->toArray();
+        /*
+         * CTE: klasifikasikan setiap tanggal sebagai Terpenuhi (1) / Tidak Terpenuhi (0).
+         * Satu hari bisa punya banyak log — MAX(status) memastikan hari dianggap
+         * Terpenuhi jika ada setidaknya satu log dengan status = 1.
+         */
+        $this->dailyStatus = DB::select("
+            WITH daily_completion AS (
+                SELECT
+                    DATE(al.date)                                      AS log_date,
+                    MAX(CASE WHEN al.status = 1 THEN 1 ELSE 0 END)    AS terpenuhi
+                FROM activity_logs al
+                INNER JOIN habit_activities a ON al.id_activity = a.id_activity
+                WHERE a.id_habit = :habit_id
+                GROUP BY DATE(al.date)
+            )
+            SELECT log_date, terpenuhi
+            FROM daily_completion
+            ORDER BY log_date ASC
+        ", ['habit_id' => $habit->id_habit]);
+
+        // Gunakan hanya tanggal Terpenuhi untuk perhitungan streak
+        $this->logDates = array_values(array_map(
+            fn($r) => $r->log_date,
+            array_filter($this->dailyStatus, fn($r) => (int) $r->terpenuhi === 1)
+        ));
 
         return $this;
     }
@@ -40,7 +59,11 @@ class StreakBuilder
             $this->periodDays = $habit->periode_start->diffInDays($habit->periode_end) + 1;
         }
 
-        $this->completedDays = count(array_unique($this->logDates));
+        // completedDays dihitung dari baris CTE yang bertatus Terpenuhi
+        $this->completedDays = count(array_filter(
+            $this->dailyStatus,
+            fn($r) => (int) $r->terpenuhi === 1
+        ));
 
         return $this;
     }

@@ -8,10 +8,9 @@ class DatabaseSeeder extends Seeder
     use WithoutModelEvents;
     public function run(): void
     {
-        User::factory()->create([
-            'username' => 'testuser',
-            'email' => 'test@example.com',
-            'full_name' => 'Test User',
+        $this->call([
+            RoleSeeder::class,
+            AdminSeeder::class,
         ]);
     }
 }

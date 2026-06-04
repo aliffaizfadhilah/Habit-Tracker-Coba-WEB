@@ -26,7 +26,7 @@ function Avatar({ name, size = 36 }: { name: string | null; size?: number }) {
   const initials = (name ?? '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
   return (
     <div
-      className="rounded-full flex items-center justify-center text-white font-bold shrink-0 font-heading"
+      className="rounded-full flex items-center justify-center text-white font-bold shrink-0 font-body"
       style={{ width: size, height: size, fontSize: size * 0.38, background: 'linear-gradient(135deg,#16a34a,#10b981)' }}
     >{initials}</div>
   )
@@ -201,7 +201,7 @@ function PinDetailModal({ post: initial, currentUsername, onClose, onDelete, onL
           <div className="p-5 flex flex-col gap-4">
             {/* Title & caption */}
             <div>
-              <h2 className="font-heading text-[20px] font-bold text-ink m-0 mb-1 leading-snug">{initial.title}</h2>
+              <h2 className="font-body text-[20px] font-bold text-ink m-0 mb-1 leading-snug">{initial.title}</h2>
               {initial.caption && (
                 <p className="text-[14px] text-muted leading-relaxed m-0">{initial.caption}</p>
               )}
@@ -529,7 +529,7 @@ export default function PostinganPage() {
               className="w-9 h-9 border border-border rounded-[8px] bg-white cursor-pointer flex items-center justify-center shrink-0"
             ><Menu size={16} /></button>
             <div>
-              <h1 className="font-heading text-xl font-extrabold text-ink m-0">Feed</h1>
+              <h1 className="font-body text-xl font-bold text-ink m-0">Feed</h1>
               <p className="text-[12px] text-muted m-0 mt-0.5">Progres habit semua pengguna</p>
             </div>
           </div>
@@ -606,7 +606,7 @@ export default function PostinganPage() {
         {!loading && posts.length === 0 && (
           <div className="text-center py-[60px] px-6">
             <div className="mb-4 flex justify-center"><Inbox size={56} color="#4b7a54" strokeWidth={1.5} /></div>
-            <h3 className="font-heading text-xl font-bold text-ink m-0 mb-2">Belum ada postingan</h3>
+            <h3 className="font-body text-xl font-bold text-ink m-0 mb-2">Belum ada postingan</h3>
             <p className="text-sm text-muted m-0 leading-relaxed">
               Jadilah yang pertama berbagi progres habit kamu!<br />
               Buka laporan habit → klik Share → Post ke Feed.
@@ -618,7 +618,7 @@ export default function PostinganPage() {
         {!loading && posts.length > 0 && filteredPosts.length === 0 && (
           <div className="text-center py-[60px] px-6">
             <div className="mb-4 flex justify-center"><Search size={48} color="#9ca3af" strokeWidth={1.5} /></div>
-            <h3 className="font-heading text-lg font-bold text-ink m-0 mb-2">Tidak ditemukan</h3>
+            <h3 className="font-body text-lg font-bold text-ink m-0 mb-2">Tidak ditemukan</h3>
             <p className="text-sm text-muted m-0">
               Tidak ada postingan yang cocok dengan "<strong>{searchQuery}</strong>"
             </p>

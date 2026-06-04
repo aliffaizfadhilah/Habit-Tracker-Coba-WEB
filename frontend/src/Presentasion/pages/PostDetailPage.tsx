@@ -20,7 +20,7 @@ function Avatar({ name, size = 36 }: { name: string | null; size?: number }) {
   const initials = (name ?? '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
   return (
     <div
-      className="rounded-full flex items-center justify-center text-white font-bold shrink-0 font-heading"
+      className="rounded-full flex items-center justify-center text-white font-bold shrink-0 font-body"
       style={{ width: size, height: size, fontSize: size * 0.38, background: 'linear-gradient(135deg,#16a34a,#10b981)' }}
     >{initials}</div>
   )
@@ -158,7 +158,7 @@ export default function PostDetailPage() {
             className="w-9 h-9 rounded-full border-none cursor-pointer flex items-center justify-center bg-[#f3f4f6]"
           ><ArrowLeft size={18} color="#333" /></button>
 
-          <span className="flex-1 font-heading font-bold text-[15px] text-ink truncate">{post.title}</span>
+          <span className="flex-1 font-body font-bold text-[15px] text-ink truncate">{post.title}</span>
 
           <div className="flex items-center gap-2">
             <button
@@ -211,7 +211,7 @@ export default function PostDetailPage() {
         {/* Content */}
         <div className="bg-white px-5 pt-5 pb-4 flex flex-col gap-4">
           <div>
-            <h2 className="font-heading text-[20px] font-bold text-ink m-0 mb-1 leading-snug">{post.title}</h2>
+            <h2 className="font-body text-[20px] font-bold text-ink m-0 mb-1 leading-snug">{post.title}</h2>
             {post.caption && <p className="text-[14px] text-muted leading-relaxed m-0">{post.caption}</p>}
           </div>
 

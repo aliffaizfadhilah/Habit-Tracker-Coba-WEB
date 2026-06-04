@@ -65,7 +65,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
         <div className="mb-2.5 flex justify-center text-primary">
           {step === 'current_password' ? <Lock size={36} /> : step === 'otp' ? <MailOpen size={36} /> : <Key size={36} />}
         </div>
-        <h3 className="font-heading text-xl font-bold text-ink mb-1.5">{TITLES[step]}</h3>
+        <h3 className="font-body text-xl font-bold text-ink mb-1.5">{TITLES[step]}</h3>
         <p className="text-[13px] text-muted leading-relaxed">{SUBTITLES[step]}</p>
       </div>
 
@@ -157,7 +157,7 @@ function CommentItem({ c, currentUsername, onDelete }: {
   return (
     <div className="flex gap-2.5 py-2.5">
       <div
-        className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold font-heading text-[11px] shrink-0 mt-0.5"
+        className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold font-body text-[11px] shrink-0 mt-0.5"
         style={{ background: 'linear-gradient(135deg,#16a34a,#6b8fff)' }}
       >
         {userInitials(c.user)}
@@ -289,7 +289,7 @@ function PostLightbox({ post, onClose, onDelete, currentUsername }: {
           <div className="px-5 pt-4 pb-3 flex flex-col gap-2.5">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <div className="font-heading font-bold text-ink text-[17px] leading-tight">{post.title}</div>
+                <div className="font-body font-bold text-ink text-[17px] leading-tight">{post.title}</div>
                 {post.is_private && (
                   <span className="mt-1 text-[10px] font-semibold px-1.5 py-[1px] rounded-full bg-[#f3f4f6] text-[#6b7280] inline-flex items-center gap-0.5">
                     <Lock size={9} /> Privat
@@ -323,7 +323,7 @@ function PostLightbox({ post, onClose, onDelete, currentUsername }: {
           {/* ── Info Pengguna ── */}
           <div className="px-5 py-3 flex items-center gap-3 border-t border-[#f0f0f0]">
             <div
-              className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold font-heading text-[13px] shrink-0"
+              className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold font-body text-[13px] shrink-0"
               style={{ background: 'linear-gradient(135deg,#16a34a,#6b8fff)' }}
             >
               {userInitials(post.user)}
@@ -371,7 +371,7 @@ function PostLightbox({ post, onClose, onDelete, currentUsername }: {
           {/* ── Section Komentar ── */}
           <div className="border-t border-[#f0f0f0]">
             <div className="px-5 pt-4 pb-2">
-              <span className="font-heading font-bold text-ink text-[15px]">
+              <span className="font-body font-bold text-ink text-[15px]">
                 {commentsLoading ? 'Komentar' : `${comments.length} Komentar`}
               </span>
             </div>
@@ -597,11 +597,11 @@ export default function ProfilePage() {
               <Card>
                 {/* Avatar Row */}
                 <div className="flex items-center gap-5 flex-wrap mb-5">
-                  <div className="w-[72px] h-[72px] rounded-full bg-gradient-to-br from-primary to-[#6b8fff] flex items-center justify-center text-[28px] text-white font-bold font-heading shrink-0">
+                  <div className="w-[72px] h-[72px] rounded-full bg-gradient-to-br from-primary to-[#6b8fff] flex items-center justify-center text-[28px] text-white font-bold font-body shrink-0">
                     {(profile.full_name || profile.username || 'U')[0].toUpperCase()}
                   </div>
                   <div>
-                    <div className="font-heading text-xl font-bold text-ink">{profile.full_name || profile.username}</div>
+                    <div className="font-body text-xl font-bold text-ink">{profile.full_name || profile.username}</div>
                     <div className="text-[13px] text-muted mt-0.5">@{profile.username}</div>
                     <div className="flex gap-2 mt-2 flex-wrap">
                       {profile.is_verified && (
@@ -627,7 +627,7 @@ export default function ProfilePage() {
                   ].map(s => (
                     <div key={s.label} className="flex flex-col items-center gap-1 py-2">
                       {s.icon}
-                      <span className="font-heading text-[20px] font-bold text-ink leading-none">{s.value}</span>
+                      <span className="font-body text-[20px] font-bold text-ink">{s.value}</span>
                       <span className="text-[11px] text-muted">{s.label}</span>
                     </div>
                   ))}
@@ -636,7 +636,7 @@ export default function ProfilePage() {
 
               {/* Edit Profil */}
               <Card>
-                <h3 className="font-heading text-[17px] font-bold text-ink mb-5">Informasi Akun</h3>
+                <h3 className="font-body text-[17px] font-bold text-ink mb-5">Informasi Akun</h3>
                 <div className="flex flex-col gap-4">
                   <Input label="Nama Lengkap" placeholder="Masukkan nama lengkap" value={fullName} onChange={e => { setFullName(e.target.value); setProfileErrors(p => ({ ...p, full_name: '' })) }} error={profileErrors.full_name} />
                   <Input label="Username" placeholder="Masukkan username" value={username} onChange={e => { setUsername(e.target.value); setProfileErrors(p => ({ ...p, username: '' })) }} error={profileErrors.username} />
@@ -647,7 +647,7 @@ export default function ProfilePage() {
 
               {/* Keamanan */}
               <Card>
-                <h3 className="font-heading text-[17px] font-bold text-ink mb-2">Keamanan Akun</h3>
+                <h3 className="font-body text-[17px] font-bold text-ink mb-2">Keamanan Akun</h3>
                 <p className="text-[13px] text-muted mb-5 leading-relaxed">
                   {isGoogleUser ? 'Akun ini menggunakan Google login. Ganti password tidak tersedia.' : 'Ganti password secara berkala untuk menjaga keamanan akunmu. Kode OTP akan dikirim ke emailmu.'}
                 </p>
@@ -664,7 +664,7 @@ export default function ProfilePage() {
             <div className="mt-8">
               <div className="flex items-center gap-3 mb-4">
                 <Camera size={18} color="#16a34a" />
-                <h3 className="font-heading text-[17px] font-bold text-ink m-0">Dinding Foto</h3>
+                <h3 className="font-body text-[17px] font-bold text-ink m-0">Dinding Foto</h3>
                 {!wallLoading && myPosts.length > 0 && (
                   <span className="ml-auto text-[12px] text-muted">{myPosts.length} postingan</span>
                 )}

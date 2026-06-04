@@ -34,7 +34,7 @@ function Toast({ toast, onRemove }: { toast: ToastItem; onRemove: (id: number) =
           <Bell size={15} color="#16a34a" />
         </div>
         <div className="flex-1 min-w-0 pt-0.5">
-          <p className="m-0 text-[13px] font-bold text-ink font-heading leading-snug">{toast.title}</p>
+          <p className="m-0 text-[13px] font-bold text-ink font-body leading-snug">{toast.title}</p>
           <p className="m-0 mt-1 text-xs text-muted font-body leading-relaxed">{toast.body}</p>
         </div>
         <button

@@ -11,7 +11,7 @@ export interface PageHeaderProps {
 export const PageHeader: React.FC<PageHeaderProps> = ({ title, subtitle, action }) => (
   <div className="flex items-start justify-between mb-8 flex-wrap gap-4">
     <div>
-      <h1 className="font-heading text-[28px] font-bold text-ink m-0 tracking-tight">{title}</h1>
+      <h1 className="font-body text-[28px] font-bold text-ink m-0 tracking-tight">{title}</h1>
       {subtitle && <p className="text-sm text-muted mt-1 font-body">{subtitle}</p>}
     </div>
     {action && <div>{action}</div>}
@@ -43,7 +43,7 @@ export const StatCard: React.FC<StatCardProps> = ({ label, value, icon, color = 
         <span className="text-[11px] font-semibold text-muted font-body tracking-[0.5px] uppercase">{label}</span>
         <div className={`w-9 h-9 rounded-[10px] ${iconBg} flex items-center justify-center`}>{icon}</div>
       </div>
-      <div className="font-heading text-[32px] font-bold text-ink tracking-[-1px]">{value}</div>
+      <div className="font-body text-[32px] font-bold text-ink">{value}</div>
       {trend && <div className="text-xs text-muted mt-1 font-body">{trend}</div>}
     </div>
   )
@@ -140,7 +140,7 @@ export interface EmptyStateProps {
 export const EmptyState: React.FC<EmptyStateProps> = ({ icon, title, description, action }) => (
   <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
     <div className="w-20 h-20 rounded-full bg-primary-light flex items-center justify-center mb-5">{icon}</div>
-    <h3 className="font-heading text-xl font-bold text-ink mb-2">{title}</h3>
+    <h3 className="font-body text-xl font-bold text-ink mb-2">{title}</h3>
     <p className="text-sm text-muted font-body max-w-[320px] leading-relaxed mb-6">{description}</p>
     {action}
   </div>

@@ -131,7 +131,7 @@ export default function HabitReportPage() {
           <div key="badge" className="rounded-[16px] px-6 py-5 flex items-center gap-4 border-2" style={{ background: badge.bg, borderColor: `${badge.color}33` }}>
             <div className="shrink-0">{badge.icon}</div>
             <div>
-              <div className="text-xl font-extrabold font-heading mb-1" style={{ color: badge.color }}>{badge.label}</div>
+              <div className="text-xl font-extrabold font-body mb-1" style={{ color: badge.color }}>{badge.label}</div>
               <div className="text-[13px] leading-relaxed font-body" style={{ color: badge.color, opacity: 0.85 }}>{badge.desc}</div>
             </div>
           </div>
@@ -156,7 +156,7 @@ export default function HabitReportPage() {
             ].map(s => (
               <div key={s.label} className="bg-white rounded-lg border border-border px-2 py-3 text-center shadow-card">
                 <div className="flex justify-center mb-1">{s.icon}</div>
-                <div className="text-sm font-bold font-heading flex items-center justify-center gap-[3px]" style={{ color: s.color }}>
+                <div className="text-sm font-bold font-body flex items-center justify-center gap-[3px]" style={{ color: s.color }}>
                   {s.label === 'Streak' && <Flame size={13} color="#f97316" />}{s.value}
                 </div>
                 <div className="text-[11px] text-muted mt-0.5">{s.label}</div>
@@ -181,7 +181,7 @@ export default function HabitReportPage() {
       case 'day_analysis':
         return (
           <div key="day_analysis" className="bg-white rounded-lg border border-border p-4 shadow-card">
-            <div className="text-sm font-bold text-ink font-heading mb-3.5 flex items-center gap-1.5"><Calendar size={14} /> Konsistensi per Hari</div>
+            <div className="text-sm font-bold text-ink font-body mb-3.5 flex items-center gap-1.5"><Calendar size={14} /> Konsistensi per Hari</div>
             <div className="flex gap-1.5 items-end h-[72px]">
               {DAY_LABELS.map((label, i) => {
                 const done = dowChecked[i], total = dowTotal[i]
@@ -205,7 +205,7 @@ export default function HabitReportPage() {
       case 'calendar':
         return (
           <div key="calendar" className="bg-white rounded-lg border border-border p-4 shadow-card">
-            <div className="text-sm font-bold text-ink font-heading mb-3 flex items-center gap-1.5"><Calendar size={14} /> Riwayat Hari-hari</div>
+            <div className="text-sm font-bold text-ink font-body mb-3 flex items-center gap-1.5"><Calendar size={14} /> Riwayat Hari-hari</div>
             <div className="flex gap-3 mb-3.5 flex-wrap">
               {(['done','missed','future','today-pending'] as DayStatus[]).map(status => (
                 <div key={status} className="flex items-center gap-[5px] text-[11px] text-muted">
@@ -259,7 +259,7 @@ export default function HabitReportPage() {
           <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-lg border border-border bg-white cursor-pointer flex items-center justify-center shrink-0"><ArrowLeft size={16} /></button>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="font-heading text-xl font-extrabold text-ink m-0">{habit.title}</h1>
+              <h1 className="font-body text-xl font-bold text-ink m-0">{habit.title}</h1>
               <span className={`text-[11px] font-bold px-2.5 py-[3px] rounded-full inline-flex items-center gap-1 ${isFinal ? 'bg-primary-light text-primary' : 'bg-[#eff6ff] text-[#1d4ed8]'}`}>
                 <BarChart2 size={11} /> {isFinal ? 'Laporan Final' : 'Laporan Progress'}
               </span>

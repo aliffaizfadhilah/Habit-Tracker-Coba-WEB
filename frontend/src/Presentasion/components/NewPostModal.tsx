@@ -409,7 +409,7 @@ export default function NewPostModal({ onClose, onPosted }: Props) {
                 <X size={16} />
               </button>
             )}
-            <div className="flex-1 text-center font-heading font-bold text-[15px] text-ink">
+            <div className="flex-1 text-center font-body font-bold text-[15px] text-ink">
               {step === 1 ? 'Pilih Habit' : step === 2 ? 'Buat Snapshot' : 'Detail Postingan'}
             </div>
             <div className="flex gap-1.5">

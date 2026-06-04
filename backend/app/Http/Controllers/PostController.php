@@ -41,6 +41,17 @@ class PostController extends Controller
 
     public function store(PostRequest $request): JsonResponse
     {
+        $consentRaw = $request->cookie('habittracker_cookie_consent');
+        if ($consentRaw) {
+            $consent = json_decode(urldecode($consentRaw), true);
+            if (empty($consent['preferences']['marketing'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Aktifkan Cookie Komunitas di pengaturan cookie untuk dapat berbagi postingan.',
+                ], 403);
+            }
+        }
+
         $post = $this->postService->create(
             $request->validated(),
             $request->file('image'),
