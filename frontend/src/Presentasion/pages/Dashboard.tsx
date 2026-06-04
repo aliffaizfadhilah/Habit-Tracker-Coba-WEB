@@ -5,6 +5,8 @@ import HabitReportModal from '../components/HabitReportModal'
 import { useDashboard } from '../../BusinessLogic/hooks/useDashboard'
 import { useAuth } from '../../BusinessLogic/context/AuthContext'
 import { http } from '../../BusinessLogic/services/HttpService'
+import { notifyHabitUpdated } from '../../BusinessLogic/hooks/useHabitRealtime'
+import { habitRepository } from '../../BusinessLogic/repositories/HabitRepository'
 import { Sidebar, LogoutModal, useSidebar } from './shared/sideBar'
 import RiwayatDrawer from '../components/RiwayatDrawer'
 import { habitCompletionService } from '../../BusinessLogic/services/HabitCompletionService'
@@ -134,7 +136,11 @@ const HabitStreakCard: React.FC<{
   const handleToggleCheck = async () => {
     if (isLocked) return
     setChecking(true)
-    try { await http.post(`/api/habits/${habit.id_habit}/check-today`, {}); await onRefetch() }
+    try {
+      await http.post(`/api/habits/${habit.id_habit}/check-today`, {})
+      habitRepository.invalidate()
+      notifyHabitUpdated()
+    }
     catch { /* silent */ }
     finally { setChecking(false) }
   }

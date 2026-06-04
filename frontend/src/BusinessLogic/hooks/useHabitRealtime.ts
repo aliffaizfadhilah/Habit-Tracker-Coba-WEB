@@ -44,6 +44,10 @@ function _disconnectAll() {
 }
 
 
+export function notifyHabitUpdated(): void {
+  _notifyAll()
+}
+
 export function useHabitRealtime(onUpdate: () => void): void {
   const latestRef = useRef(onUpdate)
   useEffect(() => { latestRef.current = onUpdate })

@@ -16,6 +16,7 @@ services:
       dockerfile: backend.Dockerfile
     volumes:
       - ./backend:/app
+      - vendor_data:/app/vendor
     environment:
       DB_HOST: mysql
       DB_PORT: 3306
@@ -46,3 +47,4 @@ services:
 
 volumes:
   mysql_data:
+  vendor_data:

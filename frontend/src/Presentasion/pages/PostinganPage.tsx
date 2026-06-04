@@ -183,19 +183,22 @@ function PinDetailModal({ post: initial, currentUsername, onClose, onDelete, onL
               </div>
             </div>
           ) : (
-            !imgError ? (
-              <img
-                src={initial.image_url}
-                alt={initial.title}
-                onError={() => setImgError(true)}
-                className="w-full block"
-              />
-            ) : (
-              <div className="w-full flex flex-col items-center justify-center gap-3" style={{ height: 260, background: 'linear-gradient(135deg,#dcfce7,#bbf7d0)' }}>
-                <ImageOff size={44} color="#16a34a" />
-                <span className="text-sm text-muted">Gambar tidak tersedia</span>
-              </div>
-            )
+            <div style={{ aspectRatio: '256/455', overflow: 'hidden' }}>
+              {!imgError ? (
+                <img
+                  src={initial.image_url}
+                  alt={initial.title}
+                  onError={() => setImgError(true)}
+                  className="w-full h-full block"
+                  style={{ objectFit: 'cover', display: 'block' }}
+                />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center gap-3" style={{ background: 'linear-gradient(135deg,#dcfce7,#bbf7d0)' }}>
+                  <ImageOff size={44} color="#16a34a" />
+                  <span className="text-sm text-muted">Gambar tidak tersedia</span>
+                </div>
+              )}
+            </div>
           )}
 
           <div className="p-5 flex flex-col gap-4">
@@ -392,20 +395,22 @@ function PinCard({ post, onLikeChange, onClick }: {
       onMouseLeave={() => setHovering(false)}
       onClick={() => onClick(post)}
     >
-      {!imgError ? (
-        <img
-          src={post.image_url}
-          alt={post.title}
-          onError={() => setImgError(true)}
-          className="w-full block"
-          style={{ display: 'block' }}
-        />
-      ) : (
-        <div className="w-full flex flex-col items-center justify-center gap-2" style={{ height: 200, background: 'linear-gradient(135deg,#dcfce7,#bbf7d0)' }}>
-          <BarChart2 size={32} color="#16a34a" />
-          <span className="text-xs text-muted">Habit Progress</span>
-        </div>
-      )}
+      <div style={{ aspectRatio: '256/455', overflow: 'hidden' }}>
+        {!imgError ? (
+          <img
+            src={post.image_url}
+            alt={post.title}
+            onError={() => setImgError(true)}
+            className="w-full h-full block"
+            style={{ objectFit: 'cover', display: 'block' }}
+          />
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg,#dcfce7,#bbf7d0)' }}>
+            <BarChart2 size={32} color="#16a34a" />
+            <span className="text-xs text-muted">Habit Progress</span>
+          </div>
+        )}
+      </div>
 
       <div
         className="absolute inset-0 pointer-events-none transition-opacity duration-200"

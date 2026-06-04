@@ -303,16 +303,14 @@ export const HabitGridCard: React.FC<HabitGridCardProps> = ({ habit, onEdit, onD
 
       {/* Header: title + badge + actions */}
       <div className="flex justify-between items-start">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap mb-1">
-            <span className="font-body font-semibold text-[15px] text-ink overflow-hidden text-ellipsis whitespace-nowrap">
-              {habit.title}
-            </span>
+        <div className="flex-1 min-w-0 pr-2">
+          <p className="font-body font-semibold text-[15px] text-ink truncate mb-1.5">
+            {habit.title}
+          </p>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <Badge color="green">{getCategoryLabel(habit.category)}</Badge>
             {isComplete && <Badge color="emerald">Selesai</Badge>}
             {isExpired  && <Badge color="orange">Periode Berakhir</Badge>}
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Badge color="green">{getCategoryLabel(habit.category)}</Badge>
           </div>
         </div>
 
