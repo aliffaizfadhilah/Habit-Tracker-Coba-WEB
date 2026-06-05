@@ -11,8 +11,8 @@ export function SimpleLineChart({ data, height = 220 }: LineChartProps) {
   )
 
   const VW  = 560
-  const VH  = 160
-  const pad = { top: 14, right: 10, bottom: 26, left: 32 }
+  const VH  = 172
+  const pad = { top: 14, right: 24, bottom: 40, left: 36 }
   const iw  = VW - pad.left - pad.right
   const ih  = VH - pad.top  - pad.bottom
 
@@ -60,8 +60,8 @@ export function SimpleLineChart({ data, height = 220 }: LineChartProps) {
         <g key={t.val}>
           <line x1={pad.left} y1={t.y} x2={pad.left + iw} y2={t.y}
             stroke="#e5e7eb" strokeWidth="0.4" />
-          <text x={pad.left - 4} y={t.y + 1.5} textAnchor="end"
-            fontSize="8" fill="#9ca3af">{t.val}</text>
+          <text x={pad.left - 5} y={t.y + 1.5} textAnchor="end"
+            fontSize="9" fill="#6b7280">{t.val}</text>
         </g>
       ))}
 
@@ -75,8 +75,8 @@ export function SimpleLineChart({ data, height = 220 }: LineChartProps) {
       ))}
 
       {xLabels.map((p, i) => (
-        <text key={i} x={p.x} y={VH - 4} textAnchor="middle"
-          fontSize="8" fill="#9ca3af">
+        <text key={i} x={p.x} y={VH - 8} textAnchor="middle"
+          fontSize="10" fill="#4b5563">
           {p.date.slice(5)}
         </text>
       ))}

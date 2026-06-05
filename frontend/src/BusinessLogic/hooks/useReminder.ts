@@ -21,6 +21,7 @@ export function useReminder() {
       console.log('[Reminder] Data habit dimuat:', data.data.length, 'habit')
       setHabits(data.data)
       reminderService.update(data.data)
+      reminderService.start()
     } catch (err) {
       console.error('[Reminder] Error memuat habit:', err)
       setError('Terjadi kesalahan. Coba lagi.')

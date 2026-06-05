@@ -16,14 +16,15 @@ interface AdminUser {
 }
 
 export default function AdminUsersPage() {
-  const [users,    setUsers]    = useState<AdminUser[]>([])
-  const [page,     setPage]     = useState(1)
-  const [lastPage, setLastPage] = useState(1)
-  const [loading,  setLoading]  = useState(false)
+  const [users,   setUsers]   = useState<AdminUser[]>([])
+  const [page,    setPage]    = useState(1)
+  const [lastPage,setLastPage]= useState(1)
+  const [loading, setLoading] = useState(false)
+  const [tab,     setTab]     = useState<'users' | 'admins'>('users')
 
   const load = (p: number) => {
     setLoading(true)
-    http.get<any>(`/api/admin/users?per_page=20&page=${p}`)
+    http.get<any>(`/api/admin/users?per_page=100&page=${p}`)
       .then(r => { if (r.success) { setUsers(r.data.data); setLastPage(r.data.last_page) } })
       .finally(() => setLoading(false))
   }
@@ -35,11 +36,41 @@ export default function AdminUsersPage() {
     if (r.success) setUsers(us => us.map(u => u.id === id ? { ...u, is_active: r.is_active } : u))
   }
 
+  const filtered = users
+    .filter(u => {
+      const isAdmin = u.roles.some(r => r.role_name === 'ADMIN')
+      return tab === 'admins' ? isAdmin : !isAdmin
+    })
+    .sort((a, b) => {
+      if (!a.ranking && !b.ranking) return 0
+      if (!a.ranking) return 1
+      if (!b.ranking) return -1
+      return a.ranking - b.ranking
+    })
+
   return (
     <AdminLayout>
       <div className="p-4 sm:p-6 lg:p-8">
         <h1 className="text-[26px] font-bold text-ink mb-1">Pengguna</h1>
-        <p className="text-sm text-muted mb-6">Kelola semua akun pengguna</p>
+        <p className="text-sm text-muted mb-5">Kelola semua akun pengguna</p>
+
+        {/* Tabs */}
+        <div className="flex gap-0 mb-5 border-b border-border">
+          {(['users', 'admins'] as const).map(t => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={
+                'px-5 py-2.5 text-sm font-medium border-b-2 -mb-px transition-all cursor-pointer ' +
+                (tab === t
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted hover:text-ink hover:border-border')
+              }
+            >
+              {t === 'users' ? 'Pengguna' : 'Admin'}
+            </button>
+          ))}
+        </div>
 
         <div className="bg-white border border-border rounded-xl overflow-hidden shadow-card overflow-x-auto">
           <table className="w-full text-sm min-w-[640px]">
@@ -53,7 +84,9 @@ export default function AdminUsersPage() {
             <tbody>
               {loading ? (
                 <tr><td colSpan={8} className="text-center py-12 text-muted text-sm">Memuat...</td></tr>
-              ) : users.map(u => {
+              ) : filtered.length === 0 ? (
+                <tr><td colSpan={8} className="text-center py-12 text-muted text-sm">Tidak ada data</td></tr>
+              ) : filtered.map(u => {
                 const isAdmin = u.roles.some(r => r.role_name === 'ADMIN')
                 return (
                   <tr key={u.id} className="border-b border-border/60 hover:bg-surface/50 transition-colors">
@@ -63,7 +96,7 @@ export default function AdminUsersPage() {
                          u.ranking === 2 ? 'bg-slate-100 text-slate-600' :
                          u.ranking === 3 ? 'bg-orange-100 text-orange-600' :
                          'bg-surface text-muted')}>
-                        {u.ranking}
+                        {u.ranking || '—'}
                       </span>
                     </td>
                     <td className="px-4 py-3">
@@ -108,7 +141,7 @@ export default function AdminUsersPage() {
         </div>
 
         <div className="flex items-center justify-between mt-4">
-          <span className="text-sm text-muted">Halaman {page} dari {lastPage}</span>
+          <span className="text-sm text-muted">Menampilkan {filtered.length} {tab === 'admins' ? 'admin' : 'pengguna'}</span>
           <div className="flex gap-2">
             <button disabled={page <= 1} onClick={() => setPage(p => p - 1)}
               className="px-3 py-1.5 text-sm border border-border rounded-md disabled:opacity-40 cursor-pointer hover:bg-surface transition-all">
