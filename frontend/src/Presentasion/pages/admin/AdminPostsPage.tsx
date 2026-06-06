@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Trash2 } from 'lucide-react'
 import AdminLayout from './AdminLayout'
 import { http } from '../../../BusinessLogic/services/HttpService'
+import { useAdminRealtime } from '../../../BusinessLogic/hooks/useAdminRealtime'
 
 interface AdminPost {
   id: number
@@ -20,10 +21,13 @@ export default function AdminPostsPage() {
   const [lastPage, setLastPage] = useState(1)
   const [deleting, setDeleting] = useState<number | null>(null)
 
-  useEffect(() => {
-    http.get<any>(`/api/admin/posts?per_page=20&page=${page}`)
+  const load = useCallback((p: number) => {
+    http.get<any>(`/api/admin/posts?per_page=20&page=${p}`)
       .then(r => { if (r.success) { setPosts(r.data.data); setLastPage(r.data.last_page) } })
-  }, [page])
+  }, [])
+
+  useEffect(() => { load(page) }, [page, load])
+  useAdminRealtime(() => load(page), 45_000)
 
   const deletePost = async (id: number) => {
     if (!confirm('Hapus postingan ini?')) return

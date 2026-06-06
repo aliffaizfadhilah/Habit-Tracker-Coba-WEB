@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { ShieldOff, ShieldCheck } from 'lucide-react'
 import AdminLayout from './AdminLayout'
 import { http } from '../../../BusinessLogic/services/HttpService'
+import { useAdminRealtime } from '../../../BusinessLogic/hooks/useAdminRealtime'
 
 interface AdminUser {
   id: number
@@ -30,6 +31,7 @@ export default function AdminUsersPage() {
   }
 
   useEffect(() => { load(page) }, [page])
+  useAdminRealtime(() => load(page), 60_000)
 
   const toggleSuspend = async (id: number) => {
     const r = await http.patch<any>(`/api/admin/users/${id}/suspend`, {})

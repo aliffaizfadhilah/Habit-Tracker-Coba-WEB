@@ -19,12 +19,14 @@ class JwtMiddleware
                 ], 401);
             }
 
-            $user = auth('api')->setToken($token)->authenticate();
+            // Gunakan user() bukan authenticate() agar expired/invalid token
+            // tidak melempar AuthenticationException yang menyebabkan redirect ke route 'login'
+            $user = auth('api')->setToken($token)->user();
 
             if (!$user) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Token tidak valid'
+                    'message' => 'Token tidak valid atau kadaluarsa'
                 ], 401);
             }
 

@@ -84,6 +84,72 @@ export function SimpleLineChart({ data, height = 220 }: LineChartProps) {
   )
 }
 
+interface HorizontalBarChartProps {
+  data: { label: string; value: number }[]
+  height?: number
+}
+
+export function SimpleHorizontalBarChart({ data, height = 260 }: HorizontalBarChartProps) {
+  if (!data.length) return (
+    <div className="flex items-center justify-center text-muted text-sm" style={{ height }}>
+      Belum ada data
+    </div>
+  )
+
+  const max    = Math.max(...data.map(d => d.value), 1)
+  const rowH   = 28
+  const labelW = 130
+  const padR   = 48
+  const padT   = 6
+  const barAreaW = 340
+  const totalW   = labelW + barAreaW + padR
+  const totalH   = padT + data.length * rowH
+
+  return (
+    <svg
+      viewBox={`0 0 ${totalW} ${totalH}`}
+      style={{ width: '100%', height }}
+      preserveAspectRatio="xMidYMid meet"
+    >
+      {data.map((d, i) => {
+        const y    = padT + i * rowH
+        const barW = (d.value / max) * barAreaW
+        const cy   = y + rowH / 2
+        return (
+          <g key={i}>
+            <text
+              x={labelW - 8}
+              y={cy + 4}
+              textAnchor="end"
+              fontSize="10"
+              fill="#374151"
+            >
+              {d.label.length > 22 ? d.label.slice(0, 21) + '…' : d.label}
+            </text>
+            <rect
+              x={labelW}
+              y={cy - 7}
+              width={Math.max(barW, 2)}
+              height={14}
+              fill="#16a34a"
+              rx="3"
+              opacity="0.85"
+            />
+            <text
+              x={labelW + barW + 6}
+              y={cy + 4}
+              fontSize="10"
+              fill="#6b7280"
+            >
+              {d.value}
+            </text>
+          </g>
+        )
+      })}
+    </svg>
+  )
+}
+
 interface BarChartProps {
   data: { label: string; value: number }[]
   height?: number

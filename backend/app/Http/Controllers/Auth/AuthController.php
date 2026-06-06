@@ -23,6 +23,45 @@ class AuthController extends Controller
         return cookie('jwt_token', $token, 60 * 24, '/', null, $secure, true, false, 'Lax');
     }
 
+    // ── Mobile: kembalikan token di JSON, tidak set cookie ────────────────────
+
+    public function registerMobile(RegisterRequest $request): JsonResponse
+    {
+        $result = $this->authService->register($request->validated());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Registrasi berhasil!',
+            'token'   => $result['token'],
+            'user'    => $result['user'],
+        ], 201);
+    }
+
+    public function loginMobile(LoginRequest $request): JsonResponse
+    {
+        $result = $this->authService->login($request->email, $request->password);
+
+        if (!$result) {
+            return response()->json(['success' => false, 'message' => 'Email atau password salah!'], 401);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Login berhasil!',
+            'token'   => $result['token'],
+            'user'    => $result['user'],
+        ]);
+    }
+
+    public function logoutMobile(): JsonResponse
+    {
+        $this->authService->logout();
+
+        return response()->json(['success' => true, 'message' => 'Logout berhasil!']);
+    }
+
+    // ── Web ───────────────────────────────────────────────────────────────────
+
     public function register(RegisterRequest $request): JsonResponse
     {
         $result = $this->authService->register($request->validated());

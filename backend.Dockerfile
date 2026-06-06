@@ -5,4 +5,4 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /app
 COPY backend/ .
 RUN composer install --no-dev --optimize-autoloader
-CMD sh -c "php artisan key:generate --force && until php artisan migrate --force; do echo 'Waiting for MySQL, retrying in 3s...'; sleep 3; done && php-fpm"
+CMD sh -c "chown -R www-data:www-data /app/storage /app/bootstrap/cache && php artisan key:generate --force && until php artisan migrate --force; do echo 'Waiting for MySQL, retrying in 3s...'; sleep 3; done && php-fpm"

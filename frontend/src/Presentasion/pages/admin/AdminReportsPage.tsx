@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { CheckCircle, XCircle } from 'lucide-react'
 import AdminLayout from './AdminLayout'
 import { http } from '../../../BusinessLogic/services/HttpService'
+import { useAdminRealtime } from '../../../BusinessLogic/hooks/useAdminRealtime'
 
 interface AdminReport {
   id: number
@@ -40,6 +41,7 @@ export default function AdminReportsPage() {
   }
 
   useEffect(() => { load() }, [page, filter, typeFilter])
+  useAdminRealtime(load, 30_000)
 
   const resolve = async (id: number) => {
     const r = await http.patch<any>(`/api/admin/reports/${id}/resolve`, {})

@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Users, Repeat2, FileText, Eye, Flag } from 'lucide-react'
 import { SimpleLineChart } from '../../components/SimpleChart'
 import AdminLayout from './AdminLayout'
 import { http } from '../../../BusinessLogic/services/HttpService'
+import { useAdminRealtime } from '../../../BusinessLogic/hooks/useAdminRealtime'
 
 interface Stats {
   total_users: number
@@ -32,12 +33,15 @@ export default function AdminDashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [chart, setChart] = useState<ChartPoint[]>([])
 
-  useEffect(() => {
+  const load = useCallback(() => {
     http.get<{ success: boolean; data: Stats }>('/api/admin/stats')
       .then(r => { if (r.success) setStats(r.data) })
     http.get<{ success: boolean; data: ChartPoint[] }>('/api/admin/visitors/chart?days=30')
       .then(r => { if (r.success) setChart(r.data) })
   }, [])
+
+  useEffect(() => { load() }, [load])
+  useAdminRealtime(load, 20_000)
 
   return (
     <AdminLayout>

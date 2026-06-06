@@ -321,7 +321,7 @@ export default function NewPostModal({ onClose, onPosted }: Props) {
       case 'branding':
         return (
           <div style={{ fontSize: fs, color: 'rgba(255,255,255,0.65)', textShadow: '0 1px 3px rgba(0,0,0,0.5)', fontFamily: 'system-ui,sans-serif', pointerEvents: 'none' }}>
-            🌿 HabitTracker
+            HabitTracker
           </div>
         )
     }

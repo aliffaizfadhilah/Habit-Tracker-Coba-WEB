@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Download } from 'lucide-react'
 import AdminLayout from './AdminLayout'
 import { http } from '../../../BusinessLogic/services/HttpService'
+import { SimpleHorizontalBarChart } from '../../components/SimpleChart'
+import { useAdminRealtime } from '../../../BusinessLogic/hooks/useAdminRealtime'
 
 interface Visitor {
   id: number
@@ -15,18 +17,46 @@ interface Visitor {
   created_at: string
 }
 
-export default function AdminVisitorsPage() {
-  const [visitors, setVisitors] = useState<Visitor[]>([])
-  const [page,     setPage]     = useState(1)
-  const [lastPage, setLastPage] = useState(1)
-  const [loading,  setLoading]  = useState(false)
+interface LocationStat {
+  country: string | null
+  city: string | null
+  total: number
+}
 
-  useEffect(() => {
+export default function AdminVisitorsPage() {
+  const [visitors,  setVisitors]  = useState<Visitor[]>([])
+  const [locations, setLocations] = useState<{ label: string; value: number }[]>([])
+  const [page,      setPage]      = useState(1)
+  const [lastPage,  setLastPage]  = useState(1)
+  const [loading,   setLoading]   = useState(false)
+
+  const loadLocations = useCallback(() => {
+    http.get<{ success: boolean; data: LocationStat[] }>('/api/admin/visitors/locations')
+      .then(r => {
+        if (r.success) {
+          const mapped = r.data
+            .slice(0, 10)
+            .map(d => ({
+              label: [d.city, d.country].filter(Boolean).join(', ') || 'Tidak diketahui',
+              value: d.total,
+            }))
+          setLocations(mapped)
+        }
+      })
+  }, [])
+
+  const loadVisitors = useCallback((p: number) => {
     setLoading(true)
-    http.get<any>(`/api/admin/visitors?per_page=20&page=${page}`)
+    http.get<any>(`/api/admin/visitors?per_page=20&page=${p}`)
       .then(r => { if (r.success) { setVisitors(r.data.data); setLastPage(r.data.last_page) } })
       .finally(() => setLoading(false))
-  }, [page])
+  }, [])
+
+  useEffect(() => { loadLocations() }, [loadLocations])
+  useEffect(() => { loadVisitors(page) }, [page, loadVisitors])
+
+  const refresh = useCallback(() => { loadLocations(); loadVisitors(page) }, [loadLocations, loadVisitors, page])
+  useAdminRealtime(refresh, 20_000)
 
   const exportCsv = () => window.open('/api/admin/visitors/export', '_blank')
 
@@ -46,6 +76,13 @@ export default function AdminVisitorsPage() {
             Export CSV
           </button>
         </div>
+
+        {locations.length > 0 && (
+          <div className="bg-white border border-border rounded-xl p-5 shadow-card mb-6">
+            <h2 className="text-[14px] font-bold text-ink mb-4">Top Lokasi Pengunjung</h2>
+            <SimpleHorizontalBarChart data={locations} height={locations.length * 32 + 16} />
+          </div>
+        )}
 
         <div className="bg-white border border-border rounded-xl overflow-hidden shadow-card overflow-x-auto">
           <table className="w-full text-sm min-w-[700px]">
