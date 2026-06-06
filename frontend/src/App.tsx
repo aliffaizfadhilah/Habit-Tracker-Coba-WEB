@@ -1,5 +1,35 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+
+function makeUUID(): string {
+  const b = new Uint8Array(16)
+  crypto.getRandomValues(b)
+  b[6] = (b[6] & 0x0f) | 0x40
+  b[8] = (b[8] & 0x3f) | 0x80
+  const h = Array.from(b, x => x.toString(16).padStart(2, '0')).join('')
+  return `${h.slice(0,8)}-${h.slice(8,12)}-${h.slice(12,16)}-${h.slice(16,20)}-${h.slice(20)}`
+}
+
+function trackVisit() {
+  try {
+    const TRACKED_KEY = 'habittracker_tracked'
+    const SESSION_KEY = 'habittracker_session_id'
+    if (sessionStorage.getItem(TRACKED_KEY)) return
+    sessionStorage.setItem(TRACKED_KEY, '1')
+    let sid = sessionStorage.getItem(SESSION_KEY)
+    if (!sid) {
+      sid = makeUUID()
+      sessionStorage.setItem(SESSION_KEY, sid)
+    }
+    fetch('/api/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ page: window.location.pathname, session_id: sid }),
+    }).catch(() => {})
+  } catch {
+    // tracking must never crash the app
+  }
+}
 import { AuthProvider } from './BusinessLogic/context/AuthContext'
 import Dashboard         from './Presentasion/pages/Dashboard'
 import Login             from './Presentasion/pages/auth/Login'
@@ -25,6 +55,8 @@ const AdminPostsPage     = lazy(() => import('./Presentasion/pages/admin/AdminPo
 const AdminReportsPage   = lazy(() => import('./Presentasion/pages/admin/AdminReportsPage'))
 
 export default function App() {
+  useEffect(() => { trackVisit() }, [])
+
   return (
     <AuthProvider>
     <BrowserRouter>
