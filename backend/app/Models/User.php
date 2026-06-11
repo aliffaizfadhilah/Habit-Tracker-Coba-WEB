@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Habit;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class User extends Authenticatable implements JWTSubject
 {
+    use HasFactory; 
     use Notifiable;
 
     protected $fillable = [
@@ -15,7 +18,7 @@ class User extends Authenticatable implements JWTSubject
         'full_name', 'bio', 'profile_picture',
         'date_of_birth', 'gender', 'reminder_time',
         'reminder_enabled', 'is_verified', 'is_active',
-        'google_id', 'otp_code', 'otp_expires_at',
+        'otp_code', 'otp_expires_at',
     ];
 
     protected $hidden = ['password', 'salt', 'otp_code'];
@@ -37,5 +40,10 @@ class User extends Authenticatable implements JWTSubject
     public function roles()
     {
         return $this->belongsToMany(Role::class, 'user_roles');
+    }
+
+    public function habits()
+    {
+        return $this->hasMany(Habit::class, 'username', 'username');
     }
 }
